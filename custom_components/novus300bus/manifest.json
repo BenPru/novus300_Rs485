@@ -6,5 +6,6 @@
   "dependencies": [],
   "after_dependencies": ["http"],
   "codeowners": ["@BenPru"],
-  "requirements": ["pyserial>=3.4", "pyserial-asyncio>=0.4"]
+  "requirements": ["pyserial>=3.4", "pyserial-asyncio>=0.4"],
+  "issue_tracker": "https://github.com/BenPru/novus300_Rs485/issues"
 }
