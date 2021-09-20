@@ -5,6 +5,6 @@
   "documentation": "https://www.home-assistant.io/components/novus300bus",
   "dependencies": [],
   "after_dependencies": ["http"],
-  "codeowners": ["@schack17"],
+  "codeowners": ["@BenPru"],
   "requirements": ["pyserial>=3.4", "pyserial-asyncio>=0.4"]
 }
