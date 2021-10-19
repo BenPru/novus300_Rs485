@@ -1,5 +1,7 @@
 # Paul Novus 300 - RS-485
 
+[![Validate with HACS validation](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml/badge.svg](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml/badge.svg)
+
 This component has been created to be used with Home Assistant. This is a custom component for home assistant.
 
 Home Assistant HACS component to readout values from a Paul Novus 300 ventilation system.
@@ -23,7 +25,21 @@ To enable this component, add the following lines to your `configuration.yaml` f
   # name: ...
 ```
 
-Todo:
+**Note:**
+Not all data received by the this controller is understood by now as the protocol is not publicly documented.  
+
+## Sensor
+This sensor allows you to monitor the following status values:
+- novus300_temp_house_air_out
+- novus300_temp_indoor
+- novus300_temp_indoor_in
+- novus300_temp_outdoor
+
+TODO Sensors:
+- novus300_heat_recovery
+- Filter days
+
+## Todo
 
 - Remove hardcoded sensors and read them as config
 - Add filter time as sensor
