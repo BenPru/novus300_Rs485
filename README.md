@@ -1,6 +1,6 @@
 # Paul Novus 300 - RS-485
 
-[![Validate with HACS validation](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml/badge.svg](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml/badge.svg)
+[![Validate with HACS validation](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml/badge.svg)](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml/badge.svg)
 
 This component has been created to be used with Home Assistant. This is a custom component for home assistant.
 
