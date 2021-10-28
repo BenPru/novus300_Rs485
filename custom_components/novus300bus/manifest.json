@@ -2,7 +2,7 @@
   "domain": "novus300bus",
   "name": "Paul Novus 300 RS-485 Bus",
   "version": "2021.09.20",
-  "documentation": "https://github.com/BenPru/novus300_Rs485",
+  "documentation": "www.home-assistant.io/integrations/novus300bus",
   "dependencies": [],
   "after_dependencies": ["http"],
   "codeowners": ["@BenPru"],
