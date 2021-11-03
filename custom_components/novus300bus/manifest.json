@@ -7,5 +7,6 @@
   "after_dependencies": ["http"],
   "codeowners": ["@BenPru"],
   "requirements": ["pyserial>=3.5"],
+  "iot_class": "local_polling",
   "issue_tracker": "https://github.com/BenPru/novus300_Rs485/issues"
 }
