@@ -7,16 +7,15 @@ from enum import Enum
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.components.binary_sensor import (DEVICE_CLASS_PLUG,
-                                                    BinarySensorEntity)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (CONF_NAME, DEVICE_CLASS_TEMPERATURE,
-                                 TEMP_CELSIUS)
+from homeassistant.const import CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+from homeassistant.components.sensor import SensorDeviceClass
 from serial import EIGHTBITS, PARITY_MARK, STOPBITS_ONE, Serial
 
 # endregion Imports
@@ -147,7 +146,7 @@ async def async_setup_platform(hass: HomeAssistant, config: ConfigType, async_ad
                     # try:
                     while not isCommand(data[2]):
                         data = data[1:]
-                        if len(data) < 2:
+                        if len(data) < 3:
                             break
                     if data[2] != Command.OTHER.value:
                         if isCommand(data[2]):
@@ -366,7 +365,7 @@ class NovusBinarySensor(BinarySensorEntity, NovusSensorInterface):
         self._name = friendly_name
         self._attr_icon = 'mdi:compare-horizontal'
         self._is_on = None
-        self._attr_device_class = DEVICE_CLASS_PLUG
+        self._attr_device_class = BinarySensorDeviceClass.PLUG
 
     @property
     def name(self):
@@ -389,7 +388,7 @@ class NovusSensor(SensorEntity, NovusSensorInterface):
         self._name = friendly_name
         self._state = None
         # self._attr_icon = icon
-        # self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        # self._attr_device_class = SensorDeviceClass.TEMPERATURE
         # self._attr_unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -417,5 +416,5 @@ class NovusTempSensor(NovusSensor):
         self._attr_icon = icon
         self._state = None
         # self._attr_should_poll = True  # self._port is not None
-        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self._attr_unit_of_measurement = TEMP_CELSIUS
