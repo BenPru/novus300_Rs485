@@ -147,7 +147,7 @@ async def async_setup_platform(hass: HomeAssistant, config: ConfigType, async_ad
                     # try:
                     while not isCommand(data[2]):
                         data = data[1:]
-                        if len(data) < 2:
+                        if len(data) < 3:
                             break
                     if data[2] != Command.OTHER.value:
                         if isCommand(data[2]):
