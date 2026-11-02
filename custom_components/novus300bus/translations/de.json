@@ -17,14 +17,10 @@
           "serial_port": "Serielles Gerät",
           "baudrate": "Baudrate",
           "parity": "Parität",
-          "fan_enabled": "0-10-V-Lüftersteuerung aktivieren",
+          "fan_enabled": "0-10-V-Lüfterstatus anzeigen",
           "tinkerforge_host": "Tinkerforge-Host",
           "tinkerforge_port": "Tinkerforge-Port",
-          "tinkerforge_uid": "UID des Industrial Analog Out",
-          "fan_default_percentage": "Standard-Lüfterstufe in Prozent",
-          "fan_automatic_entity": "Helfer-Entity für Automatikmodus",
-          "boost_percentage": "Lüfterstufe für Stoßlüftung in Prozent",
-          "boost_duration_minutes": "Dauer der Stoßlüftung in Minuten"
+          "tinkerforge_uid": "UID des Industrial Analog Out"
         }
       }
     }

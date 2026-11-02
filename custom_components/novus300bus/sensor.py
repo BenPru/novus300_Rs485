@@ -239,6 +239,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def icon(self) -> str | None:
         """Return an icon matching the current operating state."""
+        if self._description.key == "fan_setpoint":
+            return "mdi:fan"
         state_icons = {
             "run_state": {
                 "stopped": "mdi:stop-circle-outline",

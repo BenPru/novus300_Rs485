@@ -17,14 +17,10 @@
           "serial_port": "Serial device",
           "baudrate": "Baud rate",
           "parity": "Parity",
-          "fan_enabled": "Enable 0-10 V fan control",
+          "fan_enabled": "Show 0-10 V fan status",
           "tinkerforge_host": "Tinkerforge host",
           "tinkerforge_port": "Tinkerforge port",
-          "tinkerforge_uid": "Industrial Analog Out UID",
-          "fan_default_percentage": "Default fan percentage",
-          "fan_automatic_entity": "Automatic mode helper entity",
-          "boost_percentage": "Boost fan percentage",
-          "boost_duration_minutes": "Boost duration in minutes"
+          "tinkerforge_uid": "Industrial Analog Out UID"
         }
       }
     }
