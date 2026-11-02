@@ -27,6 +27,12 @@ COUNTER_ENTITY_IDS = {
     "filter_interval": "sensor.novus300_filter_interval",
 }
 
+PERSISTED_KEYS = {
+    *COUNTER_ENTITY_IDS,
+    "ventilation_mode",
+    "ventilation_mode_raw",
+}
+
 
 class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     """Read bus frames continuously in a dedicated serial thread."""
@@ -42,7 +48,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._values: dict[str, NovusValue] = {}
-        self._counter_store = Store[dict[str, float]](
+        self._counter_store = Store[dict[str, NovusValue]](
             hass, 1, f"{DOMAIN}.{entry_id}.counters"
         )
         self.data = {}
@@ -89,12 +95,12 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                 break
         return counters
 
-    def _counter_values(self) -> dict[str, float]:
-        """Return decoded counter readings suitable for persistent storage."""
+    def _persisted_values(self) -> dict[str, NovusValue]:
+        """Return readings suitable for persistent storage."""
         return {
-            key: float(value)
+            key: value
             for key, value in self._values.items()
-            if key in COUNTER_ENTITY_IDS and isinstance(value, float | int)
+            if key in PERSISTED_KEYS and isinstance(value, float | int | str)
         }
 
     async def async_stop(self) -> None:
@@ -160,6 +166,6 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     def _async_publish(self, readings: dict[str, NovusValue]) -> None:
         """Publish decoded readings on Home Assistant's event loop."""
         self._values.update(readings)
-        if any(key in COUNTER_ENTITY_IDS for key in readings):
-            self._counter_store.async_delay_save(self._counter_values, 5)
+        if any(key in PERSISTED_KEYS for key in readings):
+            self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))
