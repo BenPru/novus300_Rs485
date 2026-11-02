@@ -1,181 +1,173 @@
 # Paul Novus 300 RS-485 Bus
 
-[![Validate with HACS validation](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml/badge.svg)](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml)
+[![HACS validation](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml/badge.svg)](https://github.com/BenPru/novus300_Rs485/actions/workflows/validate.yml)
+[![Hassfest](https://github.com/BenPru/novus300_Rs485/actions/workflows/hassfest.yml/badge.svg)](https://github.com/BenPru/novus300_Rs485/actions/workflows/hassfest.yml)
 
-Home-Assistant-Integration zum passiven Auslesen einer Paul Novus 300 über
-RS-485. Sie stellt Temperaturen, Betriebszustand, Luftweg, Filter- und
-Betriebszeiten sowie die am Bedienpanel gewählte Lüftungsstufe bereit.
+[Deutsche Dokumentation](README.de.md)
 
-Optional kann sie einen vorhandenen Tinkerforge Industrial Analog Out V2 für
-den 0-10-V-Eingang der Anlage als `fan.novus300` einbinden. Diese Ausgabe wird
-ausschließlich im Panel-Modus **Automatik** steuerbar. Die RS-485-Schnittstelle
-bleibt stets lesend.
+Home Assistant integration for passively reading a Paul Novus 300 ventilation
+unit through its RS-485 bus. It exposes temperatures, operating state, air
+path, filter and operating times, and the ventilation level selected at the
+unit's panel.
 
-## Voraussetzungen
+An existing Tinkerforge Industrial Analog Out V2 can optionally be exposed as
+`fan.novus300` to control the unit's external 0-10 V input. This output is
+controllable only while the unit panel is in **Automatic** mode. The RS-485
+connection is always read-only.
 
-- Home Assistant mit HACS
-- Paul Novus 300 mit zugänglicher RS-485-Service-/Bus-Schnittstelle
-- Ein für die Schnittstelle geeigneter RS-485-Adapter oder ein separater
-  seriell-zu-TCP-Reader
-- Optional für `fan.novus300`: Tinkerforge Master/Bricklet-System mit
-  **Industrial Analog Out V2**, Brick Daemon und Netzwerkzugriff
+## Requirements
+
+- Home Assistant with HACS
+- Paul Novus 300 with an accessible RS-485 service/bus connection
+- A suitable RS-485 adapter, or a separate serial-to-TCP reader
+- Optional for `fan.novus300`: a Tinkerforge Master/Bricklet setup with an
+  **Industrial Analog Out V2**, Brick Daemon, and network access
 
 > [!WARNING]
-> Arbeiten an der Lüftungsanlage und ihrer Busverkabelung erfolgen auf eigene
-> Verantwortung. Anlage spannungsfrei schalten, bevor Leitungen angeschlossen
-> oder verändert werden. Anschlussbelegung, zulässige Leitungslänge und
-> Abschlusswiderstände immer dem Paul-Handbuch und dem konkreten Anlagentyp
-> entnehmen. Diese Integration sendet keine RS-485-Telegramme und darf nicht
-> zum Schreiben auf den Bus erweitert werden.
+> Work on the ventilation unit and its bus wiring is at your own risk. Switch
+> off the unit before connecting or altering any wiring. Always follow the
+> connection pinout, permitted cable length, and termination guidance in the
+> Paul documentation for the specific unit. This integration never transmits
+> RS-485 frames and must not be extended to write to the bus.
 
-## Installation mit HACS
+## Install with HACS
 
-1. In HACS **Integrationen** öffnen.
-2. Über das Drei-Punkte-Menü **Benutzerdefinierte Repositorys** wählen.
-3. `https://github.com/BenPru/novus300_Rs485` eintragen und als Kategorie
-   **Integration** auswählen.
-4. Die Integration herunterladen und Home Assistant neu starten.
-5. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** nach
-   **Paul Novus 300 RS-485 Bus** suchen.
+1. Open **HACS → Integrations**.
+2. Select the three-dot menu and choose **Custom repositories**.
+3. Add `https://github.com/BenPru/novus300_Rs485` with category
+   **Integration**.
+4. Download the integration and restart Home Assistant.
+5. Go to **Settings → Devices & services → Add integration** and select
+   **Paul Novus 300 RS-485 Bus**.
 
-Die Konfiguration erfolgt vollständig über die Oberfläche; YAML für die
-RS-485-Integration ist nicht erforderlich.
+The RS-485 integration is configured entirely in the UI; YAML is not needed.
 
-## RS-485 anschließen und konfigurieren
+## Connect and configure RS-485
 
-### Direkter USB-RS-485-Adapter
+### Direct USB-to-RS-485 adapter
 
-1. Einen Adapter verwenden, dessen UART **MARK-Parität** bei 9600 Baud
-   unterstützt. In Home Assistant immer den stabilen Gerätenamen
-   `/dev/serial/by-id/...` verwenden, nicht `/dev/ttyUSB0`.
-2. Den Adapter bei ausgeschalteter Anlage an die dafür vorgesehene RS-485-
-   Schnittstelle anschließen:
-   - `A`/`D+` des Adapters an `A`/`D+` der Anlage,
-   - `B`/`D-` des Adapters an `B`/`D-` der Anlage,
-   - Signalmasse nur dann verbinden, wenn sie im Paul-Schaltbild vorgesehen
-     ist.
-3. Keine eigene Busversorgung einspeisen und keine Abschlusswiderstände
-   hinzufügen, sofern dies nicht explizit in der Anlagendokumentation verlangt
-   wird.
-4. In der Integration als serielles Gerät den `/dev/serial/by-id/...`-Pfad,
-   **9600** Baud und die Parität **mark** auswählen.
+1. Use an adapter whose UART supports **MARK parity** at 9600 baud. In Home
+   Assistant, use its stable `/dev/serial/by-id/...` path instead of
+   `/dev/ttyUSB0`.
+2. With the unit powered off, connect the adapter to the RS-485 interface
+   specified for your ventilation unit:
+   - adapter `A`/`D+` to unit `A`/`D+`;
+   - adapter `B`/`D-` to unit `B`/`D-`;
+   - connect signal ground only where the Paul wiring diagram specifies it.
+3. Do not feed bus power or add termination resistors unless the unit
+   documentation specifically requires this.
+4. In the integration, select the `/dev/serial/by-id/...` path, **9600** baud,
+   and **mark** parity.
 
-Werden keine Werte empfangen, zuerst A und B gemäß Anlagendokumentation prüfen.
-Leitungsfarben sind nicht genormt; A/B nicht anhand der Farbe zuordnen.
+If no readings arrive, first verify A/B against the unit documentation.
+Wire colours are not standardized and must not be used to identify A and B.
 
-### Seriell über TCP
+### Serial over TCP
 
-Die RS-485-Schnittstelle kann auch an einem separaten Rechner gelesen und dort
-als TCP-Stream bereitgestellt werden. Das trennt die physische
-Busanbindung vom Home-Assistant-Host.
+The RS-485 interface can instead be read by a separate computer and made
+available as a TCP stream. This keeps the physical bus connection independent
+of the Home Assistant host.
 
-- Der serielle Reader verarbeitet auf seiner lokalen UART-Seite 9600 Baud mit
-  MARK-Parität.
-- In der Integration `socket://<host>:<port>` eintragen, beispielsweise
+- The serial reader handles 9600 baud and MARK parity on its local UART.
+- Enter `socket://<host>:<port>` in the integration, for example
   `socket://10.0.17.45:9700`.
-- Für TCP in der Integration die Parität **none** wählen: Die Parität wurde
-  bereits vom seriellen Reader verarbeitet.
+- Select **none** parity in the integration because the serial reader already
+  processed the parity.
 
-Der eingesetzte TCP-Reader muss nur einen Client zulassen oder Zugriffe
-serialisieren. Eine zweite parallele Verbindung kann die bestehende
-Home-Assistant-Verbindung trennen.
+The TCP reader must either accept only one client or serialize access. A
+second concurrent connection can replace the Home Assistant connection.
 
-## Optional: Tinkerforge 0-10-V-Lüftersteuerung
+## Optional Tinkerforge 0-10 V fan control
 
-Die RS-485-Auslesung funktioniert ohne Tinkerforge. Dieser Abschnitt ist nur
-für die zusätzliche Entität `fan.novus300` erforderlich.
+RS-485 monitoring works without Tinkerforge. This section is only required
+for the additional `fan.novus300` entity.
 
-### Tinkerforge vorbereiten
+### Prepare Tinkerforge
 
-1. Den **Industrial Analog Out V2** mit dem Tinkerforge-Stack verbinden und
-   dessen UID mit Brick Viewer ermitteln.
-2. Brick Daemon auf dem Rechner/Gateway betreiben, der/das den Tinkerforge-
-   Stack erreicht. Der Standardport ist `4223`.
-3. Vom Home-Assistant-Host die TCP-Verbindung zu `<tinkerforge-host>:4223`
-   erlauben.
-4. In den Integrationsoptionen **0-10-V-Lüftersteuerung aktivieren** sowie
-   Host, Port und UID eintragen.
+1. Connect the **Industrial Analog Out V2** to the Tinkerforge stack and find
+   its UID in Brick Viewer.
+2. Run Brick Daemon on the host/gateway that reaches the Tinkerforge stack.
+   Its default port is `4223`.
+3. Allow the Home Assistant host to reach `<tinkerforge-host>:4223`.
+4. In the integration options, enable **0-10 V fan control** and enter the
+   host, port, and UID.
 
-### 0-10-V-Ausgang anschließen
+### Connect the 0-10 V output
 
-1. Anlage und Tinkerforge-Hardware vor dem Verdrahten spannungsfrei schalten.
-2. Den Ausgang `OUT` des Industrial Analog Out V2 mit dem in der
-   Paul-Dokumentation bezeichneten **externen 0-10-V-Steuereingang** verbinden.
-3. `GND` des Analogausgangs mit der dazugehörigen Signalmasse des
-   Steuereingangs verbinden. Nicht mit RS-485 A/B verbinden.
-4. Zulässige Spannungen, Massereferenz und mögliche galvanische Trennung der
-   Paul-Anlage vor dem Einschalten anhand der Herstellerunterlagen prüfen.
-5. Die Ausgabe zunächst mit 0 % testen und erst danach geringe Werte setzen.
+1. Switch off the ventilation unit and Tinkerforge hardware before wiring.
+2. Connect `OUT` on the Industrial Analog Out V2 to the external **0-10 V
+   control input** named in the Paul documentation.
+3. Connect the analog output `GND` to the corresponding control-input signal
+   ground. Never connect it to RS-485 A or B.
+4. Verify allowed voltages, ground reference, and any required galvanic
+   isolation in the unit documentation before powering up.
+5. Test at 0% first, then use low values before increasing the output.
 
-`fan.novus300` liest beim Start die aktuell ausgegebene Spannung. Schreiben
-ist nur möglich, wenn das Lüftungspanel auf **Automatik** steht. Bei
-Panel-Stufe 1–3, Stoßlüftung, Abwesend oder Standby ist die Entität bewusst
-schreibgeschützt.
+`fan.novus300` reads the existing analog voltage at startup. Writing is only
+allowed while the unit panel is in **Automatic** mode. At panel levels 1–3,
+boost, away, or standby, the entity is intentionally read-only.
 
-Die Schaltfläche `button.novus300_boost` steht ebenfalls nur in Automatik zur
-Verfügung. Sie setzt den 0-10-V-Ausgang für die konfigurierte Dauer auf den
-Wert **Panel-Stoßlüftung** und stellt anschließend den vorherigen Wert wieder
-her.
+When the configured automatic-mode helper exists, `fan.novus300` additionally
+offers the **Automatic** and **Manual** presets. They toggle only that helper
+and are also available only in panel Automatic mode. The
+`button.novus300_boost` button is subject to the same restriction; it applies
+the configured **Panel boost** value for the configured duration and then
+restores the prior output.
 
-Wenn der konfigurierte Automatik-Helfer vorhanden ist, bietet `fan.novus300`
-zusätzlich die Presets **Automatik** und **Manuell**. Sie schalten ausschließlich
-diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
+## Panel levels and values
 
-## Panel-Stufen und Werte
+The unit broadcasts a fixed panel level but not its percentage. The integration
+therefore maps these configurable values:
 
-Die Anlage überträgt für feste Panel-Stufen nur den Modus, nicht jedoch deren
-zugehörige Prozentwerte. Die Integration ordnet daher folgende einstellbare
-Werte zu:
-
-| Panel-Modus | Standardwert | Konfigurationsfeld |
+| Panel mode | Default | Option |
 |---|---:|---|
-| Lüftungsstufe 1 | 35 % | Panel-Lüftungsstufe 1 |
-| Lüftungsstufe 2 | 60 % | Panel-Lüftungsstufe 2 |
-| Lüftungsstufe 3 | 90 % | Panel-Lüftungsstufe 3 |
-| Stoßlüftung | 75 % | Panel-Stoßlüftung |
-| Abwesend | 15 % | Panel-Abwesend |
+| Level 1 | 35% | Panel level 1 |
+| Level 2 | 60% | Panel level 2 |
+| Level 3 | 90% | Panel level 3 |
+| Boost ventilation | 75% | Panel boost |
+| Away | 15% | Panel away |
 
-Die Werte sind Zahlenfelder von 0 bis 100 %. `fan.novus300` verwendet beim
-Einschalten die konfigurierte **Panel-Lüftungsstufe 2**; die
-Stoßlüftungs-Schaltfläche verwendet **Panel-Stoßlüftung**. Standby hat keine
-eigene Prozentzuordnung und zeigt den Rohwert des Busses.
+These are numeric inputs from 0 to 100%. Turning on `fan.novus300` uses the
+configured **Panel level 2** value; the boost button uses **Panel boost**.
+Standby has no mapped percentage and shows the raw bus value instead.
 
-## Angelegte Entitäten
+## Entities
 
-- Temperaturen für Zu-, Außen-, Ab- und Fortluft
-- `sensor.novus300_ventilation_mode` für Standby, Automatik, Stufe 1–3,
-  Stoßlüftung und Abwesend
-- `sensor.novus300_fan_setpoint` für die Lüfteransteuerung
-- Betriebsstatus, Luftweg und Bypass
-- Gesamt- und Lüfterbetriebszeit sowie Filterintervall und Filterrestlaufzeit,
-  sobald die Anlage den vollständigen Register-Dump sendet
-- Optional `fan.novus300` und `button.novus300_boost`
+- supply, outdoor, extract, and exhaust air temperatures
+- `sensor.novus300_ventilation_mode` for standby, automatic, levels 1–3,
+  boost, and away
+- `sensor.novus300_fan_setpoint` for the fan control value
+- run state, air path, and bypass state
+- operating time, fan operating time, filter interval, and remaining filter
+  time when the controller broadcasts its complete register dump
+- optional `fan.novus300` and `button.novus300_boost`
 
-Nicht jedes Register wird zyklisch übertragen. Nach einem Neustart von Home
-Assistant kann ein Wechsel der Panel-Stufe nötig sein, damit der aktuelle
-Modus erneut am Bus erscheint.
+Not every register is sent continuously. After a Home Assistant restart, you
+may need to change the panel level once for the current mode to be broadcast
+again.
 
-## Fehlerdiagnose
+## Troubleshooting
 
-| Symptom | Prüfung |
+| Symptom | Check |
 |---|---|
-| Keine RS-485-Werte | Stabilen `/dev/serial/by-id/...`-Pfad, 9600 Baud, MARK-Parität sowie A/B-Zuordnung prüfen. |
-| TCP-Verbindung bricht ab | Sicherstellen, dass nur ein Client mit dem seriellen TCP-Reader verbunden ist. |
-| `fan.novus300` ist nicht steuerbar | Panel auf Automatik stellen; Tinkerforge-Host, Port, UID und Brick Daemon prüfen. |
-| Feste Panel-Stufe zeigt falschen Prozentwert | Den zugehörigen Panel-Wert in den Integrationsoptionen anpassen. |
-| Filter-/Betriebszeit fehlt | Auf den vollständigen Register-Dump der Anlage warten; dieser wird nicht kontinuierlich gesendet. |
+| No RS-485 readings | Verify the stable `/dev/serial/by-id/...` path, 9600 baud, MARK parity, and A/B wiring. |
+| TCP connection drops | Ensure only one client is connected to the serial TCP reader. |
+| `fan.novus300` cannot be controlled | Set the panel to Automatic and verify Tinkerforge host, port, UID, and Brick Daemon. |
+| Fixed panel level has the wrong percentage | Adjust the corresponding panel-level option. |
+| Filter or operating time is missing | Wait for the unit's complete register dump; these registers are not broadcast continuously. |
 
-## HACS-Status und Aufnahme
+## HACS
 
-Das Repository ist öffentlich, enthält genau eine Integration unter
-`custom_components/novus300bus`, ein gültiges `manifest.json`, eine
-Root-`hacs.json` und einen HACS-Validierungsworkflow. Damit kann es bereits
-als **benutzerdefiniertes HACS-Repository** installiert werden.
+This repository is ready to be added as a custom HACS repository. It includes
+one integration, a root `hacs.json`, the required integration manifest, a
+brand icon, a GPL-3.0-only license, and HACS and Hassfest validation workflows.
 
-Für eine Aufnahme in den offiziellen HACS-Standardkatalog werden zusätzlich
-Brand-Assets benötigt, mindestens
-`custom_components/novus300bus/brand/icon.png`. GitHub Releases sind
-empfohlen, aber nicht verpflichtend. Nach Ergänzung der Brand-Assets und
-einem erfolgreichen HACS-Workflow kann die Aufnahme gemäß
-[HACS Publishing Guide](https://www.hacs.xyz/docs/publish/integration/)
-beantragt werden.
+For inclusion in the official HACS default repository, a full GitHub release
+must be created after both workflows succeed. The repository can then be added
+alphabetically to the `integration` file in
+[hacs/default](https://github.com/hacs/default), through a pull request from
+the repository owner's fork.
+
+## License
+
+This project is licensed under [GPL-3.0-only](LICENSE).
