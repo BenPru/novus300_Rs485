@@ -162,11 +162,12 @@ This repository is ready to be added as a custom HACS repository. It includes
 one integration, a root `hacs.json`, the required integration manifest, a
 brand icon, a GPL-3.0-only license, and HACS and Hassfest validation workflows.
 
-For inclusion in the official HACS default repository, a full GitHub release
-must be created after both workflows succeed. The repository can then be added
-alphabetically to the `integration` file in
-[hacs/default](https://github.com/hacs/default), through a pull request from
-the repository owner's fork.
+The repository is already listed alphabetically in the official
+[hacs/default integration list](https://github.com/hacs/default/blob/master/integration).
+Release [v2026.11.02.12](https://github.com/BenPru/novus300_Rs485/releases/tag/v2026.11.02.12)
+is available after successful HACS and Hassfest validation. HACS will discover
+the release during its next scheduled scan; no additional catalog pull request
+is necessary.
 
 ## License
 

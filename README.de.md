@@ -171,13 +171,13 @@ Modus erneut am Bus erscheint.
 
 Das Repository ist öffentlich, enthält genau eine Integration unter
 `custom_components/novus300bus`, ein gültiges `manifest.json`, eine
-Root-`hacs.json` und einen HACS-Validierungsworkflow. Damit kann es bereits
-als **benutzerdefiniertes HACS-Repository** installiert werden.
+Root-`hacs.json`, Brand-Assets, eine GPL-3.0-only-Lizenz sowie HACS- und
+Hassfest-Validierungsworkflows.
 
-Für eine Aufnahme in den offiziellen HACS-Standardkatalog werden zusätzlich
-Brand-Assets benötigt, mindestens
-`custom_components/novus300bus/brand/icon.png`. GitHub Releases sind
-empfohlen, aber nicht verpflichtend. Nach Ergänzung der Brand-Assets und
-einem erfolgreichen HACS-Workflow kann die Aufnahme gemäß
-[HACS Publishing Guide](https://www.hacs.xyz/docs/publish/integration/)
-beantragt werden.
+Der Eintrag `BenPru/novus300_Rs485` ist bereits alphabetisch in der
+[offiziellen HACS-Integrationsliste](https://github.com/hacs/default/blob/master/integration)
+vorhanden. Der Release
+[v2026.11.02.12](https://github.com/BenPru/novus300_Rs485/releases/tag/v2026.11.02.12)
+ist nach erfolgreich bestandener HACS- und Hassfest-Prüfung veröffentlicht.
+HACS übernimmt ihn beim nächsten geplanten Scan; ein weiterer Katalog-Pull-
+Request ist nicht erforderlich.
