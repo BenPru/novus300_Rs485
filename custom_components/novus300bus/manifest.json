@@ -1,11 +1,12 @@
 {
   "domain": "novus300bus",
   "name": "Paul Novus 300 RS-485 Bus",
-  "version": "2026.11.02.11",
+  "version": "2026.11.02.12",
   "config_flow": true,
   "documentation": "https://github.com/BenPru/novus300_Rs485",
   "codeowners": ["@BenPru"],
-  "requirements": ["pyserial>=3.5", "tinkerforge>=2.1.31"],
+  "requirements": ["tinkerforge>=2.1.31"],
+  "after_dependencies": ["recorder"],
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/BenPru/novus300_Rs485/issues"
 }
