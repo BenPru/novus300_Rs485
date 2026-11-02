@@ -22,7 +22,9 @@
           "tinkerforge_port": "Tinkerforge port",
           "tinkerforge_uid": "Industrial Analog Out UID",
           "fan_default_percentage": "Default fan percentage",
-          "fan_automatic_entity": "Automatic mode helper entity"
+          "fan_automatic_entity": "Automatic mode helper entity",
+          "boost_percentage": "Boost fan percentage",
+          "boost_duration_minutes": "Boost duration in minutes"
         }
       }
     }
