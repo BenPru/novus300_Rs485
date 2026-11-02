@@ -43,11 +43,15 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     async def async_stop(self) -> None:
         """Stop the serial reader thread."""
         self._stop_event.set()
+        await self.hass.async_add_executor_job(self._close_serial)
+        if self._thread is not None:
+            await self.hass.async_add_executor_job(self._thread.join, 5)
+
+    def _close_serial(self) -> None:
+        """Close the serial connection outside Home Assistant's event loop."""
         with self._serial_lock:
             if self._serial is not None:
                 self._serial.close()
-        if self._thread is not None:
-            await self.hass.async_add_executor_job(self._thread.join, 5)
 
     def _read_serial(self) -> None:
         """Read and decode the serial byte stream until stopped."""

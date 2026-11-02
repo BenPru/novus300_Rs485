@@ -21,6 +21,7 @@ class NovusBypassSensor(CoordinatorEntity[NovusCoordinator], BinarySensorEntity)
     _attr_name = "Bypass"
     _attr_unique_id = "novus300bus_bypass"
     _attr_icon = "mdi:arrow-decision"
+    _attr_translation_key = "bypass"
 
     def __init__(self, coordinator: NovusCoordinator) -> None:
         """Initialize the bypass sensor."""

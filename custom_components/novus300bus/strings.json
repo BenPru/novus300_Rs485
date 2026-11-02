@@ -8,6 +8,34 @@
           "parity": "Parity"
         }
       }
+    },
+    "entity": {
+      "sensor": {
+        "run_state": {
+          "state": {
+            "stopped": "Stopped",
+            "running": "Running",
+            "starting": "Starting",
+            "unknown": "Unknown"
+          }
+        },
+        "air_path": {
+          "state": {
+            "heat_recovery": "Heat recovery",
+            "bypass": "Bypass",
+            "transition": "Transition",
+            "unknown": "Unknown"
+          }
+        }
+      },
+      "binary_sensor": {
+        "bypass": {
+          "state": {
+            "on": "Open",
+            "off": "Closed"
+          }
+        }
+      }
     }
   }
 }

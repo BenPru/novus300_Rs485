@@ -27,6 +27,7 @@ class NovusSensorDescription:
     state_class: SensorStateClass | None = None
     entity_category: EntityCategory | None = None
     options: tuple[str, ...] | None = None
+    translation_key: str | None = None
 
 
 SENSORS = (
@@ -69,17 +70,14 @@ SENSORS = (
         "Betriebsstatus",
         SensorDeviceClass.ENUM,
         options=("stopped", "running", "starting", "unknown"),
-    ),
-    NovusSensorDescription(
-        "run_state_raw",
-        "Betriebsstatus Rohwert",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="run_state",
     ),
     NovusSensorDescription(
         "air_path",
         "Luftweg",
         SensorDeviceClass.ENUM,
         options=("heat_recovery", "bypass", "transition", "unknown"),
+        translation_key="air_path",
     ),
     NovusSensorDescription(
         "status_word",
@@ -90,7 +88,7 @@ SENSORS = (
         "operating_time",
         "Gesamtbetriebszeit",
         SensorDeviceClass.DURATION,
-        UnitOfTime.SECONDS,
+        UnitOfTime.HOURS,
         SensorStateClass.TOTAL_INCREASING,
         EntityCategory.DIAGNOSTIC,
     ),
@@ -106,14 +104,16 @@ SENSORS = (
         "filter_time_remaining",
         "Filter Restlaufzeit",
         SensorDeviceClass.DURATION,
-        UnitOfTime.SECONDS,
+        UnitOfTime.DAYS,
+        SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NovusSensorDescription(
         "filter_interval",
         "Filterintervall",
         SensorDeviceClass.DURATION,
-        UnitOfTime.SECONDS,
+        UnitOfTime.DAYS,
+        SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -145,6 +145,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
         self._attr_state_class = description.state_class
         self._attr_entity_category = description.entity_category
         self._attr_options = description.options
+        self._attr_translation_key = description.translation_key
         self.entity_id = f"sensor.novus300_{description.key}"
         self._attr_device_info = {
             "identifiers": {("novus300bus", "novus300")},
@@ -162,4 +163,21 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
     def native_value(self) -> float | int | str | None:
         """Return the decoded register value."""
         value = self.coordinator.data.get(self._description.key)
+        if self._description.key == "operating_time" and isinstance(
+            value, float | int
+        ):
+            return round(value / 3600, 2)
+        if (
+            self._description.key in ("filter_time_remaining", "filter_interval")
+            and isinstance(value, float | int)
+        ):
+            return round(value / 86400, 2)
         return value if isinstance(value, float | int | str) else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, int]:
+        """Expose the raw run-state register without a second entity."""
+        if self._description.key != "run_state":
+            return {}
+        raw_value = self.coordinator.data.get("run_state_raw")
+        return {"raw_value": raw_value} if isinstance(raw_value, int) else {}
