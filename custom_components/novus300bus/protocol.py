@@ -53,6 +53,7 @@ VENTILATION_MODES = {
     2: "level_2",
     3: "level_3",
     4: "boost",
+    5: "away",
     6: "automatic",
 }
 

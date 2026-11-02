@@ -63,6 +63,7 @@
         "level_2": "Lüftungsstufe 2",
         "level_3": "Lüftungsstufe 3",
         "boost": "Stoßlüftung",
+        "away": "Abwesend",
         "unknown": "Unbekannt"
       }
     }

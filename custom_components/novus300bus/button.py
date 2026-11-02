@@ -64,6 +64,12 @@ class NovusBoostButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Start or extend the configured ventilation boost."""
+        if not self.hass.states.is_state(
+            "sensor.novus300_ventilation_mode", "automatic"
+        ):
+            raise HomeAssistantError(
+                "Novus boost is available only in panel automatic mode"
+            )
         fan_state = self.hass.states.get("fan.novus300")
         if fan_state is None:
             raise HomeAssistantError("Novus fan entity is unavailable")

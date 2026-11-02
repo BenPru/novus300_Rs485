@@ -63,6 +63,7 @@
         "level_2": "Level 2",
         "level_3": "Level 3",
         "boost": "Boost ventilation",
+        "away": "Away",
         "unknown": "Unknown"
       }
     }

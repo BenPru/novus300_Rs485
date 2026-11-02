@@ -68,7 +68,7 @@ SENSORS = (
     ),
     NovusSensorDescription(
         "ventilation_mode",
-        "Lüftungsmodus",
+        "Lüftungsstufe",
         SensorDeviceClass.ENUM,
         options=(
             "automatic",
@@ -76,6 +76,7 @@ SENSORS = (
             "level_2",
             "level_3",
             "boost",
+            "away",
             "unknown",
         ),
         translation_key="ventilation_mode",
@@ -257,6 +258,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
                 "level_2": "mdi:fan-speed-2",
                 "level_3": "mdi:fan-speed-3",
                 "boost": "mdi:weather-windy",
+                "away": "mdi:home-export-outline",
                 "unknown": "mdi:help-circle-outline",
             },
         }

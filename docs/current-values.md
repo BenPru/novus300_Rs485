@@ -12,6 +12,7 @@ RS-485-Bus.
 | Bypass | Zu | `binary_sensor.novus300_bypass` |
 | Luftweg | Wärmerückgewinnung | `sensor.novus300_air_path` |
 | Externe Lüfteransteuerung | 40,3 % | `sensor.novus300_fan_setpoint` |
+| Lüftungsstufe | Abwesend (`raw_value: 5`) | `sensor.novus300_ventilation_mode` |
 | Betriebsstatus | Läuft (`raw_value: 1`) | `sensor.novus300_run_state` |
 | Luftweg-Rohwert | `13` (`0x0D`) | Attribut `raw_value` von `sensor.novus300_air_path` |
 
