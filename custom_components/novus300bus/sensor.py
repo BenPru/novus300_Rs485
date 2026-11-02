@@ -222,6 +222,25 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         return value if isinstance(value, float | int | str) else None
 
     @property
+    def icon(self) -> str | None:
+        """Return an icon matching the current operating state."""
+        state_icons = {
+            "run_state": {
+                "stopped": "mdi:stop-circle-outline",
+                "running": "mdi:play-circle-outline",
+                "starting": "mdi:progress-clock",
+                "unknown": "mdi:help-circle-outline",
+            },
+            "air_path": {
+                "heat_recovery": "mdi:heat-wave",
+                "bypass": "mdi:arrow-right-bold-circle-outline",
+                "transition": "mdi:swap-horizontal-circle-outline",
+                "unknown": "mdi:help-circle-outline",
+            },
+        }
+        return state_icons.get(self._description.key, {}).get(self.native_value)
+
+    @property
     def extra_state_attributes(self) -> dict[str, int]:
         """Expose numeric source registers as attributes."""
         raw_key = {

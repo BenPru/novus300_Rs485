@@ -20,7 +20,6 @@ class NovusBypassSensor(CoordinatorEntity[NovusCoordinator], BinarySensorEntity)
     _attr_has_entity_name = True
     _attr_name = "Bypass"
     _attr_unique_id = "novus300bus_bypass"
-    _attr_icon = "mdi:arrow-decision"
     _attr_translation_key = "bypass"
 
     def __init__(self, coordinator: NovusCoordinator) -> None:
@@ -43,3 +42,12 @@ class NovusBypassSensor(CoordinatorEntity[NovusCoordinator], BinarySensorEntity)
     def is_on(self) -> bool | None:
         """Return whether the bypass is open."""
         return self.coordinator.data.get("bypass_open")
+
+    @property
+    def icon(self) -> str:
+        """Return an icon matching the current bypass state."""
+        return (
+            "mdi:arrow-right-bold-circle-outline"
+            if self.is_on
+            else "mdi:heat-wave"
+        )
