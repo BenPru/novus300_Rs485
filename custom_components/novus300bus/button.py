@@ -13,13 +13,12 @@ from homeassistant.helpers.event import async_call_later, async_track_state_chan
 
 from .const import (
     CONF_BOOST_DURATION_MINUTES,
-    CONF_BOOST_PERCENTAGE,
     CONF_FAN_AUTOMATIC_ENTITY,
     CONF_FAN_ENABLED,
     DEFAULT_BOOST_DURATION_MINUTES,
-    DEFAULT_BOOST_PERCENTAGE,
     DEFAULT_FAN_AUTOMATIC_ENTITY,
 )
+from .coordinator import NovusCoordinator
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
@@ -27,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     config = {**entry.data, **entry.options}
     if not config.get(CONF_FAN_ENABLED, False):
         return
-    async_add_entities([NovusBoostButton(hass, config)])
+    async_add_entities([NovusBoostButton(hass, entry.runtime_data, config)])
 
 
 class NovusBoostButton(ButtonEntity):
@@ -37,13 +36,16 @@ class NovusBoostButton(ButtonEntity):
     _attr_unique_id = "novus300bus_boost"
     _attr_icon = "mdi:weather-windy"
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: NovusCoordinator,
+        config: dict[str, Any],
+    ) -> None:
         """Initialize the boost button."""
         self.hass = hass
         self.entity_id = "button.novus300_boost"
-        self._boost_percentage = config.get(
-            CONF_BOOST_PERCENTAGE, DEFAULT_BOOST_PERCENTAGE
-        )
+        self._boost_percentage = coordinator.fan_level_percentage("boost") or 0
         self._duration = timedelta(
             minutes=config.get(
                 CONF_BOOST_DURATION_MINUTES, DEFAULT_BOOST_DURATION_MINUTES

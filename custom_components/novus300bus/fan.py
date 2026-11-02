@@ -18,11 +18,9 @@ from tinkerforge.ip_connection import Error, IPConnection
 
 from .const import (
     CONF_FAN_ENABLED,
-    CONF_FAN_DEFAULT_PERCENTAGE,
     CONF_TINKERFORGE_HOST,
     CONF_TINKERFORGE_PORT,
     CONF_TINKERFORGE_UID,
-    DEFAULT_FAN_DEFAULT_PERCENTAGE,
 )
 from .coordinator import NovusCoordinator
 
@@ -49,9 +47,7 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self._host = config[CONF_TINKERFORGE_HOST]
         self._port = config[CONF_TINKERFORGE_PORT]
         self._uid = config[CONF_TINKERFORGE_UID]
-        self._default_percentage = config.get(
-            CONF_FAN_DEFAULT_PERCENTAGE, DEFAULT_FAN_DEFAULT_PERCENTAGE
-        )
+        self._default_percentage = coordinator.fan_level_percentage("level_2") or 0
         self._percentage: int | None = None
         self._available = False
         self._ipcon: IPConnection | None = None

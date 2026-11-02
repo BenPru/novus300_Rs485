@@ -21,16 +21,13 @@
           "tinkerforge_host": "Tinkerforge host",
           "tinkerforge_port": "Tinkerforge port",
           "tinkerforge_uid": "Industrial Analog Out UID",
-          "fan_default_percentage": "Default fan percentage",
           "fan_automatic_entity": "Automatic mode helper entity",
-          "boost_percentage": "Boost fan percentage",
           "boost_duration_minutes": "Boost duration in minutes",
           "fan_level_1_percentage": "Panel level 1 percentage",
           "fan_level_2_percentage": "Panel level 2 percentage",
           "fan_level_3_percentage": "Panel level 3 percentage",
           "fan_boost_percentage": "Panel boost percentage",
-          "fan_away_percentage": "Panel away percentage",
-          "fan_standby_percentage": "Panel standby percentage"
+          "fan_away_percentage": "Panel away percentage"
         }
       }
     }

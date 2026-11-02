@@ -17,7 +17,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_BAUDRATE,
-    DEFAULT_FAN_STANDBY_PERCENTAGE,
     DEFAULT_FAN_AWAY_PERCENTAGE,
     DEFAULT_FAN_BOOST_PERCENTAGE,
     CONF_PARITY,
@@ -203,7 +202,6 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             ),
             "boost": ("fan_boost_percentage", DEFAULT_FAN_BOOST_PERCENTAGE),
             "away": ("fan_away_percentage", DEFAULT_FAN_AWAY_PERCENTAGE),
-            "standby": ("fan_standby_percentage", DEFAULT_FAN_STANDBY_PERCENTAGE),
         }.get(mode)
         if option is None:
             return None
