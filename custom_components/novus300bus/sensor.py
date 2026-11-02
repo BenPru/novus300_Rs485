@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import NovusCoordinator
@@ -122,7 +123,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     )
 
 
-class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
+class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEntity):
     """Expose a parsed Novus register as a sensor."""
 
     _attr_has_entity_name = True
@@ -141,6 +142,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
         self._attr_entity_category = description.entity_category
         self._attr_options = description.options
         self._attr_translation_key = description.translation_key
+        self._restored_value: float | None = None
         self.entity_id = f"sensor.novus300_{description.key}"
         self._attr_device_info = {
             "identifiers": {("novus300bus", "novus300")},
@@ -149,15 +151,62 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
             "model": "Novus 300",
         }
 
+    async def async_added_to_hass(self) -> None:
+        """Restore duration readings until their next bus update."""
+        await super().async_added_to_hass()
+        if self._description.key not in (
+            "operating_time",
+            "fan_operating_time",
+            "filter_time_remaining",
+            "filter_interval",
+        ):
+            return
+
+        last_state = await self.async_get_last_state()
+        if (
+            last_state is None
+            or self._description.key in self.coordinator.data
+            or last_state.attributes.get("unit_of_measurement")
+            not in (UnitOfTime.SECONDS, UnitOfTime.HOURS, UnitOfTime.DAYS)
+        ):
+            return
+
+        try:
+            restored_value = float(last_state.state)
+        except ValueError:
+            return
+
+        previous_unit = last_state.attributes["unit_of_measurement"]
+        if (
+            previous_unit == UnitOfTime.SECONDS
+            and self._description.key
+            in ("operating_time", "fan_operating_time")
+        ):
+            restored_value /= 3600
+        elif (
+            previous_unit == UnitOfTime.SECONDS
+            and self._description.key
+            in ("filter_time_remaining", "filter_interval")
+        ):
+            restored_value /= 86400
+
+        self._restored_value = round(restored_value, 2)
+        self.async_write_ha_state()
+
     @property
     def available(self) -> bool:
         """Return whether this register has been observed."""
-        return self._description.key in self.coordinator.data
+        return (
+            self._description.key in self.coordinator.data
+            or self._restored_value is not None
+        )
 
     @property
     def native_value(self) -> float | int | str | None:
         """Return the decoded register value."""
         value = self.coordinator.data.get(self._description.key)
+        if value is None:
+            return self._restored_value
         if self._description.key in (
             "operating_time",
             "fan_operating_time",
