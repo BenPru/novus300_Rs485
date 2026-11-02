@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.const import STATE_OFF
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from tinkerforge.bricklet_industrial_analog_out_v2 import (
     BrickletIndustrialAnalogOutV2,
@@ -99,6 +100,13 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
 
     async def async_added_to_hass(self) -> None:
         """Read the existing analog output without changing it."""
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass,
+                ["sensor.novus300_ventilation_mode"],
+                self._handle_panel_mode_change,
+            )
+        )
         await self.async_update()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -175,3 +183,7 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
                 self._ipcon.disconnect()
                 self._ipcon = None
                 self._analog_out = None
+
+    def _handle_panel_mode_change(self, event) -> None:
+        """Refresh fan controls after the panel mode changes."""
+        self.async_write_ha_state()

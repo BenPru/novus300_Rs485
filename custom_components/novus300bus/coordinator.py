@@ -15,7 +15,15 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_BAUDRATE, CONF_PARITY, CONF_SERIAL_PORT, DOMAIN
+from .const import (
+    CONF_BAUDRATE,
+    CONF_PARITY,
+    CONF_SERIAL_PORT,
+    DEFAULT_FAN_LEVEL_1_PERCENTAGE,
+    DEFAULT_FAN_LEVEL_2_PERCENTAGE,
+    DEFAULT_FAN_LEVEL_3_PERCENTAGE,
+    DOMAIN,
+)
 from .protocol import NovusFrameParser, NovusValue, VENTILATION_MODES
 
 LOGGER = logging.getLogger(__name__)
@@ -174,3 +182,25 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         if any(key in PERSISTED_KEYS for key in readings):
             self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))
+
+    def fan_level_percentage(self, mode: str) -> int | None:
+        """Return the configured percentage for a fixed panel fan level."""
+        option = {
+            "level_1": (
+                "fan_level_1_percentage",
+                DEFAULT_FAN_LEVEL_1_PERCENTAGE,
+            ),
+            "level_2": (
+                "fan_level_2_percentage",
+                DEFAULT_FAN_LEVEL_2_PERCENTAGE,
+            ),
+            "level_3": (
+                "fan_level_3_percentage",
+                DEFAULT_FAN_LEVEL_3_PERCENTAGE,
+            ),
+        }.get(mode)
+        if option is None:
+            return None
+        key, default = option
+        value = self._config.get(key, default)
+        return value if isinstance(value, int) else None

@@ -62,7 +62,7 @@ SENSORS = (
     ),
     NovusSensorDescription(
         "fan_setpoint",
-        "Externe Lüfteransteuerung",
+        "Lüfteransteuerung",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -222,6 +222,12 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         value = self.coordinator.data.get(self._description.key)
         if value is None:
             return self._restored_value
+        if self._description.key == "fan_setpoint":
+            fixed_level_value = self.coordinator.fan_level_percentage(
+                self.coordinator.data.get("ventilation_mode", "")
+            )
+            if fixed_level_value is not None:
+                return fixed_level_value
         if self._description.key in (
             "operating_time",
             "fan_operating_time",
@@ -267,8 +273,16 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         return state_icons.get(self._description.key, {}).get(self.native_value)
 
     @property
-    def extra_state_attributes(self) -> dict[str, int]:
-        """Expose numeric source registers as attributes."""
+    def extra_state_attributes(self) -> dict[str, float | int | str]:
+        """Expose source registers and mapped fixed levels as attributes."""
+        if self._description.key == "fan_setpoint":
+            bus_value = self.coordinator.data.get("fan_setpoint")
+            panel_mode = self.coordinator.data.get("ventilation_mode")
+            if isinstance(bus_value, float | int) and isinstance(panel_mode, str):
+                return {
+                    "bus_value": bus_value,
+                    "panel_mode": panel_mode,
+                }
         raw_key = {
             "run_state": "run_state_raw",
             "air_path": "status_word",

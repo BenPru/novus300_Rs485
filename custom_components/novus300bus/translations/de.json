@@ -24,7 +24,10 @@
           "fan_default_percentage": "Standard-Lüfterstufe in Prozent",
           "fan_automatic_entity": "Helfer-Entity für Automatikmodus",
           "boost_percentage": "Lüfterstufe für Stoßlüftung in Prozent",
-          "boost_duration_minutes": "Dauer der Stoßlüftung in Minuten"
+          "boost_duration_minutes": "Dauer der Stoßlüftung in Minuten",
+          "fan_level_1_percentage": "Panel-Lüftungsstufe 1 in Prozent",
+          "fan_level_2_percentage": "Panel-Lüftungsstufe 2 in Prozent",
+          "fan_level_3_percentage": "Panel-Lüftungsstufe 3 in Prozent"
         }
       }
     }

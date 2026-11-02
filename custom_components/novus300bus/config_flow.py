@@ -13,6 +13,9 @@ from .const import (
     CONF_FAN_AUTOMATIC_ENTITY,
     CONF_FAN_DEFAULT_PERCENTAGE,
     CONF_FAN_ENABLED,
+    CONF_FAN_LEVEL_1_PERCENTAGE,
+    CONF_FAN_LEVEL_2_PERCENTAGE,
+    CONF_FAN_LEVEL_3_PERCENTAGE,
     CONF_PARITY,
     CONF_SERIAL_PORT,
     CONF_TINKERFORGE_HOST,
@@ -24,6 +27,9 @@ from .const import (
     DEFAULT_FAN_AUTOMATIC_ENTITY,
     DEFAULT_FAN_DEFAULT_PERCENTAGE,
     DEFAULT_FAN_ENABLED,
+    DEFAULT_FAN_LEVEL_1_PERCENTAGE,
+    DEFAULT_FAN_LEVEL_2_PERCENTAGE,
+    DEFAULT_FAN_LEVEL_3_PERCENTAGE,
     DEFAULT_PARITY,
     DEFAULT_SERIAL_PORT,
     DEFAULT_TINKERFORGE_HOST,
@@ -152,6 +158,27 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                         DEFAULT_BOOST_DURATION_MINUTES,
                     ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=120)),
+                vol.Required(
+                    CONF_FAN_LEVEL_1_PERCENTAGE,
+                    default=self._value(
+                        CONF_FAN_LEVEL_1_PERCENTAGE,
+                        DEFAULT_FAN_LEVEL_1_PERCENTAGE,
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+                vol.Required(
+                    CONF_FAN_LEVEL_2_PERCENTAGE,
+                    default=self._value(
+                        CONF_FAN_LEVEL_2_PERCENTAGE,
+                        DEFAULT_FAN_LEVEL_2_PERCENTAGE,
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+                vol.Required(
+                    CONF_FAN_LEVEL_3_PERCENTAGE,
+                    default=self._value(
+                        CONF_FAN_LEVEL_3_PERCENTAGE,
+                        DEFAULT_FAN_LEVEL_3_PERCENTAGE,
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)
