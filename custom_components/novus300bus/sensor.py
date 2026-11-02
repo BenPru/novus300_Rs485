@@ -80,11 +80,6 @@ SENSORS = (
         translation_key="air_path",
     ),
     NovusSensorDescription(
-        "status_word",
-        "Statuswort",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NovusSensorDescription(
         "operating_time",
         "Gesamtbetriebszeit",
         SensorDeviceClass.DURATION,
@@ -96,7 +91,7 @@ SENSORS = (
         "fan_operating_time",
         "Lüfterbetriebszeit",
         SensorDeviceClass.DURATION,
-        UnitOfTime.SECONDS,
+        UnitOfTime.HOURS,
         SensorStateClass.TOTAL_INCREASING,
         EntityCategory.DIAGNOSTIC,
     ),
@@ -163,7 +158,10 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
     def native_value(self) -> float | int | str | None:
         """Return the decoded register value."""
         value = self.coordinator.data.get(self._description.key)
-        if self._description.key == "operating_time" and isinstance(
+        if self._description.key in (
+            "operating_time",
+            "fan_operating_time",
+        ) and isinstance(
             value, float | int
         ):
             return round(value / 3600, 2)
@@ -176,8 +174,12 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, int]:
-        """Expose the raw run-state register without a second entity."""
-        if self._description.key != "run_state":
+        """Expose numeric source registers as attributes."""
+        raw_key = {
+            "run_state": "run_state_raw",
+            "air_path": "status_word",
+        }.get(self._description.key)
+        if raw_key is None:
             return {}
-        raw_value = self.coordinator.data.get("run_state_raw")
+        raw_value = self.coordinator.data.get(raw_key)
         return {"raw_value": raw_value} if isinstance(raw_value, int) else {}
