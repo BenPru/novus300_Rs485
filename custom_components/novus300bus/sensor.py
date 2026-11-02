@@ -62,7 +62,7 @@ SENSORS = (
     ),
     NovusSensorDescription(
         "fan_setpoint",
-        "Lüfter Sollwert",
+        "Lüfteransteuerung",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

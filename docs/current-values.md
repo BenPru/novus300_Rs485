@@ -11,9 +11,9 @@ RS-485-Bus.
 | Fortluft Temperatur | 13,5 °C | `sensor.novus300_exhaust_air_temperature` |
 | Bypass | Zu | `binary_sensor.novus300_bypass` |
 | Luftweg | Wärmerückgewinnung | `sensor.novus300_air_path` |
-| Lüfter-Sollwert | 40,3 % | `sensor.novus300_fan_setpoint` |
+| Lüfteransteuerung | 40,3 % | `sensor.novus300_fan_setpoint` |
 | Betriebsstatus | Läuft (`raw_value: 1`) | `sensor.novus300_run_state` |
-| Statuswort | `13` (`0x0D`) | `sensor.novus300_status_word` |
+| Luftweg-Rohwert | `13` (`0x0D`) | Attribut `raw_value` von `sensor.novus300_air_path` |
 
 Die Sensoren für Gesamtbetriebszeit, Lüfterbetriebszeit, Filterintervall und
 Filter-Restlaufzeit werden erst sichtbar, wenn die Steuerung ihren vollständigen
