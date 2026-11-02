@@ -12,6 +12,7 @@ CONF_TINKERFORGE_HOST: Final = "tinkerforge_host"
 CONF_TINKERFORGE_PORT: Final = "tinkerforge_port"
 CONF_TINKERFORGE_UID: Final = "tinkerforge_uid"
 CONF_FAN_DEFAULT_PERCENTAGE: Final = "fan_default_percentage"
+CONF_FAN_AUTOMATIC_ENTITY: Final = "fan_automatic_entity"
 
 DEFAULT_SERIAL_PORT: Final = "/dev/ttyNovus300"
 DEFAULT_BAUDRATE: Final = 9600
@@ -21,5 +22,6 @@ DEFAULT_TINKERFORGE_HOST: Final = "10.0.17.45"
 DEFAULT_TINKERFORGE_PORT: Final = 4223
 DEFAULT_TINKERFORGE_UID: Final = "Hob"
 DEFAULT_FAN_DEFAULT_PERCENTAGE: Final = 60
+DEFAULT_FAN_AUTOMATIC_ENTITY: Final = "input_boolean.luftung_automatik"
 
 PARITY_OPTIONS: Final = ("none", "mark")

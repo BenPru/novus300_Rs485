@@ -21,7 +21,8 @@
           "tinkerforge_host": "Tinkerforge-Host",
           "tinkerforge_port": "Tinkerforge-Port",
           "tinkerforge_uid": "UID des Industrial Analog Out",
-          "fan_default_percentage": "Standard-Lüfterstufe in Prozent"
+          "fan_default_percentage": "Standard-Lüfterstufe in Prozent",
+          "fan_automatic_entity": "Helfer-Entity für Automatikmodus"
         }
       }
     }

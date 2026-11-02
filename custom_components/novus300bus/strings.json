@@ -21,7 +21,8 @@
           "tinkerforge_host": "Tinkerforge host",
           "tinkerforge_port": "Tinkerforge port",
           "tinkerforge_uid": "Industrial Analog Out UID",
-          "fan_default_percentage": "Default fan percentage"
+          "fan_default_percentage": "Default fan percentage",
+          "fan_automatic_entity": "Automatic mode helper entity"
         }
       }
     }

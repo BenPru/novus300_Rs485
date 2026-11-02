@@ -9,6 +9,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import (
     CONF_BAUDRATE,
     CONF_FAN_DEFAULT_PERCENTAGE,
+    CONF_FAN_AUTOMATIC_ENTITY,
     CONF_FAN_ENABLED,
     CONF_PARITY,
     CONF_SERIAL_PORT,
@@ -17,6 +18,7 @@ from .const import (
     CONF_TINKERFORGE_UID,
     DEFAULT_BAUDRATE,
     DEFAULT_FAN_DEFAULT_PERCENTAGE,
+    DEFAULT_FAN_AUTOMATIC_ENTITY,
     DEFAULT_FAN_ENABLED,
     DEFAULT_PARITY,
     DEFAULT_SERIAL_PORT,
@@ -126,6 +128,13 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                         CONF_FAN_DEFAULT_PERCENTAGE, DEFAULT_FAN_DEFAULT_PERCENTAGE
                     ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+                vol.Required(
+                    CONF_FAN_AUTOMATIC_ENTITY,
+                    default=self._value(
+                        CONF_FAN_AUTOMATIC_ENTITY,
+                        DEFAULT_FAN_AUTOMATIC_ENTITY,
+                    ),
+                ): str,
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)
