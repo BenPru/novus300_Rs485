@@ -167,6 +167,13 @@ Modus erneut am Bus erscheint.
 | Feste Panel-Stufe zeigt falschen Prozentwert | Den zugehörigen Panel-Wert in den Integrationsoptionen anpassen. |
 | Filter-/Betriebszeit fehlt | Auf den vollständigen Register-Dump der Anlage warten; dieser wird nicht kontinuierlich gesendet. |
 
+## Vorbereitung der passiven Busaufzeichnung
+
+Das ausschließlich lesende Capture-Werkzeug und der spätere Ablauf stehen in
+[docs/full-duplex-capture.md](docs/full-duplex-capture.md). Der Dienst ist auf
+dem Bridge-Host installiert, aber inaktiv und darf nur für eine geplante,
+dokumentierte Aufzeichnung gestartet werden.
+
 ## HACS-Status und Aufnahme
 
 Das Repository ist öffentlich, enthält genau eine Integration unter

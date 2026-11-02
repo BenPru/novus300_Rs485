@@ -1,0 +1,10 @@
+[Unit]
+Description=Passive Paul Novus 300 RS-485 capture
+Conflicts=novus300-serial-bridge.service
+
+[Service]
+Type=simple
+User=pi
+Group=dialout
+ExecStart=/usr/bin/python3 /home/pi/novus300-bridge/novus300_bus_capture.py
+

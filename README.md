@@ -156,6 +156,13 @@ again.
 | Fixed panel level has the wrong percentage | Adjust the corresponding panel-level option. |
 | Filter or operating time is missing | Wait for the unit's complete register dump; these registers are not broadcast continuously. |
 
+## Passive bus capture preparation
+
+The receive-only capture utility and its later operating procedure are in
+[docs/full-duplex-capture.md](docs/full-duplex-capture.md). It is installed
+but inactive on the bridge host and must only be started for a planned,
+documented recording session.
+
 ## HACS
 
 This repository is ready to be added as a custom HACS repository. It includes
