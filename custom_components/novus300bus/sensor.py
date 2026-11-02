@@ -137,7 +137,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
+        self._description = description
         self._attr_name = description.name
         self._attr_unique_id = f"novus300bus_{description.key}"
         self._attr_device_class = description.device_class
@@ -156,10 +156,10 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
     @property
     def available(self) -> bool:
         """Return whether this register has been observed."""
-        return self.entity_description.key in self.coordinator.data
+        return self._description.key in self.coordinator.data
 
     @property
     def native_value(self) -> float | int | str | None:
         """Return the decoded register value."""
-        value = self.coordinator.data.get(self.entity_description.key)
+        value = self.coordinator.data.get(self._description.key)
         return value if isinstance(value, float | int | str) else None

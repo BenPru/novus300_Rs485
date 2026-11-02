@@ -58,19 +58,25 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         )
         while not self._stop_event.is_set():
             try:
-                with serial.Serial(
-                    self._config[CONF_SERIAL_PORT],
-                    baudrate=self._config[CONF_BAUDRATE],
-                    bytesize=serial.EIGHTBITS,
-                    parity=parity,
-                    stopbits=serial.STOPBITS_ONE,
-                    timeout=1,
-                    rtscts=False,
-                    dsrdtr=False,
-                    exclusive=True,
-                ) as serial_port:
-                    serial_port.dtr = False
-                    serial_port.rts = False
+                port = self._config[CONF_SERIAL_PORT]
+                if port.startswith("socket://"):
+                    serial_port = serial.serial_for_url(port, timeout=1)
+                else:
+                    serial_port = serial.Serial(
+                        port,
+                        baudrate=self._config[CONF_BAUDRATE],
+                        bytesize=serial.EIGHTBITS,
+                        parity=parity,
+                        stopbits=serial.STOPBITS_ONE,
+                        timeout=1,
+                        rtscts=False,
+                        dsrdtr=False,
+                        exclusive=True,
+                    )
+                with serial_port:
+                    if not port.startswith("socket://"):
+                        serial_port.dtr = False
+                        serial_port.rts = False
                     with self._serial_lock:
                         self._serial = serial_port
                     LOGGER.info("Connected to Novus bus at %s", serial_port.port)

@@ -18,11 +18,10 @@ The `Novus300-RS485` integration lets you read out values from a ventilation sys
 Install the repository through HACS, then add **Paul Novus 300 RS-485 Bus**
 from **Settings → Devices & services → Add integration**.
 
-The default serial path is `/dev/ttyNovus300`, intended for a serial-over-TCP
-bridge exposed to the Home Assistant container as a pseudo-terminal. For a
-directly attached adapter, select its stable `/dev/serial/by-id/...` path and
-choose `mark` parity. The integration only reads the bus and never sends bytes
-to the ventilation system.
+For a directly attached adapter, select its stable `/dev/serial/by-id/...` path
+and choose `mark` parity. For a serial-over-TCP bridge, enter
+`socket://<host>:<port>` and use `none` parity. The integration only reads the
+bus and never sends bytes to the ventilation system.
 
 **Note:**
 Not all data received by the this controller is understood by now as the protocol is not publicly documented.  
