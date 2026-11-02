@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_BAUDRATE, CONF_PARITY, CONF_SERIAL_PORT, DOMAIN
-from .protocol import NovusFrameParser, NovusValue
+from .protocol import NovusFrameParser, NovusValue, VENTILATION_MODES
 
 LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +74,11 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                 await self._counter_store.async_save(counters)
 
         if counters:
+            raw_mode = counters.get("ventilation_mode_raw")
+            if isinstance(raw_mode, int):
+                counters["ventilation_mode"] = VENTILATION_MODES.get(
+                    raw_mode, "unknown"
+                )
             self._values.update(counters)
             self.async_set_updated_data(dict(self._values))
 
