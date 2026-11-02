@@ -8,16 +8,23 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import NovusCoordinator
 
-PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
+PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR, Platform.FAN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Novus integration from a config entry."""
-    coordinator = NovusCoordinator(hass, dict(entry.data), entry.entry_id)
+    config = {**entry.data, **entry.options}
+    coordinator = NovusCoordinator(hass, config, entry.entry_id)
     entry.runtime_data = coordinator
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await coordinator.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the integration after its options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

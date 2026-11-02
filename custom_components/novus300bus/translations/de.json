@@ -10,6 +10,22 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "serial_port": "Serielles Gerät",
+          "baudrate": "Baudrate",
+          "parity": "Parität",
+          "fan_enabled": "0-10-V-Lüftersteuerung aktivieren",
+          "tinkerforge_host": "Tinkerforge-Host",
+          "tinkerforge_port": "Tinkerforge-Port",
+          "tinkerforge_uid": "UID des Industrial Analog Out",
+          "fan_default_percentage": "Standard-Lüfterstufe in Prozent"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "run_state": {

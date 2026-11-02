@@ -10,6 +10,22 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "serial_port": "Serial device",
+          "baudrate": "Baud rate",
+          "parity": "Parity",
+          "fan_enabled": "Enable 0-10 V fan control",
+          "tinkerforge_host": "Tinkerforge host",
+          "tinkerforge_port": "Tinkerforge port",
+          "tinkerforge_uid": "Industrial Analog Out UID",
+          "fan_default_percentage": "Default fan percentage"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "run_state": {

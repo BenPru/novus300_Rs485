@@ -5,7 +5,7 @@
   "config_flow": true,
   "documentation": "https://github.com/BenPru/novus300_Rs485",
   "codeowners": ["@BenPru"],
-  "requirements": ["pyserial>=3.5"],
+  "requirements": ["pyserial>=3.5", "tinkerforge>=2.1.31"],
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/BenPru/novus300_Rs485/issues"
 }
