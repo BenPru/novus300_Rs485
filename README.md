@@ -117,6 +117,10 @@ Verfügung. Sie setzt den 0-10-V-Ausgang für die konfigurierte Dauer auf den
 Wert **Panel-Stoßlüftung** und stellt anschließend den vorherigen Wert wieder
 her.
 
+Wenn der konfigurierte Automatik-Helfer vorhanden ist, bietet `fan.novus300`
+zusätzlich die Presets **Automatik** und **Manuell**. Sie schalten ausschließlich
+diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
+
 ## Panel-Stufen und Werte
 
 Die Anlage überträgt für feste Panel-Stufen nur den Modus, nicht jedoch deren

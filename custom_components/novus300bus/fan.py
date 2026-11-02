@@ -7,7 +7,7 @@ import threading
 from typing import Any
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -17,10 +17,12 @@ from tinkerforge.bricklet_industrial_analog_out_v2 import (
 from tinkerforge.ip_connection import Error, IPConnection
 
 from .const import (
+    CONF_FAN_AUTOMATIC_ENTITY,
     CONF_FAN_ENABLED,
     CONF_TINKERFORGE_HOST,
     CONF_TINKERFORGE_PORT,
     CONF_TINKERFORGE_UID,
+    DEFAULT_FAN_AUTOMATIC_ENTITY,
 )
 from .coordinator import NovusCoordinator
 
@@ -40,6 +42,7 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
 
     _attr_name = "Lüftung"
     _attr_unique_id = "novus300bus_fan"
+
     def __init__(self, coordinator: NovusCoordinator, config: dict[str, Any]) -> None:
         """Initialize the fan controller."""
         super().__init__(coordinator)
@@ -48,6 +51,10 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self._port = config[CONF_TINKERFORGE_PORT]
         self._uid = config[CONF_TINKERFORGE_UID]
         self._default_percentage = coordinator.fan_level_percentage("level_2") or 0
+        self._automatic_entity = config.get(
+            CONF_FAN_AUTOMATIC_ENTITY, DEFAULT_FAN_AUTOMATIC_ENTITY
+        )
+        self._has_automatic_entity = False
         self._percentage: int | None = None
         self._available = False
         self._ipcon: IPConnection | None = None
@@ -78,11 +85,22 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     @property
     def supported_features(self) -> FanEntityFeature:
         """Return controls only while the panel selects automatic mode."""
-        return (
-            FanEntityFeature.SET_SPEED
-            if self.coordinator.data.get("ventilation_mode") == "automatic"
-            else FanEntityFeature(0)
-        )
+        if self.coordinator.data.get("ventilation_mode") != "automatic":
+            return FanEntityFeature(0)
+        features = FanEntityFeature.SET_SPEED
+        if self._has_automatic_entity:
+            features |= FanEntityFeature.PRESET_MODE
+        return features
+
+    @property
+    def preset_modes(self) -> tuple[str, ...] | None:
+        """Return automation presets while panel control is available."""
+        if (
+            self.coordinator.data.get("ventilation_mode") != "automatic"
+            or not self._has_automatic_entity
+        ):
+            return None
+        return ("Automatik", "Manuell")
 
     @property
     def is_on(self) -> bool | None:
@@ -94,8 +112,30 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         """Return the legacy numeric state used by existing automations."""
         return str(self._percentage) if self.is_on else STATE_OFF
 
+    @property
+    def preset_mode(self) -> str | None:
+        """Return whether existing automations control the ventilation."""
+        if self.preset_modes is None:
+            return None
+        return (
+            "Automatik"
+            if self.hass.states.is_state(self._automatic_entity, STATE_ON)
+            else "Manuell"
+        )
+
     async def async_added_to_hass(self) -> None:
         """Read the existing analog output without changing it."""
+        self._has_automatic_entity = (
+            self.hass.states.get(self._automatic_entity) is not None
+        )
+        if self._has_automatic_entity:
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass,
+                    [self._automatic_entity],
+                    self._handle_automation_mode_change,
+                )
+            )
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
@@ -129,6 +169,22 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set the analog output to zero."""
         await self.async_set_percentage(0)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Switch between the existing automatic and manual control modes."""
+        self._ensure_panel_automatic()
+        if not self._has_automatic_entity:
+            raise HomeAssistantError(
+                f"Automatic mode entity {self._automatic_entity} is unavailable"
+            )
+        if preset_mode not in (self.preset_modes or ()):
+            raise HomeAssistantError(f"Unsupported fan preset: {preset_mode}")
+        await self.hass.services.async_call(
+            "input_boolean",
+            "turn_on" if preset_mode == "Automatik" else "turn_off",
+            {"entity_id": self._automatic_entity},
+            blocking=True,
+        )
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the 0-10 V output percentage in panel automatic mode."""
@@ -182,4 +238,8 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
 
     def _handle_panel_mode_change(self, event) -> None:
         """Refresh fan controls after the panel mode changes."""
+        self.async_write_ha_state()
+
+    def _handle_automation_mode_change(self, event) -> None:
+        """Refresh the displayed preset after an automation mode change."""
         self.async_write_ha_state()
