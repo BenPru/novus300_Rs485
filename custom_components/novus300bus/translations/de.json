@@ -17,10 +17,14 @@
           "serial_port": "Serielles Gerät",
           "baudrate": "Baudrate",
           "parity": "Parität",
-          "fan_enabled": "0-10-V-Lüfterstatus anzeigen",
+          "fan_enabled": "0-10-V-Lüftersteuerung aktivieren",
           "tinkerforge_host": "Tinkerforge-Host",
           "tinkerforge_port": "Tinkerforge-Port",
-          "tinkerforge_uid": "UID des Industrial Analog Out"
+          "tinkerforge_uid": "UID des Industrial Analog Out",
+          "fan_default_percentage": "Standard-Lüfterstufe in Prozent",
+          "fan_automatic_entity": "Helfer-Entity für Automatikmodus",
+          "boost_percentage": "Lüfterstufe für Stoßlüftung in Prozent",
+          "boost_duration_minutes": "Dauer der Stoßlüftung in Minuten"
         }
       }
     }
@@ -42,6 +46,17 @@
           "transition": "Umschaltung",
           "unknown": "Unbekannt"
         }
+      },
+      "ventilation_mode": {
+        "state": {
+          "automatic": "Automatik",
+          "level_1": "Lüftungsstufe 1",
+          "level_2": "Lüftungsstufe 2",
+          "level_3": "Lüftungsstufe 3",
+          "boost": "Stoßlüftung",
+          "away": "Abwesend",
+          "unknown": "Unbekannt"
+        }
       }
     },
     "binary_sensor": {
@@ -50,17 +65,6 @@
           "on": "Auf",
           "off": "Zu"
         }
-      }
-    },
-    "ventilation_mode": {
-      "state": {
-        "automatic": "Automatik",
-        "level_1": "Lüftungsstufe 1",
-        "level_2": "Lüftungsstufe 2",
-        "level_3": "Lüftungsstufe 3",
-        "boost": "Stoßlüftung",
-        "away": "Abwesend",
-        "unknown": "Unbekannt"
       }
     }
   }

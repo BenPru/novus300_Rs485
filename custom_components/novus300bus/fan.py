@@ -6,7 +6,7 @@ import logging
 import threading
 from typing import Any
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.const import STATE_OFF
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -17,9 +17,11 @@ from tinkerforge.ip_connection import Error, IPConnection
 
 from .const import (
     CONF_FAN_ENABLED,
+    CONF_FAN_DEFAULT_PERCENTAGE,
     CONF_TINKERFORGE_HOST,
     CONF_TINKERFORGE_PORT,
     CONF_TINKERFORGE_UID,
+    DEFAULT_FAN_DEFAULT_PERCENTAGE,
 )
 from .coordinator import NovusCoordinator
 
@@ -46,6 +48,9 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self._host = config[CONF_TINKERFORGE_HOST]
         self._port = config[CONF_TINKERFORGE_PORT]
         self._uid = config[CONF_TINKERFORGE_UID]
+        self._default_percentage = config.get(
+            CONF_FAN_DEFAULT_PERCENTAGE, DEFAULT_FAN_DEFAULT_PERCENTAGE
+        )
         self._percentage: int | None = None
         self._available = False
         self._ipcon: IPConnection | None = None
@@ -75,8 +80,12 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
 
     @property
     def supported_features(self) -> FanEntityFeature:
-        """Return no controls for this read-only fan entity."""
-        return FanEntityFeature(0)
+        """Return controls only while the panel selects automatic mode."""
+        return (
+            FanEntityFeature.SET_SPEED
+            if self.coordinator.data.get("ventilation_mode") == "automatic"
+            else FanEntityFeature(0)
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -109,16 +118,28 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
             self._available = True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Reject writes to the read-only analog output."""
-        self._raise_read_only()
+        """Enable the output at the requested or configured default percentage."""
+        percentage = kwargs.get(ATTR_PERCENTAGE, self._default_percentage)
+        await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Reject writes to the read-only analog output."""
-        self._raise_read_only()
+        """Set the analog output to zero."""
+        await self.async_set_percentage(0)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Reject writes to the read-only analog output."""
-        self._raise_read_only()
+        """Set the 0-10 V output percentage in panel automatic mode."""
+        self._ensure_panel_automatic()
+        target = max(0, min(100, round(percentage)))
+        try:
+            await self.hass.async_add_executor_job(self._set_percentage, target)
+        except (Error, OSError) as err:
+            self._available = False
+            raise HomeAssistantError(
+                f"Unable to set Novus fan control: {err}"
+            ) from err
+        self._percentage = target
+        self._available = True
+        self.async_write_ha_state()
 
     def _connect(self) -> BrickletIndustrialAnalogOutV2:
         """Connect to the configured Tinkerforge analog output."""
@@ -133,10 +154,19 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         with self._lock:
             return round(self._connect().get_voltage() / 100)
 
-    @staticmethod
-    def _raise_read_only() -> None:
-        """Raise an explicit error for unsupported write attempts."""
-        raise HomeAssistantError("Novus fan control is read-only")
+    def _ensure_panel_automatic(self) -> None:
+        """Allow analog control only while the panel selects automatic mode."""
+        if self.coordinator.data.get("ventilation_mode") != "automatic":
+            raise HomeAssistantError(
+                "Novus fan control is available only in panel automatic mode"
+            )
+
+    def _set_percentage(self, percentage: int) -> None:
+        """Set the analog output voltage."""
+        with self._lock:
+            analog_out = self._connect()
+            analog_out.set_voltage(percentage * 100)
+            analog_out.set_enabled(True)
 
     def _disconnect(self) -> None:
         """Disconnect the Tinkerforge client."""

@@ -17,10 +17,14 @@
           "serial_port": "Serial device",
           "baudrate": "Baud rate",
           "parity": "Parity",
-          "fan_enabled": "Show 0-10 V fan status",
+          "fan_enabled": "Enable 0-10 V fan control",
           "tinkerforge_host": "Tinkerforge host",
           "tinkerforge_port": "Tinkerforge port",
-          "tinkerforge_uid": "Industrial Analog Out UID"
+          "tinkerforge_uid": "Industrial Analog Out UID",
+          "fan_default_percentage": "Default fan percentage",
+          "fan_automatic_entity": "Automatic mode helper entity",
+          "boost_percentage": "Boost fan percentage",
+          "boost_duration_minutes": "Boost duration in minutes"
         }
       }
     }
@@ -42,6 +46,17 @@
           "transition": "Transition",
           "unknown": "Unknown"
         }
+      },
+      "ventilation_mode": {
+        "state": {
+          "automatic": "Automatic",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "boost": "Boost ventilation",
+          "away": "Away",
+          "unknown": "Unknown"
+        }
       }
     },
     "binary_sensor": {
@@ -50,17 +65,6 @@
           "on": "Open",
           "off": "Closed"
         }
-      }
-    },
-    "ventilation_mode": {
-      "state": {
-        "automatic": "Automatic",
-        "level_1": "Level 1",
-        "level_2": "Level 2",
-        "level_3": "Level 3",
-        "boost": "Boost ventilation",
-        "away": "Away",
-        "unknown": "Unknown"
       }
     }
   }
