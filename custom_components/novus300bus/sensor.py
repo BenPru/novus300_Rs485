@@ -26,6 +26,7 @@ class NovusSensorDescription:
     native_unit_of_measurement: str | None = None
     state_class: SensorStateClass | None = None
     entity_category: EntityCategory | None = None
+    options: tuple[str, ...] | None = None
 
 
 SENSORS = (
@@ -65,8 +66,20 @@ SENSORS = (
     ),
     NovusSensorDescription(
         "run_state",
+        "Betriebsstatus",
+        SensorDeviceClass.ENUM,
+        options=("stopped", "running", "starting", "unknown"),
+    ),
+    NovusSensorDescription(
+        "run_state_raw",
         "Betriebsstatus Rohwert",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NovusSensorDescription(
+        "air_path",
+        "Luftweg",
+        SensorDeviceClass.ENUM,
+        options=("heat_recovery", "bypass", "transition", "unknown"),
     ),
     NovusSensorDescription(
         "status_word",
@@ -131,6 +144,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         self._attr_state_class = description.state_class
         self._attr_entity_category = description.entity_category
+        self._attr_options = description.options
+        self.entity_id = f"sensor.novus300_{description.key}"
         self._attr_device_info = {
             "identifiers": {("novus300bus", "novus300")},
             "name": "Paul Novus 300",
@@ -144,7 +159,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity):
         return self.entity_description.key in self.coordinator.data
 
     @property
-    def native_value(self) -> float | int | None:
+    def native_value(self) -> float | int | str | None:
         """Return the decoded register value."""
         value = self.coordinator.data.get(self.entity_description.key)
-        return value if isinstance(value, float | int) else None
+        return value if isinstance(value, float | int | str) else None

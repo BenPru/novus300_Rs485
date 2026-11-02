@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+NovusValue = float | int | bool | str
 
 REGISTER_WIDTHS = {
     0x08: 1,
@@ -41,6 +42,12 @@ COUNTER_REGISTERS = {
     0x85: "fan_operating_time",
 }
 
+RUN_STATES = {
+    0: "stopped",
+    1: "running",
+    3: "starting",
+}
+
 
 def crc16_ccitt(data: bytes) -> int:
     """Return the protocol's CRC-16/CCITT value."""
@@ -65,8 +72,8 @@ def _duration_seconds(raw: bytes) -> int:
     return (((years * 365 + days) * 24 + hour) * 60 + minute) * 60
 
 
-def _decode_registers(payload: bytes) -> dict[str, float | int | bool]:
-    readings: dict[str, float | int | bool] = {}
+def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
+    readings: dict[str, NovusValue] = {}
     offset = 0
     while offset + 2 <= len(payload):
         register = int.from_bytes(payload[offset : offset + 2], "little")
@@ -84,10 +91,22 @@ def _decode_registers(payload: bytes) -> dict[str, float | int | bool]:
             readings["fan_setpoint"] = int.from_bytes(raw, "little") / 10
         elif register == 0x1A:
             status_word = raw[0]
-            readings["bypass_open"] = bool(status_word & 0x20)
+            heat_recovery = bool(status_word & 0x08)
+            bypass = bool(status_word & 0x20)
+            if heat_recovery and bypass:
+                air_path = "transition"
+            elif bypass:
+                air_path = "bypass"
+            elif heat_recovery:
+                air_path = "heat_recovery"
+            else:
+                air_path = "unknown"
+            readings["air_path"] = air_path
+            readings["bypass_open"] = air_path in ("bypass", "transition")
             readings["status_word"] = status_word
         elif register == 0x1D:
-            readings["run_state"] = raw[0]
+            readings["run_state"] = RUN_STATES.get(raw[0], "unknown")
+            readings["run_state_raw"] = raw[0]
         elif register in COUNTER_REGISTERS:
             readings[COUNTER_REGISTERS[register]] = _duration_seconds(raw)
     return readings
@@ -99,7 +118,7 @@ class NovusFrameParser:
     def __init__(self) -> None:
         self._buffer = bytearray()
 
-    def feed(self, data: bytes) -> list[Mapping[str, float | int | bool]]:
+    def feed(self, data: bytes) -> list[Mapping[str, NovusValue]]:
         """Return readings from every valid register-data frame in `data`."""
         self._buffer.extend(data)
         readings: list[Mapping[str, float | int | bool]] = []

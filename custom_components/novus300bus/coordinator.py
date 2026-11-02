@@ -12,12 +12,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_BAUDRATE, CONF_PARITY, CONF_SERIAL_PORT, DOMAIN
-from .protocol import NovusFrameParser
+from .protocol import NovusFrameParser, NovusValue
 
 LOGGER = logging.getLogger(__name__)
 
 
-class NovusCoordinator(DataUpdateCoordinator[dict[str, float | int | bool]]):
+class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     """Read bus frames continuously in a dedicated serial thread."""
 
     def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
@@ -28,7 +28,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, float | int | bool]]):
         self._serial_lock = threading.Lock()
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
-        self._values: dict[str, float | int | bool] = {}
+        self._values: dict[str, NovusValue] = {}
         self.data = {}
 
     async def async_start(self) -> None:
@@ -90,7 +90,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, float | int | bool]]):
                 with self._serial_lock:
                     self._serial = None
 
-    def _async_publish(self, readings: dict[str, float | int | bool]) -> None:
+    def _async_publish(self, readings: dict[str, NovusValue]) -> None:
         """Publish decoded readings on Home Assistant's event loop."""
         self._values.update(readings)
         self.async_set_updated_data(dict(self._values))

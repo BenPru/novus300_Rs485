@@ -25,6 +25,7 @@ class NovusBypassSensor(CoordinatorEntity[NovusCoordinator], BinarySensorEntity)
     def __init__(self, coordinator: NovusCoordinator) -> None:
         """Initialize the bypass sensor."""
         super().__init__(coordinator)
+        self.entity_id = "binary_sensor.novus300_bypass"
         self._attr_device_info = {
             "identifiers": {("novus300bus", "novus300")},
             "name": "Paul Novus 300",

@@ -33,14 +33,23 @@ class NovusFrameParserTest(unittest.TestCase):
 
         readings = parser.feed(bytes.fromhex("0100850335771a000d"))
 
-        self.assertEqual(readings, [{"bypass_open": False, "status_word": 13}])
+        self.assertEqual(
+            readings,
+            [
+                {
+                    "air_path": "heat_recovery",
+                    "bypass_open": False,
+                    "status_word": 13,
+                }
+            ],
+        )
 
     def test_repairs_missing_frame_marker(self) -> None:
         parser = NovusFrameParser()
 
         readings = parser.feed(bytes.fromhex("0000850329331d0001"))
 
-        self.assertEqual(readings, [{"run_state": 1}])
+        self.assertEqual(readings, [{"run_state": "running", "run_state_raw": 1}])
 
 
 if __name__ == "__main__":
