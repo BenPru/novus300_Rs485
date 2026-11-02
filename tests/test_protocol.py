@@ -2,7 +2,7 @@
 
 import unittest
 
-from custom_components.novus300bus.protocol import NovusFrameParser
+from custom_components.novus300bus.protocol import NovusFrameParser, crc16_ccitt
 
 
 class NovusFrameParserTest(unittest.TestCase):
@@ -50,6 +50,21 @@ class NovusFrameParserTest(unittest.TestCase):
         readings = parser.feed(bytes.fromhex("0000850329331d0001"))
 
         self.assertEqual(readings, [{"run_state": "running", "run_state_raw": 1}])
+
+    def test_decodes_panel_ventilation_mode(self) -> None:
+        parser = NovusFrameParser()
+        payload = bytes.fromhex("270006")
+        header = bytes((0x01, 0x00, 0x85, len(payload)))
+        crc = crc16_ccitt(header + payload)
+
+        readings = parser.feed(
+            header + bytes((crc & 0xFF, crc >> 8)) + payload
+        )
+
+        self.assertEqual(
+            readings,
+            [{"ventilation_mode": "automatic", "ventilation_mode_raw": 6}],
+        )
 
 
 if __name__ == "__main__":

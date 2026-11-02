@@ -55,6 +55,16 @@
           "off": "Zu"
         }
       }
+    },
+    "ventilation_mode": {
+      "state": {
+        "automatic": "Automatik",
+        "level_1": "Lüftungsstufe 1",
+        "level_2": "Lüftungsstufe 2",
+        "level_3": "Lüftungsstufe 3",
+        "boost": "Stoßlüftung",
+        "unknown": "Unbekannt"
+      }
     }
   }
 }

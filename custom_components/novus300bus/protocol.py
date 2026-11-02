@@ -48,6 +48,14 @@ RUN_STATES = {
     3: "starting",
 }
 
+VENTILATION_MODES = {
+    1: "level_1",
+    2: "level_2",
+    3: "level_3",
+    4: "boost",
+    6: "automatic",
+}
+
 
 def crc16_ccitt(data: bytes) -> int:
     """Return the protocol's CRC-16/CCITT value."""
@@ -107,6 +115,9 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
         elif register == 0x1D:
             readings["run_state"] = RUN_STATES.get(raw[0], "unknown")
             readings["run_state_raw"] = raw[0]
+        elif register == 0x27:
+            readings["ventilation_mode"] = VENTILATION_MODES.get(raw[0], "unknown")
+            readings["ventilation_mode_raw"] = raw[0]
         elif register in COUNTER_REGISTERS:
             readings[COUNTER_REGISTERS[register]] = _duration_seconds(raw)
     return readings
