@@ -53,6 +53,19 @@ class NovusFrameParserTest(unittest.TestCase):
 
     def test_decodes_panel_ventilation_mode(self) -> None:
         parser = NovusFrameParser()
+        payload = bytes.fromhex("270000")
+        header = bytes((0x01, 0x00, 0x85, len(payload)))
+        crc = crc16_ccitt(header + payload)
+
+        readings = parser.feed(
+            header + bytes((crc & 0xFF, crc >> 8)) + payload
+        )
+
+        self.assertEqual(
+            readings,
+            [{"ventilation_mode": "standby", "ventilation_mode_raw": 0}],
+        )
+
         payload = bytes.fromhex("270006")
         header = bytes((0x01, 0x00, 0x85, len(payload)))
         crc = crc16_ccitt(header + payload)

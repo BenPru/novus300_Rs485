@@ -27,7 +27,10 @@
           "boost_duration_minutes": "Dauer der Stoßlüftung in Minuten",
           "fan_level_1_percentage": "Panel-Lüftungsstufe 1 in Prozent",
           "fan_level_2_percentage": "Panel-Lüftungsstufe 2 in Prozent",
-          "fan_level_3_percentage": "Panel-Lüftungsstufe 3 in Prozent"
+          "fan_level_3_percentage": "Panel-Lüftungsstufe 3 in Prozent",
+          "fan_boost_percentage": "Panel-Stoßlüftung in Prozent",
+          "fan_away_percentage": "Panel-Abwesend in Prozent",
+          "fan_standby_percentage": "Panel-Standby in Prozent"
         }
       }
     }
@@ -52,6 +55,7 @@
       },
       "ventilation_mode": {
         "state": {
+          "standby": "Standby",
           "automatic": "Automatik",
           "level_1": "Lüftungsstufe 1",
           "level_2": "Lüftungsstufe 2",

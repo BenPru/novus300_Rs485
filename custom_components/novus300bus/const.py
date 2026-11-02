@@ -18,6 +18,9 @@ CONF_BOOST_DURATION_MINUTES: Final = "boost_duration_minutes"
 CONF_FAN_LEVEL_1_PERCENTAGE: Final = "fan_level_1_percentage"
 CONF_FAN_LEVEL_2_PERCENTAGE: Final = "fan_level_2_percentage"
 CONF_FAN_LEVEL_3_PERCENTAGE: Final = "fan_level_3_percentage"
+CONF_FAN_BOOST_PERCENTAGE: Final = "fan_boost_percentage"
+CONF_FAN_AWAY_PERCENTAGE: Final = "fan_away_percentage"
+CONF_FAN_STANDBY_PERCENTAGE: Final = "fan_standby_percentage"
 
 DEFAULT_SERIAL_PORT: Final = "/dev/ttyNovus300"
 DEFAULT_BAUDRATE: Final = 9600
@@ -33,5 +36,8 @@ DEFAULT_BOOST_DURATION_MINUTES: Final = 15
 DEFAULT_FAN_LEVEL_1_PERCENTAGE: Final = 35
 DEFAULT_FAN_LEVEL_2_PERCENTAGE: Final = 60
 DEFAULT_FAN_LEVEL_3_PERCENTAGE: Final = 90
+DEFAULT_FAN_BOOST_PERCENTAGE: Final = 75
+DEFAULT_FAN_AWAY_PERCENTAGE: Final = 15
+DEFAULT_FAN_STANDBY_PERCENTAGE: Final = 0
 
 PARITY_OPTIONS: Final = ("none", "mark")

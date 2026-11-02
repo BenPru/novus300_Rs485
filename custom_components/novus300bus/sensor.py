@@ -71,6 +71,7 @@ SENSORS = (
         "Lüftungsstufe",
         SensorDeviceClass.ENUM,
         options=(
+            "standby",
             "automatic",
             "level_1",
             "level_2",
@@ -261,6 +262,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
                 "unknown": "mdi:help-circle-outline",
             },
             "ventilation_mode": {
+                "standby": "mdi:power-standby",
                 "automatic": "mdi:auto-mode",
                 "level_1": "mdi:fan-speed-1",
                 "level_2": "mdi:fan-speed-2",
