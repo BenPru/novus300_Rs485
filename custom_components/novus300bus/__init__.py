@@ -13,7 +13,7 @@ PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Novus integration from a config entry."""
-    coordinator = NovusCoordinator(hass, dict(entry.data))
+    coordinator = NovusCoordinator(hass, dict(entry.data), entry.entry_id)
     entry.runtime_data = coordinator
     await coordinator.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
