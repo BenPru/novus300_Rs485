@@ -1,7 +1,7 @@
 {
   "domain": "novus300bus",
   "name": "Paul Novus 300 RS-485 Bus",
-  "version": "2026.11.02",
+  "version": "2026.11.02.1",
   "config_flow": true,
   "documentation": "https://github.com/BenPru/novus300_Rs485",
   "codeowners": ["@BenPru"],
