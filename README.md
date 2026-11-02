@@ -15,33 +15,35 @@ The `Novus300-RS485` integration lets you read out values from a ventilation sys
 
 ## Configuration
 
-To enable this component, add the following lines to your `configuration.yaml` file:
+Install the repository through HACS, then add **Paul Novus 300 RS-485 Bus**
+from **Settings → Devices & services → Add integration**.
 
-```
-- platform: novus300bus
-  serial_port: /dev/ttyUSB0
-  # optional:
-  # baudrate: 9600
-  # name: ...
-```
+The default serial path is `/dev/ttyNovus300`, intended for a serial-over-TCP
+bridge exposed to the Home Assistant container as a pseudo-terminal. For a
+directly attached adapter, select its stable `/dev/serial/by-id/...` path and
+choose `mark` parity. The integration only reads the bus and never sends bytes
+to the ventilation system.
 
 **Note:**
 Not all data received by the this controller is understood by now as the protocol is not publicly documented.  
 
-## Sensor
-This sensor allows you to monitor the following status values:
-- novus300_temp_house_air_out
-- novus300_temp_indoor
-- novus300_temp_indoor_in
-- novus300_temp_outdoor
+## Sensors
 
-TODO Sensors:
-- novus300_heat_recovery
-- Filter days
+The integration creates entities for:
 
-## Todo
+- supply, outdoor, extract and exhaust air temperatures
+- bypass status
+- fan setpoint, including automatically/external controlled operation
+- raw run state and status word for diagnostics
+- total and fan operating time, plus filter interval and remaining filter time
+  when the controller broadcasts its restart register dump
 
-- Remove hardcoded sensors and read them as config
-- Add filter time as sensor
-- Add project to hacs
-- Add dokumentation how to connect USB RS-485
+## Protocol notes
+
+The bus uses 9600 baud with a ninth marker bit. A PC UART can receive a
+directly attached bus with mark parity. For a TCP bridge the parity has already
+been handled by the remote serial reader, so use `none` in the integration.
+
+Not every register is emitted continuously. In particular, filter and operating
+time counters are sent as part of the controller's full register dump after a
+restart.

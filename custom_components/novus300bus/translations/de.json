@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "serial_port": "Serielles Gerät",
+          "baudrate": "Baudrate",
+          "parity": "Parität"
+        }
+      }
+    }
+  }
+}

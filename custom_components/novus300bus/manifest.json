@@ -1,12 +1,11 @@
 {
   "domain": "novus300bus",
   "name": "Paul Novus 300 RS-485 Bus",
-  "version": "2021.09.20",
-  "documentation": "https://www.home-assistant.io/integrations/novus300bus",
-  "dependencies": [],
-  "after_dependencies": ["http"],
+  "version": "2026.11.02",
+  "config_flow": true,
+  "documentation": "https://github.com/BenPru/novus300_Rs485",
   "codeowners": ["@BenPru"],
   "requirements": ["pyserial>=3.5"],
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "issue_tracker": "https://github.com/BenPru/novus300_Rs485/issues"
 }
