@@ -5,6 +5,8 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 ## 2026.11.17
 
 ### Added
+- **Filter runtime reset:** `button.novus300_filter_reset` and `novus300bus.reset_filter` service.
+- **Filter interval is now an option** (30–180 d) written to the unit; `sensor.novus300_filter_interval` was removed.
 - **Send the ventilation mode over RS-485:** `select.novus300_ventilation_mode` sets automatic, levels 1–3, away and boost directly on the bus.
 - **`button.novus300_boost`** triggers the boost level on the bus (no longer via 0-10 V).
 - **`novus300bus.sync_clock` service** to trigger the clock synchronization manually.

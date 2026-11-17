@@ -27,7 +27,8 @@
           "tinkerforge_host": "0-10 V: Tinkerforge-Host",
           "tinkerforge_port": "0-10 V: Tinkerforge-Port",
           "tinkerforge_uid": "0-10 V: UID des Industrial Analog Out",
-          "fan_automatic_entity": "0-10 V: Helfer-Entität für Automatikmodus"
+          "fan_automatic_entity": "0-10 V: Helfer-Entität für Automatikmodus",
+          "filter_interval_days": "Filterintervall"
         }
       }
     }
@@ -76,6 +77,10 @@
     "sync_clock": {
       "name": "Uhrzeit synchronisieren",
       "description": "Setzt Datum und Uhrzeit der Anlage auf die lokale Zeit von Home Assistant."
+    },
+    "reset_filter": {
+      "name": "Filterlaufzeit zurücksetzen",
+      "description": "Startet die Filterlaufzeit mit dem eingestellten Intervall neu."
     }
   }
 }

@@ -127,6 +127,8 @@ These values live in the unit. The ventilation levels are plain number fields
 | Boost duration | 5 min | 20 min |
 | Away: ventilation time | 15 / 30 / 45 min/h | 30 min/h |
 
+The filter interval (30–180 days, 10-day steps) is a dropdown in the options; saving writes it to the unit. `button.novus300_filter_reset` and the `novus300bus.reset_filter` service reset the filter runtime (both registers set to the configured interval).
+
 Saving the options writes all five values to the unit over the RS-485 bridge.
 The unit cannot be queried for them; the integration remembers the values last
 seen on the bus (when saved on the panel) and offers them as defaults. Boost and

@@ -105,14 +105,6 @@ SENSORS = (
         SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    NovusSensorDescription(
-        "filter_interval",
-        "Filterintervall",
-        SensorDeviceClass.DURATION,
-        UnitOfTime.DAYS,
-        SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 )
 
 
@@ -159,7 +151,6 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             "operating_time",
             "fan_operating_time",
             "filter_time_remaining",
-            "filter_interval",
         ):
             return
 
@@ -186,8 +177,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             restored_value /= 3600
         elif (
             previous_unit == UnitOfTime.SECONDS
-            and self._description.key
-            in ("filter_time_remaining", "filter_interval")
+            and self._description.key == "filter_time_remaining"
         ):
             restored_value /= 86400
 
@@ -222,7 +212,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         ):
             return round(value / 3600, 2)
         if (
-            self._description.key in ("filter_time_remaining", "filter_interval")
+            self._description.key == "filter_time_remaining"
             and isinstance(value, float | int)
         ):
             return round(value / 86400, 2)

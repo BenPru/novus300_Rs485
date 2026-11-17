@@ -21,7 +21,7 @@ PLATFORMS = (
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the manual clock synchronization service."""
+    """Register the manual clock synchronization and filter reset services."""
 
     async def _sync_clock(call: ServiceCall) -> None:
         entries = hass.config_entries.async_loaded_entries(DOMAIN)
@@ -30,7 +30,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for entry in entries:
             await entry.runtime_data.async_sync_clock()
 
+    async def _reset_filter(call: ServiceCall) -> None:
+        entries = hass.config_entries.async_loaded_entries(DOMAIN)
+        if not entries:
+            raise HomeAssistantError("No loaded Novus 300 entry")
+        for entry in entries:
+            await entry.runtime_data.async_reset_filter()
+
     hass.services.async_register(DOMAIN, "sync_clock", _sync_clock)
+    hass.services.async_register(DOMAIN, "reset_filter", _reset_filter)
     return True
 
 

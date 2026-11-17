@@ -124,6 +124,28 @@ def build_date_frame(moment: datetime) -> bytes:
     )
 
 
+FILTER_INTERVAL_REGISTER = 0x3D
+FILTER_REMAINING_REGISTER = 0x3E
+FILTER_INTERVAL_DAYS = range(30, 181, 10)
+
+
+def _filter_days_value(register: int, days: int) -> bytes:
+    return bytes((register, 0x00, 0, 0, days & 0xFF, days >> 8, 0))
+
+
+def build_filter_interval_frame(days: int) -> bytes:
+    """Return the panel frame that stores the filter interval in days."""
+    return _build_register_write(_filter_days_value(FILTER_INTERVAL_REGISTER, days))
+
+
+def build_filter_reset_frame(days: int) -> bytes:
+    """Return the panel frame that restarts the filter run time at `days`."""
+    return _build_register_write(
+        _filter_days_value(FILTER_INTERVAL_REGISTER, days)
+        + _filter_days_value(FILTER_REMAINING_REGISTER, days)
+    )
+
+
 def build_setting_frame(key: str, value: int) -> bytes:
     """Return the panel frame that stores one menu setting in the unit."""
     register = next(reg for reg, name in SETTING_REGISTERS.items() if name == key)

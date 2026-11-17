@@ -26,6 +26,7 @@ from .const import (
     CONF_FAN_LEVEL_3_PERCENTAGE,
     DEFAULT_AWAY_DURATION_MINUTES,
     DEFAULT_BOOST_DURATION_MINUTES,
+    DEFAULT_FILTER_INTERVAL_DAYS,
     CONF_DAILY_TIME_SYNC,
     DAILY_TIME_SYNC_HOUR,
     DEFAULT_DAILY_TIME_SYNC,
@@ -42,7 +43,10 @@ from .protocol import (
     SETTING_REGISTERS,
     NovusValue,
     VENTILATION_MODES,
+    FILTER_INTERVAL_DAYS,
     build_date_frame,
+    build_filter_interval_frame,
+    build_filter_reset_frame,
     build_mode_request,
     build_setting_frame,
     build_time_frame,
@@ -282,6 +286,30 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             await asyncio.sleep(1)
             self._values[key] = int(value)
         self._counter_store.async_delay_save(self._persisted_values, 5)
+        self.async_set_updated_data(dict(self._values))
+
+    def filter_interval_days(self) -> int:
+        """Return the filter interval last seen on the bus, in days."""
+        seconds = self._values.get("filter_interval")
+        if isinstance(seconds, float | int) and not isinstance(seconds, bool):
+            return round(seconds / 86400)
+        return DEFAULT_FILTER_INTERVAL_DAYS
+
+    async def async_set_filter_interval(self, days: int) -> None:
+        """Store the filter interval in the unit, as the panel does."""
+        if days not in FILTER_INTERVAL_DAYS:
+            raise HomeAssistantError("Filter interval must be 30 to 180 days in steps of 10")
+        await self._async_send(build_filter_interval_frame(days))
+        self._values["filter_interval"] = days * 86400
+        self.async_set_updated_data(dict(self._values))
+
+    async def async_reset_filter(self) -> None:
+        """Restart the filter run time at the configured interval."""
+        days = self.filter_interval_days()
+        if days not in FILTER_INTERVAL_DAYS:
+            raise HomeAssistantError(f"Unexpected filter interval of {days} days")
+        await self._async_send(build_filter_reset_frame(days))
+        self._values["filter_time_remaining"] = days * 86400
         self.async_set_updated_data(dict(self._values))
 
     async def async_sync_clock(self) -> None:

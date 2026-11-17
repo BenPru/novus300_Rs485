@@ -15,6 +15,7 @@ from .const import (
     CONF_BAUDRATE,
     CONF_DAILY_TIME_SYNC,
     CONF_BOOST_DURATION_MINUTES,
+    CONF_FILTER_INTERVAL_DAYS,
     CONF_FAN_AUTOMATIC_ENTITY,
     CONF_FAN_ENABLED,
     CONF_FAN_LEVEL_1_PERCENTAGE,
@@ -26,6 +27,7 @@ from .const import (
     CONF_TINKERFORGE_PORT,
     CONF_TINKERFORGE_UID,
     DEFAULT_AWAY_DURATION_MINUTES,
+    DEFAULT_FILTER_INTERVAL_DAYS,
     DEFAULT_BAUDRATE,
     DEFAULT_DAILY_TIME_SYNC,
     DEFAULT_BOOST_DURATION_MINUTES,
@@ -52,10 +54,12 @@ BUS_SETTING_KEYS = (
     CONF_BOOST_DURATION_MINUTES,
     CONF_AWAY_DURATION_MINUTES,
 )
+INT_KEYS = (*BUS_SETTING_KEYS, CONF_FILTER_INTERVAL_DAYS)
 
 SETTING_GRIDS = {
     CONF_BOOST_DURATION_MINUTES: range(5, 121, 5),
     CONF_AWAY_DURATION_MINUTES: range(15, 46, 15),
+    CONF_FILTER_INTERVAL_DAYS: range(30, 181, 10),
 }
 PERCENTAGE_KEYS = (
     CONF_FAN_LEVEL_1_PERCENTAGE,
@@ -67,6 +71,8 @@ PERCENTAGE_KEYS = (
 def _label(key: str, value: int) -> str:
     if key == CONF_AWAY_DURATION_MINUTES:
         return f"{value} min/h"
+    if key == CONF_FILTER_INTERVAL_DAYS:
+        return f"{value} d"
     return f"{value} min"
 
 
@@ -142,6 +148,10 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
 
     def _value(self, key: str, default: str | int | bool) -> str | int | bool:
         """Return a bus setting as known by the unit, else the stored option."""
+        if key == CONF_FILTER_INTERVAL_DAYS:
+            coordinator = getattr(self._config_entry, "runtime_data", None)
+            if coordinator is not None:
+                return coordinator.filter_interval_days()
         if key in BUS_SETTING_KEYS:
             coordinator = getattr(self._config_entry, "runtime_data", None)
             if coordinator is not None:
@@ -156,7 +166,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         """Configure the bus, the unit's settings and optional 0-10 V control."""
         if user_input is not None:
             user_input = {
-                key: int(value) if key in BUS_SETTING_KEYS else value
+                key: int(value) if key in INT_KEYS else value
                 for key, value in user_input.items()
             }
             coordinator = getattr(self._config_entry, "runtime_data", None)
@@ -165,6 +175,9 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                     await coordinator.async_write_settings(
                         {key: user_input[key] for key in BUS_SETTING_KEYS}
                     )
+                    interval = user_input[CONF_FILTER_INTERVAL_DAYS]
+                    if interval != coordinator.filter_interval_days():
+                        await coordinator.async_set_filter_interval(interval)
                 except HomeAssistantError as err:
                     LOGGER.warning("Unable to write settings to the Novus: %s", err)
             return self.async_create_entry(title="", data=user_input)
@@ -191,6 +204,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             (CONF_FAN_LEVEL_3_PERCENTAGE, DEFAULT_FAN_LEVEL_3_PERCENTAGE),
             (CONF_BOOST_DURATION_MINUTES, DEFAULT_BOOST_DURATION_MINUTES),
             (CONF_AWAY_DURATION_MINUTES, DEFAULT_AWAY_DURATION_MINUTES),
+            (CONF_FILTER_INTERVAL_DAYS, DEFAULT_FILTER_INTERVAL_DAYS),
         ):
             current = int(self._value(key, default))
             if key in PERCENTAGE_KEYS:

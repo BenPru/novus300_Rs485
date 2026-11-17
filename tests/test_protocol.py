@@ -6,6 +6,8 @@ from datetime import datetime
 from custom_components.novus300bus.protocol import (
     NovusFrameParser,
     build_date_frame,
+    build_filter_interval_frame,
+    build_filter_reset_frame,
     build_setting_frame,
     build_time_frame,
     crc16_ccitt,
@@ -139,6 +141,16 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(
             build_setting_frame("fan_level_3_percentage", 90).hex(),
             "01008503201c30005a",
+        )
+
+    def test_filter_frames_match_panel(self):
+        self.assertEqual(build_filter_interval_frame(110).hex(), "01008507c2e43d0000006e0000")
+        self.assertEqual(build_filter_interval_frame(90).hex(), "01008507a7fd3d0000005a0000")
+        self.assertEqual(
+            build_filter_reset_frame(110).hex(), "0100850e838e3d0000006e00003e0000006e0000"
+        )
+        self.assertEqual(
+            build_filter_reset_frame(90).hex(), "0100850e48973d0000005a00003e0000005a0000"
         )
 
 

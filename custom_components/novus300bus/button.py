@@ -16,7 +16,12 @@ from .coordinator import NovusCoordinator
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up Novus buttons."""
     config = {**entry.data, **entry.options}
-    async_add_entities([NovusBoostButton(hass, entry.runtime_data, config)])
+    async_add_entities(
+        [
+            NovusBoostButton(hass, entry.runtime_data, config),
+            NovusFilterResetButton(entry.runtime_data),
+        ]
+    )
 
 
 class NovusBoostButton(ButtonEntity):
@@ -78,3 +83,26 @@ class NovusBoostButton(ButtonEntity):
         restore_mode, self._restore_mode = self._restore_mode, None
         if restore_mode and self._coordinator.data.get("ventilation_mode") == "boost":
             await self._coordinator.async_set_ventilation_mode(restore_mode)
+
+
+class NovusFilterResetButton(ButtonEntity):
+    """Restart the filter run time in the unit."""
+
+    _attr_name = "Filterlaufzeit zurücksetzen"
+    _attr_unique_id = "novus300bus_filter_reset"
+    _attr_icon = "mdi:air-filter"
+
+    def __init__(self, coordinator: NovusCoordinator) -> None:
+        """Initialize the filter reset button."""
+        self.entity_id = "button.novus300_filter_reset"
+        self._coordinator = coordinator
+        self._attr_device_info = {
+            "identifiers": {("novus300bus", "novus300")},
+            "name": "Paul Novus 300",
+            "manufacturer": "Paul",
+            "model": "Novus 300",
+        }
+
+    async def async_press(self) -> None:
+        """Reset the filter run time."""
+        await self._coordinator.async_reset_filter()

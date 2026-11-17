@@ -76,6 +76,20 @@ def clock_frame_kind(frame: bytes):
         weekday, day, month, year = payload[2:]
         valid = weekday < 7 and 1 <= day <= 31 and 1 <= month <= 12 and year < 100
         return "date" if valid else None
+    if frame[3] in (7, 14) and len(payload) == frame[3]:
+        entries = [payload[i : i + 7] for i in range(0, len(payload), 7)]
+        registers = (0x3D, 0x3E)[: len(entries)]
+        values = set()
+        for entry, register in zip(entries, registers):
+            minute, hour, days = entry[2], entry[3], entry[4] | entry[5] << 8
+            if entry[:2] != bytes((register, 0)) or minute or hour or entry[6]:
+                return None
+            if not 30 <= days <= 180 or days % 10:
+                return None
+            values.add(days)
+        if len(values) == 1:
+            return "filter_interval" if frame[3] == 7 else "filter_reset"
+        return None
     if frame[3] == 3 and len(frame) == 9 and frame[7] == 0:
         limits = {0x2E: (0, 100), 0x2F: (0, 100), 0x30: (0, 100), 0x3B: (1, 240), 0x3C: (1, 240)}
         low, high = limits.get(frame[6], (1, 0))

@@ -135,6 +135,8 @@ Diese Werte liegen in der Anlage. Die Lüftungsstufen sind normale Zahlenfelder
 | Dauer Stoßlüftung | 5 min | 20 min |
 | Abwesend: Lüftungszeit | 15 / 30 / 45 min/h | 30 min/h |
 
+Das Filterintervall (30–180 Tage, 10-Tage-Schritte) ist eine Auswahlliste in den Optionen und wird beim Speichern in die Anlage geschrieben. `button.novus300_filter_reset` und der Dienst `novus300bus.reset_filter` setzen die Filterlaufzeit zurück (beide Register auf das eingestellte Intervall).
+
 Beim Speichern der Optionen werden alle fünf Werte über die RS-485-Bridge in die
 Anlage geschrieben. Die Anlage lässt sich dazu nicht abfragen; die Integration
 merkt sich die zuletzt auf dem Bus gesehenen Werte (Speichern am Bedienteil) und
