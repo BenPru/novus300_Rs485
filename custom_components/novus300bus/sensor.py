@@ -14,6 +14,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONF_AWAY_DURATION_MINUTES
 from .coordinator import NovusCoordinator
 
 
@@ -255,10 +256,15 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             bus_value = self.coordinator.data.get("fan_setpoint")
             panel_mode = self.coordinator.data.get("ventilation_mode")
             if isinstance(bus_value, float | int) and isinstance(panel_mode, str):
-                return {
+                attributes: dict[str, float | int | str] = {
                     "bus_value": bus_value,
                     "panel_mode": panel_mode,
                 }
+                if panel_mode == "away":
+                    attributes["away_minutes_per_hour"] = (
+                        self.coordinator.setting_value(CONF_AWAY_DURATION_MINUTES)
+                    )
+                return attributes
         raw_key = {
             "run_state": "run_state_raw",
             "air_path": "status_word",

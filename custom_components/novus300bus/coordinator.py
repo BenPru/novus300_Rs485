@@ -322,10 +322,12 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         self.async_set_updated_data(dict(self._values))
 
     def fan_level_percentage(self, mode: str) -> int | None:
-        """Return the unit's percentage for a fixed ventilation level."""
+        """Return the percentage of the level a mode runs at (boost: 3, away: 1)."""
         key = {
             "level_1": CONF_FAN_LEVEL_1_PERCENTAGE,
             "level_2": CONF_FAN_LEVEL_2_PERCENTAGE,
             "level_3": CONF_FAN_LEVEL_3_PERCENTAGE,
+            "boost": CONF_FAN_LEVEL_3_PERCENTAGE,
+            "away": CONF_FAN_LEVEL_1_PERCENTAGE,
         }.get(mode)
         return None if key is None else self.setting_value(key)

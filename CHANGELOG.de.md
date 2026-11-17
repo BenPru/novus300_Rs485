@@ -17,6 +17,8 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - Options-Dialog neu geordnet: Serielle Verbindung, tägliche Synchronisation, Stufen in %, Dauer Stoßlüftung, Abwesend (min/h), danach die 0-10-V-Einstellungen; Stufen sind normale Zahlenfelder (0–100 %), Zeiten Auswahllisten, Bezeichnungen vereinheitlicht.
 - Abwesend ist jetzt „Lüftungszeit pro Stunde“ (15 / 30 / 45 min/h laut Anleitung) statt einer Dauer.
 
+- `sensor.novus300_fan_setpoint` zeigt den Stufen-% auch bei Stoßlüftung (Stufe 3) und Abwesend (Stufe 1, Attribut `away_minutes_per_hour`). Auf dem Bus ist es nur das gemessene 0-10-V-Steuersignal, nicht die echte Drehzahl.
+
 ### Entfernt
 - Prozentwerte für Stoßlüftung und Abwesend.
 - `sensor.novus300_clock` und `sensor.novus300_clock_drift`.

@@ -17,6 +17,8 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - Options dialog reordered: serial connection, daily sync, levels in %, boost duration, away time (min/h), then the 0-10 V settings. Levels are plain number fields (0–100 %), durations are dropdowns, labels unified.
 - Away is now "ventilation time per hour" (15 / 30 / 45 min/h, as in the manual) instead of a duration.
 
+- `sensor.novus300_fan_setpoint` shows the level percentage also for boost (level 3) and away (level 1, attribute `away_minutes_per_hour`). On the bus it is only the measured 0-10 V control signal, not the real fan speed.
+
 ### Removed
 - Percentage values for boost and away.
 - `sensor.novus300_clock` and `sensor.novus300_clock_drift`.
