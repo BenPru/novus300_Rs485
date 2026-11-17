@@ -65,7 +65,8 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
             "identifiers": {("novus300bus", "novus300")},
             "name": "Paul Novus 300",
             "manufacturer": "Paul",
-            "model": "Novus 300",
+            "model": "Novus 300 (FOCUS250)",
+            "sw_version": "BUS 1.7.1",
         }
 
     @property

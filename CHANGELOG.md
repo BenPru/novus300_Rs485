@@ -5,6 +5,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 ## 2026.11.17
 
 ### Added
+- **Device info:** model Novus 300 (FOCUS250), bus version 1.7.1; panel (ETA0036E29A), fan slave (SWZ0025B26A) and defroster (ST00064E24A) appear as sub-devices with serial numbers. Identifiers are read from the unit's start-up announcement; the known values are used as defaults.
 - **Unit off:** `fan.novus300` shows off (0 %, attribute `run_state`) while the unit reports "stopped"; temperatures, fan setpoint, air path and bypass become unavailable instead of showing stale values.
 - **Filter runtime reset:** `button.novus300_filter_reset` and `novus300bus.reset_filter` service.
 - **Filter interval is now an option** (30–180 d) written to the unit; `sensor.novus300_filter_interval` was removed.

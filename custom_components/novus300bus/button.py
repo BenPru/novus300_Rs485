@@ -47,7 +47,8 @@ class NovusBoostButton(ButtonEntity):
             "identifiers": {("novus300bus", "novus300")},
             "name": "Paul Novus 300",
             "manufacturer": "Paul",
-            "model": "Novus 300",
+            "model": "Novus 300 (FOCUS250)",
+            "sw_version": "BUS 1.7.1",
         }
 
     async def async_press(self) -> None:
@@ -100,7 +101,8 @@ class NovusFilterResetButton(ButtonEntity):
             "identifiers": {("novus300bus", "novus300")},
             "name": "Paul Novus 300",
             "manufacturer": "Paul",
-            "model": "Novus 300",
+            "model": "Novus 300 (FOCUS250)",
+            "sw_version": "BUS 1.7.1",
         }
 
     async def async_press(self) -> None:

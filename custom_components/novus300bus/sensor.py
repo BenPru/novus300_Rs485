@@ -151,7 +151,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             "identifiers": {("novus300bus", "novus300")},
             "name": "Paul Novus 300",
             "manufacturer": "Paul",
-            "model": "Novus 300",
+            "model": "Novus 300 (FOCUS250)",
+            "sw_version": "BUS 1.7.1",
         }
 
     async def async_added_to_hass(self) -> None:

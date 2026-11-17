@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from datetime import datetime
 
@@ -221,6 +222,22 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
     return readings
 
 
+IDENTITY_PATTERN = re.compile(rb"(ETA|SWZ|ST)[0-9A-Z]{8,9}")
+IDENTITY_KEYS = {
+    b"ETA": "serial_panel",
+    b"SWZ": "serial_fan_slave",
+    b"ST": "serial_defroster",
+}
+
+
+def _decode_identity(payload: bytes) -> dict[str, NovusValue]:
+    """Decode the component identifiers the unit announces at start-up."""
+    return {
+        IDENTITY_KEYS[match.group(1)]: match.group(0).decode()
+        for match in IDENTITY_PATTERN.finditer(payload)
+    }
+
+
 class NovusFrameParser:
     """Incrementally parse Novus RS-485 frames."""
 
@@ -266,6 +283,10 @@ class NovusFrameParser:
                 continue
 
             del self._buffer[:frame_length]
+            if candidate[2] in (0x81, 0x85):
+                identity = _decode_identity(candidate[6:])
+                if identity:
+                    readings.append(identity)
             if candidate[2] == 0x85:
                 decoded = _decode_registers(candidate[6:])
                 if decoded:

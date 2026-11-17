@@ -6,10 +6,38 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import NovusCoordinator
+
+SUB_DEVICES = (
+    ("serial_panel", "panel", "Bedienteil", "TFT"),
+    ("serial_fan_slave", "fan_slave", "Lüfter-Slave", "Slave"),
+    ("serial_defroster", "defroster", "Defroster", "Defroster"),
+)
+
+
+def _register_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Create the connected components as sub-devices of the unit."""
+    registry = dr.async_get(hass)
+    values = entry.runtime_data.data
+    main = registry.async_get_device(identifiers={(DOMAIN, "novus300")})
+    if main is None:
+        return
+    for key, slug, name, model in SUB_DEVICES:
+        serial = values.get(key)
+        if isinstance(serial, str):
+            registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, f"novus300_{slug}")},
+                via_device_id=main.id,
+                name=f"Novus 300 {name}",
+                manufacturer="Paul",
+                model=model,
+                serial_number=serial,
+            )
 
 PLATFORMS = (
     Platform.SENSOR,
@@ -50,6 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await coordinator.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _register_sub_devices(hass, entry)
+    entry.async_on_unload(
+        coordinator.async_add_listener(lambda: _register_sub_devices(hass, entry))
+    )
     return True
 
 

@@ -61,7 +61,15 @@ COUNTER_ENTITY_IDS = {
     "filter_interval": "sensor.novus300_filter_interval",
 }
 
+# Identifiers shown in the panel's software-version menu.
+KNOWN_IDENTITIES = {
+    "serial_panel": "ETA0036E29A",
+    "serial_fan_slave": "SWZ0025B26A",
+    "serial_defroster": "ST00064E24A",
+}
+
 PERSISTED_KEYS = {
+    *KNOWN_IDENTITIES,
     *COUNTER_ENTITY_IDS,
     "ventilation_mode",
     "ventilation_mode_raw",
@@ -90,7 +98,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         self._serial_lock = threading.Lock()
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
-        self._values: dict[str, NovusValue] = {}
+        self._values: dict[str, NovusValue] = dict(KNOWN_IDENTITIES)
         self._counter_store = Store[dict[str, NovusValue]](
             hass, 1, f"{DOMAIN}.{entry_id}.counters"
         )
