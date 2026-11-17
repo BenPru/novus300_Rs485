@@ -89,11 +89,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         coordinator.async_add_listener(lambda: _register_sub_devices(hass, entry))
     )
+    entry.async_on_unload(
+        coordinator.async_add_listener(lambda: _sync_settings_to_options(hass, entry))
+    )
     return True
+
+
+def _sync_settings_to_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Store menu settings sent by the unit in the options (no reload)."""
+    coordinator = entry.runtime_data
+    seen = coordinator.settings_from_bus()
+    if not seen or all(entry.options.get(k) == v for k, v in seen.items()):
+        return
+    coordinator.options_synced = True
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, **seen}
+    )
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the integration after its options change."""
+    if getattr(entry.runtime_data, "options_synced", False):
+        entry.runtime_data.options_synced = False
+        return
     await hass.config_entries.async_reload(entry.entry_id)
 
 

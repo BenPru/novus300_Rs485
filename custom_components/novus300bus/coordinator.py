@@ -289,6 +289,15 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         configured = self._config.get(key, SETTING_DEFAULTS[key])
         return int(configured)
 
+    def settings_from_bus(self) -> dict[str, int]:
+        """Return the menu settings the unit itself has sent."""
+        return {
+            key: value
+            for key in SETTING_DEFAULTS
+            if isinstance(value := self._values.get(key), int)
+            and not isinstance(value, bool)
+        }
+
     def message_history(self) -> list[dict[str, str]]:
         """Return the last unit messages seen on the bus (newest first)."""
         try:

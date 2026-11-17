@@ -20,6 +20,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - Dokumentation (EN/DE) und Tests für Uhr-, Datums- und Einstellungsframes.
 
 ### Geändert
+- Vom der Anlage gesendete Menüeinstellungen (Lüfterstufen, Stoßlüftung, Abwesend) werden automatisch in die Optionen der Integration übernommen (ohne Neuladen).
 - Anlageneinstellungen werden beim Schreiben nicht mehr zwischengespeichert; nur von der Anlage selbst gesendete Werte gelten als gelesen. Der Optionsdialog nennt, welche Werte noch Vorgaben sind. Standard Stoßlüftung 15 min (Werk).
 - Options-Dialog neu geordnet: Serielle Verbindung, tägliche Synchronisation, Stufen in %, Dauer Stoßlüftung, Abwesend (min/h), danach die 0-10-V-Einstellungen; Stufen sind normale Zahlenfelder (0–100 %), Zeiten Auswahllisten, Bezeichnungen vereinheitlicht.
 - Abwesend ist jetzt „Lüftungszeit pro Stunde“ (15 / 30 / 45 min/h laut Anleitung) statt einer Dauer.

@@ -20,6 +20,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - Documentation (EN/DE) and tests for clock, date and settings frames.
 
 ### Changed
+- Menu settings (fan levels, boost, away) sent by the unit are stored in the integration options automatically (no reload).
 - Unit settings are no longer cached when written; only values the unit sends itself count as read. The options dialog states which values are still defaults. Boost default 15 min (factory).
 - Options dialog reordered: serial connection, daily sync, levels in %, boost duration, away time (min/h), then the 0-10 V settings. Levels are plain number fields (0–100 %), durations are dropdowns, labels unified.
 - Away is now "ventilation time per hour" (15 / 30 / 45 min/h, as in the manual) instead of a duration.
