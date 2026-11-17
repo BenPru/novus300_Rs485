@@ -46,6 +46,25 @@ REGISTER_WIDTHS = {
     0x83: 2,
     0x84: 2,
     0x85: 5,
+    0x86: 1,
+    0x87: 1,
+    0x0A: 16,
+    0x0B: 4,
+    0x0C: 3,
+    0x88: 16,
+    0x89: 4,
+    0x8A: 3,
+    0x8B: 16,
+    0x8C: 4,
+    0x8D: 3,
+}
+
+# Last three unit messages: text (code byte + 15 characters), date
+# (weekday, day, month, year), time (second, minute, hour).
+MESSAGE_LOG_REGISTERS = {
+    0x0A: (0, "text"), 0x0B: (0, "date"), 0x0C: (0, "time"),
+    0x88: (1, "text"), 0x89: (1, "date"), 0x8A: (1, "time"),
+    0x8B: (2, "text"), 0x8C: (2, "date"), 0x8D: (2, "time"),
 }
 
 TEMPERATURE_REGISTERS = {
@@ -59,6 +78,8 @@ TEMPERATURE_REGISTERS = {
 MESSAGES = {
     0x00: "none",
     0x41: "filter_change",
+    0x83: "input_error",
+    0x89: "bypass_error",
 }
 
 UNKNOWN_REGISTERS = {
@@ -190,6 +211,7 @@ def _duration_seconds(raw: bytes) -> int:
 
 def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
     readings: dict[str, NovusValue] = {}
+    log: dict[int, dict[str, bytes]] = {}
     offset = 0
     while offset + 2 <= len(payload):
         register = int.from_bytes(payload[offset : offset + 2], "little")
@@ -199,7 +221,10 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
         raw = payload[offset + 2 : offset + 2 + width]
         offset += 2 + width
 
-        if register in TEMPERATURE_REGISTERS:
+        if register in MESSAGE_LOG_REGISTERS:
+            slot, part = MESSAGE_LOG_REGISTERS[register]
+            log.setdefault(slot, {})[part] = raw
+        elif register in TEMPERATURE_REGISTERS:
             readings[TEMPERATURE_REGISTERS[register]] = (
                 int.from_bytes(raw, "little", signed=True) / 10
             )
@@ -238,7 +263,25 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
             readings[SETTING_REGISTERS[register]] = raw[0]
         elif register in COUNTER_REGISTERS:
             readings[COUNTER_REGISTERS[register]] = _duration_seconds(raw)
+    for slot, parts in log.items():
+        if len(parts) == 3:
+            entry = _decode_message_log(parts)
+            if entry:
+                readings[f"message_log_{slot}"] = entry
     return readings
+
+
+def _decode_message_log(parts: dict[str, bytes]) -> str | None:
+    """Return 'ISO time|code|detail' for one stored unit message."""
+    _, day, month, year = parts["date"]
+    second, minute, hour = parts["time"]
+    try:
+        moment = datetime(2000 + year, month, day, hour, minute, second)
+    except ValueError:
+        return None
+    text = parts["text"]
+    detail = text[1:].decode("ascii", "replace").strip()
+    return f"{moment.isoformat()}|{text[0]}|{detail}"
 
 
 IDENTITY_PATTERN = re.compile(rb"(ETA|SWZ|ST)[0-9A-Z]{8,9}")

@@ -70,6 +70,9 @@ KNOWN_IDENTITIES = {
 }
 
 PERSISTED_KEYS = {
+    "message_log_0",
+    "message_log_1",
+    "message_log_2",
     "message_history",
     "message",
     "message_code",
@@ -297,6 +300,16 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             if isinstance(value := self._values.get(key), int)
             and not isinstance(value, bool)
         }
+
+    def message_log(self) -> list[dict[str, str | int]]:
+        """Return the last messages stored in the unit (newest first)."""
+        entries = []
+        for slot in range(3):
+            value = self._values.get(f"message_log_{slot}")
+            if isinstance(value, str) and value.count("|") >= 2:
+                time, code, detail = value.split("|", 2)
+                entries.append({"time": time, "code": int(code), "detail": detail})
+        return entries
 
     def message_history(self) -> list[dict[str, str]]:
         """Return the last unit messages seen on the bus (newest first)."""

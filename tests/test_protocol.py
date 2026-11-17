@@ -29,13 +29,17 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(
             readings[0],
             {
+                "register_44": 140,
                 "supply_air_temperature": 23.0,
                 "outdoor_air_temperature": 10.5,
                 "extract_air_temperature": 23.0,
                 "exhaust_air_temperature": 14.0,
             },
         )
-        self.assertEqual(readings[1], {"fan_setpoint": 40.3})
+        self.assertEqual(
+            readings[1],
+            {"message_code": 65, "message": "filter_change", "fan_setpoint": 40.3},
+        )
 
     def test_decodes_closed_bypass_status(self) -> None:
         parser = NovusFrameParser()
@@ -129,7 +133,7 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(
             readings,
             [
-                {"fan_level_1_percentage": 35},
+                {"fan_level_1_percentage": 35, "register_62": 11},
                 {"boost_duration_minutes": 20},
                 {"away_duration_minutes": 30},
             ],
@@ -151,6 +155,18 @@ class NovusFrameParserTest(unittest.TestCase):
         )
         self.assertEqual(
             build_filter_reset_frame(90).hex(), "0100850e48973d0000005a00003e0000005a0000"
+        )
+
+    def test_decodes_stored_message(self):
+        frame = bytes.fromhex(
+            "0100853d9d7a0a008354656d7046726f6d427553444546520b00050d061a0c00292c0a"
+            "0f0000120000150000180000190053575a30303235423236411a00001b007b00"
+        )
+        readings = {}
+        for part in NovusFrameParser().feed(frame):
+            readings.update(part)
+        self.assertEqual(
+            readings["message_log_0"], "2026-06-13T10:44:41|131|TempFromBuSDEFR"
         )
 
 

@@ -162,7 +162,7 @@ Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.
 - Betriebsstatus, Luftweg und Bypass
 - Gesamt- und Lüfterbetriebszeit sowie Filterintervall und Filterrestlaufzeit,
   sobald die Anlage den vollständigen Register-Dump sendet
-- `sensor.novus300_message` mit der aktuellen Meldung der Anlage (z. B. Filter wechseln) und Attribut `history` mit den letzten von Home Assistant gesehenen Wechseln
+- `sensor.novus300_message` mit der aktuellen Meldung der Anlage (z. B. Filter wechseln) und Attribut `last_messages` mit den letzten drei Meldungen der Anlage (nur beim Start der Anlage gesendet, dann gespeichert)
 - Optional `fan.novus300` und `button.novus300_boost`
 
 Nicht jedes Register wird zyklisch übertragen. Nach einem Neustart von Home

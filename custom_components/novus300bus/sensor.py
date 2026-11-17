@@ -16,11 +16,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_AWAY_DURATION_MINUTES
 from .coordinator import NovusCoordinator
+from .protocol import MESSAGES
 
 
 MESSAGE_TEXTS = {
     "none": "Keine Meldung",
     "filter_change": "Filter wechseln",
+    "input_error": "Fehler am Eingang",
+    "bypass_error": "Fehler Bypass",
 }
 
 LIVE_KEYS = (
@@ -306,7 +309,16 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         if self._description.key == "message":
             return {
                 "code": self.coordinator.data.get("message_code"),
-                "history": self.coordinator.message_history(),
+                "last_messages": [
+                    {
+                        **entry,
+                        "message": MESSAGE_TEXTS.get(
+                            MESSAGES.get(entry["code"], ""), f"Meldung {entry['code']}"
+                        ),
+                    }
+                    for entry in self.coordinator.message_log()
+                ],
+                "observed": self.coordinator.message_history(),
             }
         raw_key = {
             "run_state": "run_state_raw",
