@@ -6,7 +6,8 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 
 ### Added
 - **Device info:** model Novus 300 (FOCUS250), bus version 1.7.1; panel, fan slave and defroster appear as "Paul Novus 300 …" sub-devices whose software versions (ETA0036E29A, SWZ0025B26A, ST00064E24A) are read from the unit's start-up announcement; known values are used as defaults.
-- **Diagnostic raw sensors** for the still unidentified registers 0x44 and 0x62.
+- **`sensor.novus300_message`:** current unit message (e.g. "Filter wechseln", code 0x41 in register 0x09) with icon; attribute `history` lists the last 10 changes seen by Home Assistant (the bus carries only the current code).
+- **Diagnostic raw sensors** (disabled by default) for the still unidentified registers 0x44 and 0x62.
 - **Unit off:** `fan.novus300` shows off (0 %, attribute `run_state`) while the unit reports "stopped"; temperatures, fan setpoint, air path and bypass become unavailable instead of showing stale values.
 - **Filter runtime reset:** `button.novus300_filter_reset` and `novus300bus.reset_filter` service.
 - **Filter interval is now an option** (30–180 d) written to the unit; `sensor.novus300_filter_interval` was removed.
@@ -19,6 +20,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - Documentation (EN/DE) and tests for clock, date and settings frames.
 
 ### Changed
+- Unit settings are no longer cached when written; only values the unit sends itself count as read. The options dialog states which values are still defaults. Boost default 15 min (factory).
 - Options dialog reordered: serial connection, daily sync, levels in %, boost duration, away time (min/h), then the 0-10 V settings. Levels are plain number fields (0–100 %), durations are dropdowns, labels unified.
 - Away is now "ventilation time per hour" (15 / 30 / 45 min/h, as in the manual) instead of a duration.
 

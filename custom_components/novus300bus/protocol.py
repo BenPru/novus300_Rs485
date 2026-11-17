@@ -55,6 +55,12 @@ TEMPERATURE_REGISTERS = {
     0x84: "exhaust_air_temperature",
 }
 
+# Alarm codes sent in the first byte of register 0x09 (ASCII letter).
+MESSAGES = {
+    0x00: "none",
+    0x41: "filter_change",
+}
+
 UNKNOWN_REGISTERS = {
     0x44: "register_44",
     0x62: "register_62",
@@ -220,6 +226,12 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
         elif register == 0x27:
             readings["ventilation_mode"] = VENTILATION_MODES.get(raw[0], "unknown")
             readings["ventilation_mode_raw"] = raw[0]
+        elif register == 0x09:
+            readings["message_code"] = raw[0]
+            readings["message"] = MESSAGES.get(
+                raw[0],
+                "none" if raw[0] == 0 else f"code_{chr(raw[0]) if 32 < raw[0] < 127 else raw[0]}",
+            )
         elif register in UNKNOWN_REGISTERS:
             readings[UNKNOWN_REGISTERS[register]] = raw[0]
         elif register in SETTING_REGISTERS:

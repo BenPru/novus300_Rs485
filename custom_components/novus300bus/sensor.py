@@ -18,6 +18,11 @@ from .const import CONF_AWAY_DURATION_MINUTES
 from .coordinator import NovusCoordinator
 
 
+MESSAGE_TEXTS = {
+    "none": "Keine Meldung",
+    "filter_change": "Filter wechseln",
+}
+
 LIVE_KEYS = (
     "supply_air_temperature",
     "outdoor_air_temperature",
@@ -40,6 +45,7 @@ class NovusSensorDescription:
     entity_category: EntityCategory | None = None
     options: tuple[str, ...] | None = None
     translation_key: str | None = None
+    enabled_default: bool = True
 
 
 SENSORS = (
@@ -85,6 +91,10 @@ SENSORS = (
         translation_key="run_state",
     ),
     NovusSensorDescription(
+        "message",
+        "Meldung",
+    ),
+    NovusSensorDescription(
         "air_path",
         "Luftweg",
         SensorDeviceClass.ENUM,
@@ -96,12 +106,14 @@ SENSORS = (
         "Register 0x44 (Rohwert, unbekannt)",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_default=False,
     ),
     NovusSensorDescription(
         "register_62",
         "Register 0x62 (Rohwert, unbekannt)",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_default=False,
     ),
     NovusSensorDescription(
         "operating_time",
@@ -155,6 +167,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         self._attr_state_class = description.state_class
         self._attr_entity_category = description.entity_category
+        self._attr_entity_registry_enabled_default = description.enabled_default
         self._attr_options = description.options
         self._attr_translation_key = description.translation_key
         self._restored_value: float | None = None
@@ -223,6 +236,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         value = self.coordinator.data.get(self._description.key)
         if value is None:
             return self._restored_value
+        if self._description.key == "message":
+            return MESSAGE_TEXTS.get(value, f"Meldung {value.removeprefix('code_')}")
         if self._description.key == "fan_setpoint":
             fixed_level_value = self.coordinator.fan_level_percentage(
                 self.coordinator.data.get("ventilation_mode", "")
@@ -248,6 +263,14 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         """Return an icon matching the current operating state."""
         if self._description.key == "fan_setpoint":
             return "mdi:fan"
+        if self._description.key == "message":
+            return (
+                "mdi:check-circle-outline"
+                if self.native_value == "Keine Meldung"
+                else "mdi:air-filter"
+                if self.native_value == "Filter wechseln"
+                else "mdi:alert-circle-outline"
+            )
         state_icons = {
             "run_state": {
                 "stopped": "mdi:stop-circle-outline",
@@ -280,6 +303,11 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
                         self.coordinator.setting_value(CONF_AWAY_DURATION_MINUTES)
                     )
                 return attributes
+        if self._description.key == "message":
+            return {
+                "code": self.coordinator.data.get("message_code"),
+                "history": self.coordinator.message_history(),
+            }
         raw_key = {
             "run_state": "run_state_raw",
             "air_path": "status_word",

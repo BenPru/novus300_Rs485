@@ -146,6 +146,22 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         """Initialize options flow."""
         self._config_entry = config_entry
 
+    def _source_text(self, missing: list[str]) -> str:
+        """Describe whether the shown settings were read from the unit."""
+        german = self.hass.config.language.startswith("de")
+        if not missing:
+            return (
+                "Stufen und Zeiten wurden aus der Anlage gelesen."
+                if german
+                else "Fan levels and durations were read from the unit."
+            )
+        names = ", ".join(missing)
+        return (
+            f"Noch nicht aus der Anlage gelesen (Bedienteil-Menü einmal öffnen): {names}. Hier gelten Ersatzwerte."
+            if german
+            else f"Not yet read from the unit (open the panel menu once): {names}. Fallback values are shown."
+        )
+
     def _value(self, key: str, default: str | int | bool) -> str | int | bool:
         """Return a bus setting as known by the unit, else the stored option."""
         if key == CONF_FILTER_INTERVAL_DAYS:
@@ -243,4 +259,12 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                 ): str,
             }
         )
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(fields))
+        coordinator = getattr(self._config_entry, "runtime_data", None)
+        missing = coordinator.settings_not_read() if coordinator else []
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(fields),
+            description_placeholders={
+                "source": self._source_text(missing)
+            },
+        )

@@ -79,6 +79,11 @@ def clock_frame_kind(frame: bytes):
     if frame[3] in (7, 14) and len(payload) == frame[3]:
         entries = [payload[i : i + 7] for i in range(0, len(payload), 7)]
         registers = (0x3D, 0x3E)[: len(entries)]
+        if frame[3] == 7 and payload[0] == 0x3E:
+            minute, hour, days = payload[2], payload[3], payload[4] | payload[5] << 8
+            if payload[1] or payload[6] or minute >= 60 or hour >= 24 or days > 180:
+                return None
+            return "filter_remaining"
         values = set()
         for entry, register in zip(entries, registers):
             minute, hour, days = entry[2], entry[3], entry[4] | entry[5] << 8

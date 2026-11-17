@@ -29,7 +29,8 @@
           "tinkerforge_uid": "0-10 V: UID des Industrial Analog Out",
           "fan_automatic_entity": "0-10 V: Helfer-Entität für Automatikmodus",
           "filter_interval_days": "Filterintervall"
-        }
+        },
+        "description": "{source}"
       }
     }
   },

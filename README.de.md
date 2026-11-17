@@ -138,13 +138,13 @@ Diese Werte liegen in der Anlage. Die Lüftungsstufen sind normale Zahlenfelder
 | Einstellung | Schrittweite der Anlage | Standardwert |
 |---|---|---:|
 | Lüftungsstufe 1 / 2 / 3 | beliebiger Wert 0–100 % | 35 / 60 / 90 % |
-| Dauer Stoßlüftung | 5 min | 20 min |
+| Dauer Stoßlüftung | 5 min | 15 min (Werk) |
 | Abwesend: Lüftungszeit | 15 / 30 / 45 min/h | 30 min/h |
 
 Das Filterintervall (30–180 Tage, 10-Tage-Schritte) ist eine Auswahlliste in den Optionen und wird beim Speichern in die Anlage geschrieben. `button.novus300_filter_reset` und der Dienst `novus300bus.reset_filter` setzen die Filterlaufzeit zurück (beide Register auf das eingestellte Intervall).
 
 Beim Speichern der Optionen werden alle fünf Werte über die RS-485-Bridge in die
-Anlage geschrieben. Die Anlage lässt sich dazu nicht abfragen; die Integration
+Anlage geschrieben. Die Anlage sendet sie nur, wenn am Bedienteil das Menü *Einstellungen → Lüfterstufen* geöffnet und gespeichert wird (nicht zyklisch, nicht beim Start); die Integration
 merkt sich die zuletzt auf dem Bus gesehenen Werte (Speichern am Bedienteil) und
 bietet sie als Vorgabe an. Stoßlüftung und Abwesend haben am Bedienteil keinen
 Prozentwert. Stoßlüftung hat eine Dauer; Abwesend ist die Lüftungszeit pro
@@ -162,6 +162,7 @@ Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.
 - Betriebsstatus, Luftweg und Bypass
 - Gesamt- und Lüfterbetriebszeit sowie Filterintervall und Filterrestlaufzeit,
   sobald die Anlage den vollständigen Register-Dump sendet
+- `sensor.novus300_message` mit der aktuellen Meldung der Anlage (z. B. Filter wechseln) und Attribut `history` mit den letzten von Home Assistant gesehenen Wechseln
 - Optional `fan.novus300` und `button.novus300_boost`
 
 Nicht jedes Register wird zyklisch übertragen. Nach einem Neustart von Home

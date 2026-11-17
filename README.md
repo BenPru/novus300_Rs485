@@ -124,13 +124,13 @@ These values live in the unit. The ventilation levels are plain number fields
 | Setting | Unit step | Default |
 |---|---|---:|
 | Ventilation level 1 / 2 / 3 | any value 0–100 % | 35 / 60 / 90 % |
-| Boost duration | 5 min | 20 min |
+| Boost duration | 5 min | 15 min (factory) |
 | Away: ventilation time | 15 / 30 / 45 min/h | 30 min/h |
 
 The filter interval (30–180 days, 10-day steps) is a dropdown in the options; saving writes it to the unit. `button.novus300_filter_reset` and the `novus300bus.reset_filter` service reset the filter runtime (both registers set to the configured interval).
 
 Saving the options writes all five values to the unit over the RS-485 bridge.
-The unit cannot be queried for them; the integration remembers the values last
+The unit sends them only when the panel menu *Settings → Fan levels* is opened and saved (not cyclically, not at start-up); the integration remembers the values last
 seen on the bus (when saved on the panel) and offers them as defaults. Boost and
 away have no percentage on the panel. Boost has a duration; away is the
 ventilation time per hour (min/h) at level 1 for moisture protection. `fan.novus300` uses
@@ -147,6 +147,7 @@ value for the fan setpoint.
 - run state, air path, and bypass state
 - operating time, fan operating time, filter interval, and remaining filter
   time when the controller broadcasts its complete register dump
+- `sensor.novus300_message` with the current unit message (e.g. filter change) and a `history` attribute of the last changes seen by Home Assistant
 - optional `fan.novus300` and `button.novus300_boost`
 
 Not every register is sent continuously. After a Home Assistant restart, you

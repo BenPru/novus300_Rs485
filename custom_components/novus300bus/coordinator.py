@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import threading
 from datetime import datetime, timedelta
@@ -69,6 +70,9 @@ KNOWN_IDENTITIES = {
 }
 
 PERSISTED_KEYS = {
+    "message_history",
+    "message",
+    "message_code",
     *KNOWN_IDENTITIES,
     *COUNTER_ENTITY_IDS,
     "ventilation_mode",
@@ -285,6 +289,29 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         configured = self._config.get(key, SETTING_DEFAULTS[key])
         return int(configured)
 
+    def message_history(self) -> list[dict[str, str]]:
+        """Return the last unit messages seen on the bus (newest first)."""
+        try:
+            return json.loads(str(self._values.get("message_history", "[]")))
+        except ValueError:
+            return []
+
+    def _record_message(self, message: str) -> None:
+        """Remember when a message appeared or was cleared."""
+        if self._values.get("message") is None and message == "none":
+            return
+        history = self.message_history()
+        history.insert(0, {"time": dt_util.now().isoformat(timespec="seconds"), "message": message})
+        self._values["message_history"] = json.dumps(history[:10])
+
+    def settings_not_read(self) -> list[str]:
+        """Return menu settings never seen on the bus (fallback values apply)."""
+        return [
+            key
+            for key in SETTING_DEFAULTS
+            if not isinstance(self._values.get(key), int)
+        ]
+
     async def async_write_settings(self, settings: dict[str, int]) -> None:
         """Store menu settings in the unit, as the panel does when saving."""
         for key, value in settings.items():
@@ -292,7 +319,6 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                 continue
             await self._async_send(build_setting_frame(key, int(value)))
             await asyncio.sleep(1)
-            self._values[key] = int(value)
         self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))
 
@@ -352,6 +378,8 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                 (datetime.fromisoformat(clock) - now).total_seconds(), 1
             )
             self._last_clock_at = dt_util.utcnow().timestamp()
+        if "message" in readings and readings["message"] != self._values.get("message"):
+            self._record_message(str(readings["message"]))
         self._values.update(readings)
         if any(key in PERSISTED_KEYS for key in readings):
             self._counter_store.async_delay_save(self._persisted_values, 5)

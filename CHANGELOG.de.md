@@ -6,7 +6,8 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
 ### Neu
 - **Geräteinfo:** Modell Novus 300 (FOCUS250), Busversion 1.7.1; Bedienteil, Lüfter-Slave und Defroster als Untergeräte „Paul Novus 300 …“ mit Softwareversion (ETA0036E29A, SWZ0025B26A, ST00064E24A), gelesen aus der Start-Meldung der Anlage; bekannte Werte dienen als Vorgabe.
-- **Diagnose-Rohwertsensoren** für die noch unbekannten Register 0x44 und 0x62.
+- **`sensor.novus300_message`:** aktuelle Meldung der Anlage (z. B. „Filter wechseln“, Code 0x41 in Register 0x09) mit Icon; Attribut `history` listet die letzten 10 von Home Assistant beobachteten Wechsel (der Bus liefert nur den aktuellen Code).
+- **Diagnose-Rohwertsensoren** (standardmäßig deaktiviert) für die noch unbekannten Register 0x44 und 0x62.
 - **Anlage aus:** `fan.novus300` zeigt aus (0 %, Attribut `run_state`), solange die Anlage "stopped" meldet; Temperaturen, Lüfteransteuerung, Luftweg und Bypass sind dann nicht verfügbar statt veraltet.
 - **Filterlaufzeit zurücksetzen:** `button.novus300_filter_reset` und Dienst `novus300bus.reset_filter`.
 - **Filterintervall ist jetzt eine Option** (30–180 d), wird in die Anlage geschrieben; `sensor.novus300_filter_interval` entfällt.
@@ -19,6 +20,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - Dokumentation (EN/DE) und Tests für Uhr-, Datums- und Einstellungsframes.
 
 ### Geändert
+- Anlageneinstellungen werden beim Schreiben nicht mehr zwischengespeichert; nur von der Anlage selbst gesendete Werte gelten als gelesen. Der Optionsdialog nennt, welche Werte noch Vorgaben sind. Standard Stoßlüftung 15 min (Werk).
 - Options-Dialog neu geordnet: Serielle Verbindung, tägliche Synchronisation, Stufen in %, Dauer Stoßlüftung, Abwesend (min/h), danach die 0-10-V-Einstellungen; Stufen sind normale Zahlenfelder (0–100 %), Zeiten Auswahllisten, Bezeichnungen vereinheitlicht.
 - Abwesend ist jetzt „Lüftungszeit pro Stunde“ (15 / 30 / 45 min/h laut Anleitung) statt einer Dauer.
 
