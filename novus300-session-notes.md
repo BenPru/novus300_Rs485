@@ -1,1 +1,2 @@
 - 23:55 Einstellungen werden langsam zyklisch gesendet (2e/3b/3c ~alle 45 s Abstand); echte Werte LS1 20, LS3 80, Boost 15, Abwesend 15; Auto-Uebernahme in Optionen funktioniert
+- 00:10 Meldungshistorie im Start-Dump: Regs 0x0a-0c, 0x88-8d (Text mit Codebyte, Datum wd/d/m/y, Zeit s/m/h); Codes 0x83 Fehler am Eingang, 0x89 Fehler Bypass, 0x41 Filter; Commit

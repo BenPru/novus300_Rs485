@@ -311,6 +311,20 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                 entries.append({"time": time, "code": int(code), "detail": detail})
         return entries
 
+    def message_time(self) -> datetime | None:
+        """Return when the latest message occurred."""
+        message = self._values.get("message")
+        if message not in (None, "none"):
+            for entry in self.message_history():
+                if entry["message"] == message:
+                    return datetime.fromisoformat(entry["time"])
+        log = self.message_log()
+        if log:
+            return datetime.fromisoformat(str(log[0]["time"])).replace(
+                tzinfo=dt_util.DEFAULT_TIME_ZONE
+            )
+        return None
+
     def message_history(self) -> list[dict[str, str]]:
         """Return the last unit messages seen on the bus (newest first)."""
         try:

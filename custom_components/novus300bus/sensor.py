@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,6 +26,24 @@ MESSAGE_TEXTS = {
     "input_error": "Fehler am Eingang",
     "bypass_error": "Fehler Bypass",
 }
+
+DETAIL_TEXTS = {
+    "Out of range": "Wert außerhalb des Bereichs",
+}
+
+
+def describe_message(entry: dict[str, str | int]) -> str:
+    """Return a readable line: time, code, message and translated detail."""
+    code = int(entry["code"])
+    text = MESSAGE_TEXTS.get(MESSAGES.get(code, ""), f"Meldung {code}")
+    detail = str(entry["detail"])
+    if detail.startswith("TempFromBu"):
+        detail = f"Temperatur vom Bus ({detail})"
+    detail = DETAIL_TEXTS.get(detail, detail)
+    moment = datetime.fromisoformat(str(entry["time"]))
+    line = f"{moment:%d.%m.%Y %H:%M:%S} · Code {code} · {text}"
+    return f"{line} – {detail}" if detail else line
+
 
 LIVE_KEYS = (
     "supply_air_temperature",
@@ -96,6 +115,11 @@ SENSORS = (
     NovusSensorDescription(
         "message",
         "Meldung",
+    ),
+    NovusSensorDescription(
+        "message_time",
+        "Meldung Zeitpunkt",
+        SensorDeviceClass.TIMESTAMP,
     ),
     NovusSensorDescription(
         "air_path",
@@ -226,6 +250,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def available(self) -> bool:
         """Return whether this register has been observed."""
+        if self._description.key == "message_time":
+            return self.coordinator.message_time() is not None
         if self.coordinator.is_stopped and self._description.key in LIVE_KEYS:
             return False
         return (
@@ -236,6 +262,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def native_value(self) -> float | int | str | None:
         """Return the decoded register value."""
+        if self._description.key == "message_time":
+            return self.coordinator.message_time()
         value = self.coordinator.data.get(self._description.key)
         if value is None:
             return self._restored_value
@@ -268,12 +296,12 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             return "mdi:fan"
         if self._description.key == "message":
             return (
-                "mdi:check-circle-outline"
+                "mdi:message-check-outline"
                 if self.native_value == "Keine Meldung"
-                else "mdi:air-filter"
-                if self.native_value == "Filter wechseln"
-                else "mdi:alert-circle-outline"
+                else "mdi:message-alert-outline"
             )
+        if self._description.key == "message_time":
+            return "mdi:message-text-clock-outline"
         state_icons = {
             "run_state": {
                 "stopped": "mdi:stop-circle-outline",
@@ -307,19 +335,15 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
                     )
                 return attributes
         if self._description.key == "message":
-            return {
-                "code": self.coordinator.data.get("message_code"),
-                "last_messages": [
-                    {
-                        **entry,
-                        "message": MESSAGE_TEXTS.get(
-                            MESSAGES.get(entry["code"], ""), f"Meldung {entry['code']}"
-                        ),
-                    }
-                    for entry in self.coordinator.message_log()
-                ],
-                "observed": self.coordinator.message_history(),
-            }
+            attributes = {"code": self.coordinator.data.get("message_code")}
+            time = self.coordinator.message_time()
+            if time is not None:
+                attributes["occurred_at"] = time.isoformat(timespec="seconds")
+            names = ("previous_message", "previous_message_2", "previous_message_3")
+            for name, entry in zip(names, self.coordinator.message_log(), strict=False):
+                attributes[name] = describe_message(entry)
+            attributes["observed"] = self.coordinator.message_history()
+            return attributes
         raw_key = {
             "run_state": "run_state_raw",
             "air_path": "status_word",

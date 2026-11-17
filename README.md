@@ -147,7 +147,7 @@ value for the fan setpoint.
 - run state, air path, and bypass state
 - operating time, fan operating time, filter interval, and remaining filter
   time when the controller broadcasts its complete register dump
-- `sensor.novus300_message` with the current unit message (e.g. filter change) and a `last_messages` attribute with the unit's last three messages (sent only when the unit starts up, then stored)
+- `sensor.novus300_message` with the current unit message (e.g. filter change) and `previous_message*` attributes with the unit's last three messages, `sensor.novus300_message_time` with when the latest occurred (sent only when the unit starts up, then stored)
 - optional `fan.novus300` and `button.novus300_boost`
 
 Not every register is sent continuously. After a Home Assistant restart, you
