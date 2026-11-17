@@ -175,7 +175,7 @@ brand icon, a GPL-3.0-only license, and HACS and Hassfest validation workflows.
 
 The repository is already listed alphabetically in the official
 [hacs/default integration list](https://github.com/hacs/default/blob/master/integration).
-Release [2026.11.0](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.0)
+Release [2026.11.2](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.2)
 is available after successful HACS and Hassfest validation. HACS will discover
 the release during its next scheduled scan; no additional catalog pull request
 is necessary.

@@ -1,8 +1,8 @@
 # Changelog
 
-Versionierung wie Home Assistant: `JAHR.MONAT.PATCH`.
+Versionierung als Datum: `JAHR.MONAT.TAG`.
 
-## 2026.11.1
+## 2026.11.17
 
 ### Neu
 - **Modus per RS-485 senden:** `select.novus300_ventilation_mode` setzt Automatik, Stufe 1–3, Abwesend und Stoßlüftung direkt auf dem Bus.
@@ -28,6 +28,6 @@ Versionierung wie Home Assistant: `JAHR.MONAT.PATCH`.
 - Das Bedienteil zeigt nach einem Busbefehl evtl. weiter den alten Modus an.
 - Wer den Sensor im Dashboard nutzt, muss auf das Select umstellen.
 
-## 2026.11.0
+## 2026.11.2
 
 - Erstes HACS-fähiges Release: RS-485-Anbindung des Paul Novus 300, deutsche und englische Einrichtungsdokumentation, optionale Tinkerforge-Hinweise, HACS-Icon, GPL-3.0-only und Validierungs-Workflows.

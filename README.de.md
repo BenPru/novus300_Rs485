@@ -186,7 +186,7 @@ Hassfest-Validierungsworkflows.
 Der Eintrag `BenPru/novus300_Rs485` ist bereits alphabetisch in der
 [offiziellen HACS-Integrationsliste](https://github.com/hacs/default/blob/master/integration)
 vorhanden. Der Release
-[2026.11.0](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.0)
+[2026.11.2](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.2)
 ist nach erfolgreich bestandener HACS- und Hassfest-Prüfung veröffentlicht.
 HACS übernimmt ihn beim nächsten geplanten Scan; ein weiterer Katalog-Pull-
 Request ist nicht erforderlich.
