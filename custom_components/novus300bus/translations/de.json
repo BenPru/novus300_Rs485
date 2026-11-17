@@ -32,6 +32,9 @@
         },
         "description": "{source}"
       }
+    },
+    "error": {
+      "levels_order": "Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %."
     }
   },
   "entity": {

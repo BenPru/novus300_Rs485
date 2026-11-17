@@ -1,0 +1,1 @@
+- 23:55 Einstellungen werden langsam zyklisch gesendet (2e/3b/3c ~alle 45 s Abstand); echte Werte LS1 20, LS3 80, Boost 15, Abwesend 15; Auto-Uebernahme in Optionen funktioniert

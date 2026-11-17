@@ -20,6 +20,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - Documentation (EN/DE) and tests for clock, date and settings frames.
 
 ### Changed
+- Fan levels are validated like the unit does (17 % ≤ level 1 < level 2 < level 3 ≤ 100 %); written values stay visible until the unit broadcasts them again.
 - Menu settings (fan levels, boost, away) sent by the unit are stored in the integration options automatically (no reload).
 - Unit settings are no longer cached when written; only values the unit sends itself count as read. The options dialog states which values are still defaults. Boost default 15 min (factory).
 - Options dialog reordered: serial connection, daily sync, levels in %, boost duration, away time (min/h), then the 0-10 V settings. Levels are plain number fields (0–100 %), durations are dropdowns, labels unified.

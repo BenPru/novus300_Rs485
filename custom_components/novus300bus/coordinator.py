@@ -327,6 +327,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             if key not in SETTING_DEFAULTS:
                 continue
             await self._async_send(build_setting_frame(key, int(value)))
+            self._values[key] = int(value)
             await asyncio.sleep(1)
         self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))

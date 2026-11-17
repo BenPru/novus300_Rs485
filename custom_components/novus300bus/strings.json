@@ -32,6 +32,9 @@
         },
         "description": "{source}"
       }
+    },
+    "error": {
+      "levels_order": "Levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %."
     }
   },
   "entity": {

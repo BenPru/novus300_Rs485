@@ -180,13 +180,17 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, str | int | bool] | None = None
     ) -> FlowResult:
         """Configure the bus, the unit's settings and optional 0-10 V control."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             user_input = {
                 key: int(value) if key in INT_KEYS else value
                 for key, value in user_input.items()
             }
+            levels = [user_input[k] for k in PERCENTAGE_KEYS]
+            if not 17 <= levels[0] < levels[1] < levels[2] <= 100:
+                errors["base"] = "levels_order"
             coordinator = getattr(self._config_entry, "runtime_data", None)
-            if coordinator is not None:
+            if coordinator is not None and not errors:
                 try:
                     await coordinator.async_write_settings(
                         {key: user_input[key] for key in BUS_SETTING_KEYS}
@@ -196,7 +200,8 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                         await coordinator.async_set_filter_interval(interval)
                 except HomeAssistantError as err:
                     LOGGER.warning("Unable to write settings to the Novus: %s", err)
-            return self.async_create_entry(title="", data=user_input)
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
 
         fields: dict = {
             vol.Required(
@@ -264,6 +269,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(fields),
+            errors=errors,
             description_placeholders={
                 "source": self._source_text(missing)
             },
