@@ -29,14 +29,21 @@ def _register_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for key, slug, name, model in SUB_DEVICES:
         serial = values.get(key)
         if isinstance(serial, str):
-            registry.async_get_or_create(
+            device = registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, f"novus300_{slug}")},
                 via_device_id=main.id,
-                name=f"Novus 300 {name}",
+                name=f"Paul Novus 300 {name}",
                 manufacturer="Paul",
                 model=model,
-                serial_number=serial,
+                sw_version=serial,
+            )
+            registry.async_update_device(
+                device.id,
+                name=f"Paul Novus 300 {name}",
+                model=model,
+                sw_version=serial,
+                serial_number=None,
             )
 
 PLATFORMS = (

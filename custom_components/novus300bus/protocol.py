@@ -55,6 +55,11 @@ TEMPERATURE_REGISTERS = {
     0x84: "exhaust_air_temperature",
 }
 
+UNKNOWN_REGISTERS = {
+    0x44: "register_44",
+    0x62: "register_62",
+}
+
 COUNTER_REGISTERS = {
     0x26: "operating_time",
     0x3D: "filter_interval",
@@ -215,6 +220,8 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
         elif register == 0x27:
             readings["ventilation_mode"] = VENTILATION_MODES.get(raw[0], "unknown")
             readings["ventilation_mode_raw"] = raw[0]
+        elif register in UNKNOWN_REGISTERS:
+            readings[UNKNOWN_REGISTERS[register]] = raw[0]
         elif register in SETTING_REGISTERS:
             readings[SETTING_REGISTERS[register]] = raw[0]
         elif register in COUNTER_REGISTERS:

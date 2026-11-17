@@ -92,6 +92,18 @@ SENSORS = (
         translation_key="air_path",
     ),
     NovusSensorDescription(
+        "register_44",
+        "Register 0x44 (Rohwert, unbekannt)",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NovusSensorDescription(
+        "register_62",
+        "Register 0x62 (Rohwert, unbekannt)",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NovusSensorDescription(
         "operating_time",
         "Gesamtbetriebszeit",
         SensorDeviceClass.DURATION,

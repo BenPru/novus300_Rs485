@@ -5,7 +5,8 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 ## 2026.11.17
 
 ### Neu
-- **Geräteinfo:** Modell Novus 300 (FOCUS250), Busversion 1.7.1; Bedienteil (ETA0036E29A), Lüfter-Slave (SWZ0025B26A) und Defroster (ST00064E24A) als Untergeräte mit Seriennummer. Die Kennungen werden aus der Start-Meldung der Anlage gelesen; bekannte Werte dienen als Vorgabe.
+- **Geräteinfo:** Modell Novus 300 (FOCUS250), Busversion 1.7.1; Bedienteil, Lüfter-Slave und Defroster als Untergeräte „Paul Novus 300 …“ mit Softwareversion (ETA0036E29A, SWZ0025B26A, ST00064E24A), gelesen aus der Start-Meldung der Anlage; bekannte Werte dienen als Vorgabe.
+- **Diagnose-Rohwertsensoren** für die noch unbekannten Register 0x44 und 0x62.
 - **Anlage aus:** `fan.novus300` zeigt aus (0 %, Attribut `run_state`), solange die Anlage "stopped" meldet; Temperaturen, Lüfteransteuerung, Luftweg und Bypass sind dann nicht verfügbar statt veraltet.
 - **Filterlaufzeit zurücksetzen:** `button.novus300_filter_reset` und Dienst `novus300bus.reset_filter`.
 - **Filterintervall ist jetzt eine Option** (30–180 d), wird in die Anlage geschrieben; `sensor.novus300_filter_interval` entfällt.
