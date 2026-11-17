@@ -22,7 +22,7 @@
           "fan_level_2_percentage": "Ventilation level 2 (%)",
           "fan_level_3_percentage": "Ventilation level 3 (%)",
           "boost_duration_minutes": "Boost duration",
-          "away_duration_minutes": "Away duration",
+          "away_duration_minutes": "Away: ventilation time (min/h)",
           "fan_enabled": "0-10 V: Enable fan control",
           "tinkerforge_host": "0-10 V: Tinkerforge host",
           "tinkerforge_port": "0-10 V: Tinkerforge port",
@@ -70,6 +70,12 @@
           "away": "Away"
         }
       }
+    }
+  },
+  "services": {
+    "sync_clock": {
+      "name": "Synchronize clock",
+      "description": "Sets the unit's date and time to Home Assistant's local time."
     }
   }
 }

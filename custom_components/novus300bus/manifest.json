@@ -8,5 +8,5 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/BenPru/novus300_Rs485/issues",
   "requirements": ["tinkerforge>=2.1.31"],
-  "version": "2026.11.17"
+  "version": "2026.11.02.12"
 }

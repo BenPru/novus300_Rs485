@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import NovusCoordinator
 
 PLATFORMS = (
@@ -15,6 +18,20 @@ PLATFORMS = (
     Platform.BUTTON,
     Platform.SELECT,
 )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the manual clock synchronization service."""
+
+    async def _sync_clock(call: ServiceCall) -> None:
+        entries = hass.config_entries.async_loaded_entries(DOMAIN)
+        if not entries:
+            raise HomeAssistantError("No loaded Novus 300 entry")
+        for entry in entries:
+            await entry.runtime_data.async_sync_clock()
+
+    hass.services.async_register(DOMAIN, "sync_clock", _sync_clock)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

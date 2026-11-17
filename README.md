@@ -118,19 +118,20 @@ is still in boost.
 
 ## Unit settings
 
-These values live in the unit and are shown in the integration options as
-dropdowns:
+These values live in the unit. The ventilation levels are plain number fields
+(0–100 %, any whole number); the durations are dropdowns:
 
 | Setting | Unit step | Default |
 |---|---|---:|
-| Ventilation level 1 / 2 / 3 | 5 % (current off-grid value is kept) | 35 / 60 / 90 % |
+| Ventilation level 1 / 2 / 3 | any value 0–100 % | 35 / 60 / 90 % |
 | Boost duration | 5 min | 20 min |
-| Away duration | 15 min | 30 min |
+| Away: ventilation time | 15 / 30 / 45 min/h | 30 min/h |
 
 Saving the options writes all five values to the unit over the RS-485 bridge.
 The unit cannot be queried for them; the integration remembers the values last
 seen on the bus (when saved on the panel) and offers them as defaults. Boost and
-away have no percentage on the panel, only a duration. `fan.novus300` uses
+away have no percentage on the panel. Boost has a duration; away is the
+ventilation time per hour (min/h) at level 1 for moisture protection. `fan.novus300` uses
 **Ventilation level 2** when turned on; the boost button runs the unit's boost
 for the configured **Boost duration**. Standby and boost/away show the raw bus
 value for the fan setpoint.

@@ -7,17 +7,19 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 ### Neu
 - **Modus per RS-485 senden:** `select.novus300_ventilation_mode` setzt Automatik, Stufe 1–3, Abwesend und Stoßlüftung direkt auf dem Bus.
 - **`button.novus300_boost`** löst die Stufe Stoßlüftung auf dem Bus aus (nicht mehr per 0-10 V).
+- **Dienst `novus300bus.sync_clock`**, um die Uhrzeit-Synchronisation manuell auszulösen.
 - **Uhrzeit täglich synchronisieren:** neue Option (Standard: an), Sync täglich um 03:00 mit Prüfung der Abweichung.
 - **Anlageneinstellungen per Bus:** Lüfterstufen 1–3 in % sowie Dauer Stoßlüftung und Abwesend werden beim Speichern der Optionen in die Anlage geschrieben. Angezeigt werden die zuletzt auf dem Bus gesehenen Werte.
 - **Serielle Bridge (`tools/`):** Schreibzugriff nur für geprüfte Frames (Modus, Datum/Uhrzeit, Einstellungen) mit CRC- und Wertebereichsprüfung; optionales systemd-Beispiel.
 - Dokumentation (EN/DE) und Tests für Uhr-, Datums- und Einstellungsframes.
 
 ### Geändert
-- Options-Dialog neu geordnet: Serielle Verbindung, tägliche Synchronisation, Stufen in %, Dauer Stoßlüftung, Dauer Abwesend, danach die 0-10-V-Einstellungen; Schieberegler wurden durch Auswahllisten ersetzt, Bezeichnungen vereinheitlicht.
+- Options-Dialog neu geordnet: Serielle Verbindung, tägliche Synchronisation, Stufen in %, Dauer Stoßlüftung, Abwesend (min/h), danach die 0-10-V-Einstellungen; Stufen sind normale Zahlenfelder (0–100 %), Zeiten Auswahllisten, Bezeichnungen vereinheitlicht.
+- Abwesend ist jetzt „Lüftungszeit pro Stunde“ (15 / 30 / 45 min/h laut Anleitung) statt einer Dauer.
 
 ### Entfernt
 - Prozentwerte für Stoßlüftung und Abwesend.
-- `sensor.novus300_clock`, `sensor.novus300_clock_drift` und der Dienst `sync_clock`.
+- `sensor.novus300_clock` und `sensor.novus300_clock_drift`.
 - `sensor.novus300_ventilation_mode` (ersetzt durch `select.novus300_ventilation_mode`).
 
 ### Behoben

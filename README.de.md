@@ -126,20 +126,21 @@ diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
 
 ## Anlageneinstellungen
 
-Diese Werte liegen in der Anlage und erscheinen in den Integrationsoptionen als
-Auswahllisten:
+Diese Werte liegen in der Anlage. Die Lüftungsstufen sind normale Zahlenfelder
+(0–100 %, jede ganze Zahl); die Zeiten sind Auswahllisten:
 
 | Einstellung | Schrittweite der Anlage | Standardwert |
 |---|---|---:|
-| Lüftungsstufe 1 / 2 / 3 | 5 % (ein aktueller Zwischenwert bleibt erhalten) | 35 / 60 / 90 % |
+| Lüftungsstufe 1 / 2 / 3 | beliebiger Wert 0–100 % | 35 / 60 / 90 % |
 | Dauer Stoßlüftung | 5 min | 20 min |
-| Dauer Abwesend | 15 min | 30 min |
+| Abwesend: Lüftungszeit | 15 / 30 / 45 min/h | 30 min/h |
 
 Beim Speichern der Optionen werden alle fünf Werte über die RS-485-Bridge in die
 Anlage geschrieben. Die Anlage lässt sich dazu nicht abfragen; die Integration
 merkt sich die zuletzt auf dem Bus gesehenen Werte (Speichern am Bedienteil) und
 bietet sie als Vorgabe an. Stoßlüftung und Abwesend haben am Bedienteil keinen
-Prozentwert, nur eine Dauer. `fan.novus300` verwendet beim Einschalten
+Prozentwert. Stoßlüftung hat eine Dauer; Abwesend ist die Lüftungszeit pro
+Stunde (min/h) auf Stufe 1 als Feuchteschutz. `fan.novus300` verwendet beim Einschalten
 **Lüftungsstufe 2**; die Stoßlüftungs-Schaltfläche startet die Stoßlüftung der
 Anlage für die eingestellte **Dauer Stoßlüftung**. Bei Standby, Stoßlüftung und
 Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.

@@ -54,21 +54,20 @@ BUS_SETTING_KEYS = (
 )
 
 SETTING_GRIDS = {
-    CONF_FAN_LEVEL_1_PERCENTAGE: range(0, 101, 5),
-    CONF_FAN_LEVEL_2_PERCENTAGE: range(0, 101, 5),
-    CONF_FAN_LEVEL_3_PERCENTAGE: range(0, 101, 5),
     CONF_BOOST_DURATION_MINUTES: range(5, 121, 5),
-    CONF_AWAY_DURATION_MINUTES: range(15, 241, 15),
+    CONF_AWAY_DURATION_MINUTES: range(15, 46, 15),
 }
+PERCENTAGE_KEYS = (
+    CONF_FAN_LEVEL_1_PERCENTAGE,
+    CONF_FAN_LEVEL_2_PERCENTAGE,
+    CONF_FAN_LEVEL_3_PERCENTAGE,
+)
 
 
 def _label(key: str, value: int) -> str:
     if key == CONF_AWAY_DURATION_MINUTES:
-        hours, minutes = divmod(value, 60)
-        if not hours:
-            return f"{minutes} min"
-        return f"{hours} h" if not minutes else f"{hours} h {minutes} min"
-    return f"{value} min" if key == CONF_BOOST_DURATION_MINUTES else f"{value} %"
+        return f"{value} min/h"
+    return f"{value} min"
 
 
 def _setting_selector(key: str, current: int) -> selector.SelectSelector:
@@ -80,6 +79,18 @@ def _setting_selector(key: str, current: int) -> selector.SelectSelector:
                 for value in sorted({*SETTING_GRIDS[key], current})
             ],
             mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )
+
+
+def _percentage_selector() -> selector.NumberSelector:
+    return selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            step=1,
+            unit_of_measurement="%",
+            mode=selector.NumberSelectorMode.BOX,
         )
     )
 
@@ -182,9 +193,12 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             (CONF_AWAY_DURATION_MINUTES, DEFAULT_AWAY_DURATION_MINUTES),
         ):
             current = int(self._value(key, default))
-            fields[vol.Required(key, default=str(current))] = _setting_selector(
-                key, current
-            )
+            if key in PERCENTAGE_KEYS:
+                fields[vol.Required(key, default=current)] = _percentage_selector()
+            else:
+                fields[vol.Required(key, default=str(current))] = _setting_selector(
+                    key, current
+                )
         fields.update(
             {
                 vol.Required(
