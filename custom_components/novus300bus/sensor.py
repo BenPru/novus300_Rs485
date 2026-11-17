@@ -117,11 +117,6 @@ SENSORS = (
         "Meldung",
     ),
     NovusSensorDescription(
-        "message_time",
-        "Meldung Zeitpunkt",
-        SensorDeviceClass.TIMESTAMP,
-    ),
-    NovusSensorDescription(
         "air_path",
         "Luftweg",
         SensorDeviceClass.ENUM,
@@ -250,8 +245,6 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def available(self) -> bool:
         """Return whether this register has been observed."""
-        if self._description.key == "message_time":
-            return self.coordinator.message_time() is not None
         if self.coordinator.is_stopped and self._description.key in LIVE_KEYS:
             return False
         return (
@@ -262,8 +255,6 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def native_value(self) -> float | int | str | None:
         """Return the decoded register value."""
-        if self._description.key == "message_time":
-            return self.coordinator.message_time()
         value = self.coordinator.data.get(self._description.key)
         if value is None:
             return self._restored_value
@@ -300,8 +291,6 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
                 if self.native_value == "Keine Meldung"
                 else "mdi:message-alert-outline"
             )
-        if self._description.key == "message_time":
-            return "mdi:message-text-clock-outline"
         state_icons = {
             "run_state": {
                 "stopped": "mdi:stop-circle-outline",
