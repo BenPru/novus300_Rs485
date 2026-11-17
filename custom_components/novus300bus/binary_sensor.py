@@ -36,7 +36,10 @@ class NovusBypassSensor(CoordinatorEntity[NovusCoordinator], BinarySensorEntity)
     @property
     def available(self) -> bool:
         """Return whether the status word has been received."""
-        return "bypass_open" in self.coordinator.data
+        return (
+            "bypass_open" in self.coordinator.data
+            and not self.coordinator.is_stopped
+        )
 
     @property
     def is_on(self) -> bool | None:

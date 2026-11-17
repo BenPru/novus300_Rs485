@@ -5,6 +5,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 ## 2026.11.17
 
 ### Added
+- **Unit off:** `fan.novus300` shows off (0 %, attribute `run_state`) while the unit reports "stopped"; temperatures, fan setpoint, air path and bypass become unavailable instead of showing stale values.
 - **Filter runtime reset:** `button.novus300_filter_reset` and `novus300bus.reset_filter` service.
 - **Filter interval is now an option** (30–180 d) written to the unit; `sensor.novus300_filter_interval` was removed.
 - **Send the ventilation mode over RS-485:** `select.novus300_ventilation_mode` sets automatic, levels 1–3, away and boost directly on the bus.

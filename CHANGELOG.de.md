@@ -5,6 +5,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 ## 2026.11.17
 
 ### Neu
+- **Anlage aus:** `fan.novus300` zeigt aus (0 %, Attribut `run_state`), solange die Anlage "stopped" meldet; Temperaturen, Lüfteransteuerung, Luftweg und Bypass sind dann nicht verfügbar statt veraltet.
 - **Filterlaufzeit zurücksetzen:** `button.novus300_filter_reset` und Dienst `novus300bus.reset_filter`.
 - **Filterintervall ist jetzt eine Option** (30–180 d), wird in die Anlage geschrieben; `sensor.novus300_filter_interval` entfällt.
 - **Modus per RS-485 senden:** `select.novus300_ventilation_mode` setzt Automatik, Stufe 1–3, Abwesend und Stoßlüftung direkt auf dem Bus.

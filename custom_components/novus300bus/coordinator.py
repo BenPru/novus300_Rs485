@@ -349,6 +349,11 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))
 
+    @property
+    def is_stopped(self) -> bool:
+        """Return whether the unit reports that it is switched off."""
+        return self._values.get("run_state") == "stopped"
+
     def fan_level_percentage(self, mode: str) -> int | None:
         """Return the percentage of the level a mode runs at (boost: 3, away: 1)."""
         key = {

@@ -18,6 +18,16 @@ from .const import CONF_AWAY_DURATION_MINUTES
 from .coordinator import NovusCoordinator
 
 
+LIVE_KEYS = (
+    "supply_air_temperature",
+    "outdoor_air_temperature",
+    "extract_air_temperature",
+    "exhaust_air_temperature",
+    "fan_setpoint",
+    "air_path",
+)
+
+
 @dataclass(frozen=True)
 class NovusSensorDescription:
     """Describe a Novus sensor."""
@@ -187,6 +197,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def available(self) -> bool:
         """Return whether this register has been observed."""
+        if self.coordinator.is_stopped and self._description.key in LIVE_KEYS:
+            return False
         return (
             self._description.key in self.coordinator.data
             or self._restored_value is not None

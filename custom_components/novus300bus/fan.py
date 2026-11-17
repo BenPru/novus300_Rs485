@@ -76,6 +76,8 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current 0-10 V control value."""
+        if self.coordinator.is_stopped:
+            return 0
         return self._percentage
 
     @property
@@ -106,12 +108,21 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return whether a non-zero voltage is output."""
-        return self._percentage is not None and self._percentage > 0
+        return (
+            self._percentage is not None
+            and self._percentage > 0
+            and not self.coordinator.is_stopped
+        )
 
     @property
     def state(self) -> str:
         """Return the legacy numeric state used by existing automations."""
         return str(self._percentage) if self.is_on else STATE_OFF
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Expose the unit's run state next to the analog output."""
+        return {"run_state": self.coordinator.data.get("run_state")}
 
     @property
     def preset_mode(self) -> str | None:
