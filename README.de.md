@@ -4,7 +4,11 @@
 
 **English documentation:** [README.md](README.md)
 
+
 <img width="586" height="1380" alt="image" src="https://github.com/user-attachments/assets/04bfeca0-c872-4f2a-9d46-2d0a34c71c43" />
+Konfiguration:
+<img width="514" height="1412" alt="image" src="https://github.com/user-attachments/assets/0a9ccba9-3791-4983-b426-eef009aa0f55" />
+
 
 Home-Assistant-Integration zum passiven Auslesen einer Paul Novus 300 über
 RS-485. Sie stellt Temperaturen, Betriebszustand, Luftweg, Filter- und
