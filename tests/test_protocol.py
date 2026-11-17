@@ -1,8 +1,15 @@
 """Tests for the Novus RS-485 protocol parser."""
 
 import unittest
+from datetime import datetime
 
-from custom_components.novus300bus.protocol import NovusFrameParser, crc16_ccitt
+from custom_components.novus300bus.protocol import (
+    NovusFrameParser,
+    build_date_frame,
+    build_setting_frame,
+    build_time_frame,
+    crc16_ccitt,
+)
 
 
 class NovusFrameParserTest(unittest.TestCase):
@@ -89,6 +96,49 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(
             readings,
             [{"ventilation_mode": "away", "ventilation_mode_raw": 5}],
+        )
+
+    def test_decodes_clock_broadcast(self) -> None:
+        parser = NovusFrameParser()
+
+        readings = parser.feed(bytes.fromhex("0000000ec8b0010001110b1a0200230716040000"))
+
+        self.assertEqual(readings, [{"clock": "2026-11-17T22:07:35"}])
+
+    def test_builds_panel_clock_frames(self) -> None:
+        self.assertEqual(
+            build_time_frame(datetime(2026, 11, 17, 21, 7, 6)).hex(),
+            "010085055c570200060715",
+        )
+        self.assertEqual(
+            build_date_frame(datetime(2026, 11, 17, 21, 7, 6)).hex(),
+            "010085069953010001110b1a",
+        )
+
+    def test_decodes_and_builds_unit_settings(self) -> None:
+        parser = NovusFrameParser()
+
+        readings = parser.feed(
+            bytes.fromhex("010085097a2c2e002331000062000b")
+            + bytes.fromhex("01008503db453b0014")
+            + bytes.fromhex("0100850301613c001e")
+        )
+
+        self.assertEqual(
+            readings,
+            [
+                {"fan_level_1_percentage": 35},
+                {"boost_duration_minutes": 20},
+                {"away_duration_minutes": 30},
+            ],
+        )
+        self.assertEqual(
+            build_setting_frame("boost_duration_minutes", 20).hex(),
+            "01008503db453b0014",
+        )
+        self.assertEqual(
+            build_setting_frame("fan_level_3_percentage", 90).hex(),
+            "01008503201c30005a",
         )
 
 

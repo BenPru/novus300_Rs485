@@ -14,20 +14,20 @@
     "step": {
       "init": {
         "data": {
-          "serial_port": "Serielles Gerät",
+          "serial_port": "Serielles Gerät / Bridge-URL",
           "baudrate": "Baudrate",
           "parity": "Parität",
-          "fan_enabled": "0-10-V-Lüftersteuerung aktivieren",
-          "tinkerforge_host": "Tinkerforge-Host",
-          "tinkerforge_port": "Tinkerforge-Port",
-          "tinkerforge_uid": "UID des Industrial Analog Out",
-          "fan_automatic_entity": "Helfer-Entity für Automatikmodus",
-          "boost_duration_minutes": "Dauer der Stoßlüftung in Minuten",
-          "fan_level_1_percentage": "Panel-Lüftungsstufe 1 in Prozent",
-          "fan_level_2_percentage": "Panel-Lüftungsstufe 2 in Prozent",
-          "fan_level_3_percentage": "Panel-Lüftungsstufe 3 in Prozent",
-          "fan_boost_percentage": "Panel-Stoßlüftung in Prozent",
-          "fan_away_percentage": "Panel-Abwesend in Prozent"
+          "daily_time_sync": "Uhrzeit täglich synchronisieren",
+          "fan_level_1_percentage": "Lüftungsstufe 1 (%)",
+          "fan_level_2_percentage": "Lüftungsstufe 2 (%)",
+          "fan_level_3_percentage": "Lüftungsstufe 3 (%)",
+          "boost_duration_minutes": "Dauer Stoßlüftung",
+          "away_duration_minutes": "Dauer Abwesend",
+          "fan_enabled": "0-10 V: Lüftersteuerung aktivieren",
+          "tinkerforge_host": "0-10 V: Tinkerforge-Host",
+          "tinkerforge_port": "0-10 V: Tinkerforge-Port",
+          "tinkerforge_uid": "0-10 V: UID des Industrial Analog Out",
+          "fan_automatic_entity": "0-10 V: Helfer-Entität für Automatikmodus"
         }
       }
     }
@@ -49,18 +49,6 @@
           "transition": "Umschaltung",
           "unknown": "Unbekannt"
         }
-      },
-      "ventilation_mode": {
-        "state": {
-          "standby": "Standby",
-          "automatic": "Automatik",
-          "level_1": "Lüftungsstufe 1",
-          "level_2": "Lüftungsstufe 2",
-          "level_3": "Lüftungsstufe 3",
-          "boost": "Stoßlüftung",
-          "away": "Abwesend",
-          "unknown": "Unbekannt"
-        }
       }
     },
     "binary_sensor": {
@@ -68,6 +56,18 @@
         "state": {
           "on": "Auf",
           "off": "Zu"
+        }
+      }
+    },
+    "select": {
+      "ventilation_mode": {
+        "state": {
+          "automatic": "Automatik",
+          "level_1": "Lüftungsstufe 1",
+          "level_2": "Lüftungsstufe 2",
+          "level_3": "Lüftungsstufe 3",
+          "boost": "Stoßlüftung",
+          "away": "Abwesend"
         }
       }
     }

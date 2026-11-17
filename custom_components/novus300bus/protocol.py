@@ -3,10 +3,29 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import datetime
 
 NovusValue = float | int | bool | str
 
+# Panel menu settings: registers the panel writes when a menu page is saved.
+SETTING_REGISTERS = {
+    0x2E: "fan_level_1_percentage",
+    0x2F: "fan_level_2_percentage",
+    0x30: "fan_level_3_percentage",
+    0x3B: "boost_duration_minutes",
+    0x3C: "away_duration_minutes",
+}
+
 REGISTER_WIDTHS = {
+    0x2E: 1,
+    0x2F: 1,
+    0x30: 1,
+    0x31: 1,
+    0x32: 1,
+    0x33: 1,
+    0x3B: 1,
+    0x3C: 1,
+    0x62: 1,
     0x08: 1,
     0x09: 16,
     0x0E: 1,
@@ -71,6 +90,59 @@ def crc16_ccitt(data: bytes) -> int:
     return (msb << 8) | lsb
 
 
+MODE_REQUEST_REGISTER = 0x28
+MODE_REQUEST_VALUES = {name: value for value, name in VENTILATION_MODES.items() if value}
+
+
+def build_mode_request(mode: str) -> bytes:
+    """Return the panel frame that requests a ventilation mode."""
+    header = bytes((0x01, 0x00, 0x85, 0x03))
+    payload = bytes((MODE_REQUEST_REGISTER, 0x00, MODE_REQUEST_VALUES[mode]))
+    crc = crc16_ccitt(header + payload)
+    return header + bytes((crc & 0xFF, crc >> 8)) + payload
+
+
+def _build_register_write(payload: bytes) -> bytes:
+    header = bytes((0x01, 0x00, 0x85, len(payload)))
+    crc = crc16_ccitt(header + payload)
+    return header + bytes((crc & 0xFF, crc >> 8)) + payload
+
+
+def build_time_frame(moment: datetime) -> bytes:
+    """Return the panel frame that sets the unit's time of day."""
+    return _build_register_write(
+        bytes((0x02, 0x00, moment.second, moment.minute, moment.hour))
+    )
+
+
+def build_date_frame(moment: datetime) -> bytes:
+    """Return the panel frame that sets the unit's date and weekday."""
+    return _build_register_write(
+        bytes(
+            (0x01, 0x00, moment.weekday(), moment.day, moment.month, moment.year % 100)
+        )
+    )
+
+
+def build_setting_frame(key: str, value: int) -> bytes:
+    """Return the panel frame that stores one menu setting in the unit."""
+    register = next(reg for reg, name in SETTING_REGISTERS.items() if name == key)
+    return _build_register_write(bytes((register, 0x00, value)))
+
+
+def _decode_clock(frame: bytes) -> dict[str, NovusValue] | None:
+    """Decode the unit's clock broadcast (command 0x00)."""
+    payload = frame[6:]
+    if len(payload) != 14 or payload[0:2] != b"\x01\x00" or payload[6:8] != b"\x02\x00":
+        return None
+    _, _, weekday, day, month, year, _, _, second, minute, hour = payload[:11]
+    try:
+        moment = datetime(2000 + year, month, day, hour, minute, second)
+    except ValueError:
+        return None
+    return {"clock": moment.isoformat()}
+
+
 def _frame_is_valid(frame: bytes) -> bool:
     crc = crc16_ccitt(frame[:4] + frame[6:])
     return frame[4:6] == bytes((crc & 0xFF, crc >> 8))
@@ -120,6 +192,8 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
         elif register == 0x27:
             readings["ventilation_mode"] = VENTILATION_MODES.get(raw[0], "unknown")
             readings["ventilation_mode_raw"] = raw[0]
+        elif register in SETTING_REGISTERS:
+            readings[SETTING_REGISTERS[register]] = raw[0]
         elif register in COUNTER_REGISTERS:
             readings[COUNTER_REGISTERS[register]] = _duration_seconds(raw)
     return readings
@@ -137,7 +211,10 @@ class NovusFrameParser:
         readings: list[Mapping[str, float | int | bool]] = []
 
         while len(self._buffer) >= 6:
-            if self._buffer[0] not in (0x00, 0x01) or not 0x80 <= self._buffer[2] <= 0x87:
+            is_clock = bytes(self._buffer[:4]) == b"\x00\x00\x00\x0e"
+            if not is_clock and (
+                self._buffer[0] not in (0x00, 0x01) or not 0x80 <= self._buffer[2] <= 0x87
+            ):
                 del self._buffer[0]
                 continue
 
@@ -151,6 +228,15 @@ class NovusFrameParser:
 
             frame = bytes(self._buffer[:frame_length])
             candidate = frame
+            if is_clock:
+                if _frame_is_valid(frame):
+                    del self._buffer[:frame_length]
+                    decoded = _decode_clock(frame)
+                    if decoded:
+                        readings.append(decoded)
+                else:
+                    del self._buffer[0]
+                continue
             if candidate[0] == 0x00:
                 candidate = bytes((0x01,)) + candidate[1:]
             if not _frame_is_valid(candidate):

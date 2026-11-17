@@ -8,7 +8,13 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import NovusCoordinator
 
-PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR, Platform.FAN, Platform.BUTTON)
+PLATFORMS = (
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.BUTTON,
+    Platform.SELECT,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

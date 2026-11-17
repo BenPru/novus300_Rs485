@@ -11,7 +11,9 @@ Betriebszeiten sowie die am Bedienpanel gewählte Lüftungsstufe bereit.
 Optional kann sie einen vorhandenen Tinkerforge Industrial Analog Out V2 für
 den 0-10-V-Eingang der Anlage als `fan.novus300` einbinden. Diese Ausgabe wird
 ausschließlich im Panel-Modus **Automatik** steuerbar. Die RS-485-Schnittstelle
-bleibt stets lesend.
+liest fortlaufend und kann nur über die `socket://`-Bridge mit aktivierter
+Befehls-Whitelist per `select.novus300_ventilation_mode` einen Lüftungsmodus
+anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 
 ## Voraussetzungen
 
@@ -74,7 +76,7 @@ Busanbindung vom Home-Assistant-Host.
 - Der serielle Reader verarbeitet auf seiner lokalen UART-Seite 9600 Baud mit
   MARK-Parität.
 - In der Integration `socket://<host>:<port>` eintragen, beispielsweise
-  `socket://10.0.17.45:9700`.
+  `socket://192.0.2.45:9700`.
 - Für TCP in der Integration die Parität **none** wählen: Die Parität wurde
   bereits vom seriellen Reader verarbeitet.
 
@@ -114,39 +116,39 @@ ist nur möglich, wenn das Lüftungspanel auf **Automatik** steht. Bei
 Panel-Stufe 1–3, Stoßlüftung, Abwesend oder Standby ist die Entität bewusst
 schreibgeschützt.
 
-Die Schaltfläche `button.novus300_boost` steht ebenfalls nur in Automatik zur
-Verfügung. Sie setzt den 0-10-V-Ausgang für die konfigurierte Dauer auf den
-Wert **Panel-Stoßlüftung** und stellt anschließend den vorherigen Wert wieder
-her.
+Die Schaltfläche `button.novus300_boost` fordert den Panel-Modus
+**Stoßlüftung** auf dem RS-485-Bus an und stellt nach der konfigurierten Dauer
+den vorherigen Modus wieder her, sofern die Anlage noch in Stoßlüftung steht.
 
 Wenn der konfigurierte Automatik-Helfer vorhanden ist, bietet `fan.novus300`
 zusätzlich die Presets **Automatik** und **Manuell**. Sie schalten ausschließlich
 diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
 
-## Panel-Stufen und Werte
+## Anlageneinstellungen
 
-Die Anlage überträgt für feste Panel-Stufen nur den Modus, nicht jedoch deren
-zugehörige Prozentwerte. Die Integration ordnet daher folgende einstellbare
-Werte zu:
+Diese Werte liegen in der Anlage und erscheinen in den Integrationsoptionen als
+Auswahllisten:
 
-| Panel-Modus | Standardwert | Konfigurationsfeld |
-|---|---:|---|
-| Lüftungsstufe 1 | 35 % | Panel-Lüftungsstufe 1 |
-| Lüftungsstufe 2 | 60 % | Panel-Lüftungsstufe 2 |
-| Lüftungsstufe 3 | 90 % | Panel-Lüftungsstufe 3 |
-| Stoßlüftung | 75 % | Panel-Stoßlüftung |
-| Abwesend | 15 % | Panel-Abwesend |
+| Einstellung | Schrittweite der Anlage | Standardwert |
+|---|---|---:|
+| Lüftungsstufe 1 / 2 / 3 | 5 % (ein aktueller Zwischenwert bleibt erhalten) | 35 / 60 / 90 % |
+| Dauer Stoßlüftung | 5 min | 20 min |
+| Dauer Abwesend | 15 min | 30 min |
 
-Die Werte sind Zahlenfelder von 0 bis 100 %. `fan.novus300` verwendet beim
-Einschalten die konfigurierte **Panel-Lüftungsstufe 2**; die
-Stoßlüftungs-Schaltfläche verwendet **Panel-Stoßlüftung**. Standby hat keine
-eigene Prozentzuordnung und zeigt den Rohwert des Busses.
+Beim Speichern der Optionen werden alle fünf Werte über die RS-485-Bridge in die
+Anlage geschrieben. Die Anlage lässt sich dazu nicht abfragen; die Integration
+merkt sich die zuletzt auf dem Bus gesehenen Werte (Speichern am Bedienteil) und
+bietet sie als Vorgabe an. Stoßlüftung und Abwesend haben am Bedienteil keinen
+Prozentwert, nur eine Dauer. `fan.novus300` verwendet beim Einschalten
+**Lüftungsstufe 2**; die Stoßlüftungs-Schaltfläche startet die Stoßlüftung der
+Anlage für die eingestellte **Dauer Stoßlüftung**. Bei Standby, Stoßlüftung und
+Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.
 
 ## Angelegte Entitäten
 
 - Temperaturen für Zu-, Außen-, Ab- und Fortluft
-- `sensor.novus300_ventilation_mode` für Standby, Automatik, Stufe 1–3,
-  Stoßlüftung und Abwesend
+- `select.novus300_ventilation_mode` zum Anzeigen und Setzen von Automatik,
+  Stufe 1–3, Abwesend und Stoßlüftung
 - `sensor.novus300_fan_setpoint` für die Lüfteransteuerung
 - Betriebsstatus, Luftweg und Bypass
 - Gesamt- und Lüfterbetriebszeit sowie Filterintervall und Filterrestlaufzeit,
@@ -164,7 +166,7 @@ Modus erneut am Bus erscheint.
 | Keine RS-485-Werte | Stabilen `/dev/serial/by-id/...`-Pfad, 9600 Baud, MARK-Parität sowie A/B-Zuordnung prüfen. |
 | TCP-Verbindung bricht ab | Sicherstellen, dass nur ein Client mit dem seriellen TCP-Reader verbunden ist. |
 | `fan.novus300` ist nicht steuerbar | Panel auf Automatik stellen; Tinkerforge-Host, Port, UID und Brick Daemon prüfen. |
-| Feste Panel-Stufe zeigt falschen Prozentwert | Den zugehörigen Panel-Wert in den Integrationsoptionen anpassen. |
+| Feste Panel-Stufe zeigt falschen Prozentwert | Die passende Lüftungsstufe in den Integrationsoptionen anpassen; sie wird in die Anlage geschrieben. |
 | Filter-/Betriebszeit fehlt | Auf den vollständigen Register-Dump der Anlage warten; dieser wird nicht kontinuierlich gesendet. |
 
 ## Vorbereitung der passiven Busaufzeichnung
@@ -184,7 +186,21 @@ Hassfest-Validierungsworkflows.
 Der Eintrag `BenPru/novus300_Rs485` ist bereits alphabetisch in der
 [offiziellen HACS-Integrationsliste](https://github.com/hacs/default/blob/master/integration)
 vorhanden. Der Release
-[v2026.11.02.12](https://github.com/BenPru/novus300_Rs485/releases/tag/v2026.11.02.12)
+[2026.11.0](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.0)
 ist nach erfolgreich bestandener HACS- und Hassfest-Prüfung veröffentlicht.
 HACS übernimmt ihn beim nächsten geplanten Scan; ein weiterer Katalog-Pull-
 Request ist nicht erforderlich.
+
+## Uhrzeit-Synchronisation
+
+Die Option **Uhrzeit täglich synchronisieren** (standardmäßig an) stellt Datum
+und Uhrzeit der Anlage jeden Tag um 03:00 auf die lokale Home-Assistant-Zeit und
+prüft das Ergebnis am Zeit-Broadcast der Anlage. Voraussetzung ist die
+`socket://`-Bridge.
+
+## Schreibschutz der Bridge
+
+`tools/novus300_serial_bridge.py` leitet nur bekannte Lüftungsmodus-Frames sowie
+gültige Uhrzeit- und Einstellungs-Frames (CRC und Wertebereich geprüft) weiter,
+gesendet im Bus-Slot des Bedienteils. Schreiben aktiviert man mit
+`--allow-command-frames`.

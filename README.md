@@ -13,7 +13,9 @@ unit's panel.
 An existing Tinkerforge Industrial Analog Out V2 can optionally be exposed as
 `fan.novus300` to control the unit's external 0-10 V input. This output is
 controllable only while the unit panel is in **Automatic** mode. The RS-485
-connection is always read-only.
+connection reads continuously and, only through the `socket://` bridge
+with the command whitelist enabled, can request a ventilation mode via
+`select.novus300_ventilation_mode` (Automatic, levels 1–3, away, boost).
 
 ## Requirements
 
@@ -70,7 +72,7 @@ of the Home Assistant host.
 
 - The serial reader handles 9600 baud and MARK parity on its local UART.
 - Enter `socket://<host>:<port>` in the integration, for example
-  `socket://10.0.17.45:9700`.
+  `socket://192.0.2.45:9700`.
 - Select **none** parity in the integration because the serial reader already
   processed the parity.
 
@@ -110,32 +112,34 @@ boost, away, or standby, the entity is intentionally read-only.
 When the configured automatic-mode helper exists, `fan.novus300` additionally
 offers the **Automatic** and **Manual** presets. They toggle only that helper
 and are also available only in panel Automatic mode. The
-`button.novus300_boost` button is subject to the same restriction; it applies
-the configured **Panel boost** value for the configured duration and then
-restores the prior output.
+`button.novus300_boost` button requests the panel **boost** mode on the RS-485
+bus and, after the configured duration, restores the previous mode if the unit
+is still in boost.
 
-## Panel levels and values
+## Unit settings
 
-The unit broadcasts a fixed panel level but not its percentage. The integration
-therefore maps these configurable values:
+These values live in the unit and are shown in the integration options as
+dropdowns:
 
-| Panel mode | Default | Option |
-|---|---:|---|
-| Level 1 | 35% | Panel level 1 |
-| Level 2 | 60% | Panel level 2 |
-| Level 3 | 90% | Panel level 3 |
-| Boost ventilation | 75% | Panel boost |
-| Away | 15% | Panel away |
+| Setting | Unit step | Default |
+|---|---|---:|
+| Ventilation level 1 / 2 / 3 | 5 % (current off-grid value is kept) | 35 / 60 / 90 % |
+| Boost duration | 5 min | 20 min |
+| Away duration | 15 min | 30 min |
 
-These are numeric inputs from 0 to 100%. Turning on `fan.novus300` uses the
-configured **Panel level 2** value; the boost button uses **Panel boost**.
-Standby has no mapped percentage and shows the raw bus value instead.
+Saving the options writes all five values to the unit over the RS-485 bridge.
+The unit cannot be queried for them; the integration remembers the values last
+seen on the bus (when saved on the panel) and offers them as defaults. Boost and
+away have no percentage on the panel, only a duration. `fan.novus300` uses
+**Ventilation level 2** when turned on; the boost button runs the unit's boost
+for the configured **Boost duration**. Standby and boost/away show the raw bus
+value for the fan setpoint.
 
 ## Entities
 
 - supply, outdoor, extract, and exhaust air temperatures
-- `sensor.novus300_ventilation_mode` for standby, automatic, levels 1–3,
-  boost, and away
+- `select.novus300_ventilation_mode` to show and set automatic, levels 1–3,
+  away, and boost
 - `sensor.novus300_fan_setpoint` for the fan control value
 - run state, air path, and bypass state
 - operating time, fan operating time, filter interval, and remaining filter
@@ -153,7 +157,7 @@ again.
 | No RS-485 readings | Verify the stable `/dev/serial/by-id/...` path, 9600 baud, MARK parity, and A/B wiring. |
 | TCP connection drops | Ensure only one client is connected to the serial TCP reader. |
 | `fan.novus300` cannot be controlled | Set the panel to Automatic and verify Tinkerforge host, port, UID, and Brick Daemon. |
-| Fixed panel level has the wrong percentage | Adjust the corresponding panel-level option. |
+| Fixed panel level has the wrong percentage | Adjust the matching Ventilation level option; it is written to the unit. |
 | Filter or operating time is missing | Wait for the unit's complete register dump; these registers are not broadcast continuously. |
 
 ## Passive bus capture preparation
@@ -171,7 +175,7 @@ brand icon, a GPL-3.0-only license, and HACS and Hassfest validation workflows.
 
 The repository is already listed alphabetically in the official
 [hacs/default integration list](https://github.com/hacs/default/blob/master/integration).
-Release [v2026.11.02.12](https://github.com/BenPru/novus300_Rs485/releases/tag/v2026.11.02.12)
+Release [2026.11.0](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.0)
 is available after successful HACS and Hassfest validation. HACS will discover
 the release during its next scheduled scan; no additional catalog pull request
 is necessary.
@@ -179,3 +183,15 @@ is necessary.
 ## License
 
 This project is licensed under [GPL-3.0-only](LICENSE).
+
+## Clock synchronization
+
+The option **Synchronize time daily** (on by default) sets the unit's date and
+time to Home Assistant's local time every day at 03:00 and verifies the result
+from the unit's clock broadcast. It requires the `socket://` bridge.
+
+## Bridge write protection
+
+`tools/novus300_serial_bridge.py` forwards only known ventilation-mode frames
+and valid clock and setting frames (CRC and value range checked), sent in the
+panel's bus slot. Start it with `--allow-command-frames` to enable writing.

@@ -67,22 +67,6 @@ SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NovusSensorDescription(
-        "ventilation_mode",
-        "Lüftungsstufe",
-        SensorDeviceClass.ENUM,
-        options=(
-            "standby",
-            "automatic",
-            "level_1",
-            "level_2",
-            "level_3",
-            "boost",
-            "away",
-            "unknown",
-        ),
-        translation_key="ventilation_mode",
-    ),
-    NovusSensorDescription(
         "run_state",
         "Betriebsstatus",
         SensorDeviceClass.ENUM,
@@ -261,16 +245,6 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
                 "transition": "mdi:swap-horizontal-circle-outline",
                 "unknown": "mdi:help-circle-outline",
             },
-            "ventilation_mode": {
-                "standby": "mdi:power-standby",
-                "automatic": "mdi:auto-mode",
-                "level_1": "mdi:fan-speed-1",
-                "level_2": "mdi:fan-speed-2",
-                "level_3": "mdi:fan-speed-3",
-                "boost": "mdi:weather-windy",
-                "away": "mdi:home-export-outline",
-                "unknown": "mdi:help-circle-outline",
-            },
         }
         return state_icons.get(self._description.key, {}).get(self.native_value)
 
@@ -288,7 +262,6 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         raw_key = {
             "run_state": "run_state_raw",
             "air_path": "status_word",
-            "ventilation_mode": "ventilation_mode_raw",
         }.get(self._description.key)
         if raw_key is None:
             return {}

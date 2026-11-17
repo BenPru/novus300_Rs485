@@ -1,0 +1,47 @@
+"""Ventilation mode selection for the Paul Novus 300 bus."""
+
+from __future__ import annotations
+
+from homeassistant.components.select import SelectEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import NovusCoordinator
+from .protocol import MODE_REQUEST_VALUES
+
+MODE_ORDER = ("automatic", "level_1", "level_2", "level_3", "away", "boost")
+
+
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
+    """Set up the ventilation mode select."""
+    async_add_entities([NovusModeSelect(entry.runtime_data)])
+
+
+class NovusModeSelect(CoordinatorEntity[NovusCoordinator], SelectEntity):
+    """Select the ventilation mode on the RS-485 bus."""
+
+    _attr_name = "Lüftungsmodus"
+    _attr_unique_id = "novus300bus_mode_select"
+    _attr_translation_key = "ventilation_mode"
+    _attr_icon = "mdi:fan"
+    _attr_options = [mode for mode in MODE_ORDER if mode in MODE_REQUEST_VALUES]
+
+    def __init__(self, coordinator: NovusCoordinator) -> None:
+        """Initialize the select."""
+        super().__init__(coordinator)
+        self.entity_id = "select.novus300_ventilation_mode"
+        self._attr_device_info = {
+            "identifiers": {("novus300bus", "novus300")},
+            "name": "Paul Novus 300",
+            "manufacturer": "Paul",
+            "model": "Novus 300",
+        }
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the mode last reported by the unit."""
+        mode = self.coordinator.data.get("ventilation_mode")
+        return mode if mode in self._attr_options else None
+
+    async def async_select_option(self, option: str) -> None:
+        """Request the selected mode on the bus."""
+        await self.coordinator.async_set_ventilation_mode(option)

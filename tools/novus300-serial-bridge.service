@@ -1,0 +1,16 @@
+[Unit]
+Description=Paul Novus 300 serial-to-TCP bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=dialout
+# Replace the example addresses: --listen-host is the bridge IP, --allowed-client the Home Assistant IP.
+ExecStart=/usr/bin/python3 /home/pi/novus300-bridge/novus300_serial_bridge.py --listen-host 192.0.2.45 --allowed-client 192.0.2.11 --allow-command-frames
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

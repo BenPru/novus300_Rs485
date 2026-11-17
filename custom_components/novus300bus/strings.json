@@ -14,20 +14,20 @@
     "step": {
       "init": {
         "data": {
-          "serial_port": "Serial device",
+          "serial_port": "Serial device / bridge URL",
           "baudrate": "Baud rate",
           "parity": "Parity",
-          "fan_enabled": "Enable 0-10 V fan control",
-          "tinkerforge_host": "Tinkerforge host",
-          "tinkerforge_port": "Tinkerforge port",
-          "tinkerforge_uid": "Industrial Analog Out UID",
-          "fan_automatic_entity": "Automatic mode helper entity",
-          "boost_duration_minutes": "Boost duration in minutes",
-          "fan_level_1_percentage": "Panel level 1 percentage",
-          "fan_level_2_percentage": "Panel level 2 percentage",
-          "fan_level_3_percentage": "Panel level 3 percentage",
-          "fan_boost_percentage": "Panel boost percentage",
-          "fan_away_percentage": "Panel away percentage"
+          "daily_time_sync": "Synchronize time daily",
+          "fan_level_1_percentage": "Ventilation level 1 (%)",
+          "fan_level_2_percentage": "Ventilation level 2 (%)",
+          "fan_level_3_percentage": "Ventilation level 3 (%)",
+          "boost_duration_minutes": "Boost duration",
+          "away_duration_minutes": "Away duration",
+          "fan_enabled": "0-10 V: Enable fan control",
+          "tinkerforge_host": "0-10 V: Tinkerforge host",
+          "tinkerforge_port": "0-10 V: Tinkerforge port",
+          "tinkerforge_uid": "0-10 V: Industrial Analog Out UID",
+          "fan_automatic_entity": "0-10 V: Automatic mode helper entity"
         }
       }
     }
@@ -49,18 +49,6 @@
           "transition": "Transition",
           "unknown": "Unknown"
         }
-      },
-      "ventilation_mode": {
-        "state": {
-          "standby": "Standby",
-          "automatic": "Automatic",
-          "level_1": "Level 1",
-          "level_2": "Level 2",
-          "level_3": "Level 3",
-          "boost": "Boost ventilation",
-          "away": "Away",
-          "unknown": "Unknown"
-        }
       }
     },
     "binary_sensor": {
@@ -68,6 +56,18 @@
         "state": {
           "on": "Open",
           "off": "Closed"
+        }
+      }
+    },
+    "select": {
+      "ventilation_mode": {
+        "state": {
+          "automatic": "Automatic",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "boost": "Boost ventilation",
+          "away": "Away"
         }
       }
     }

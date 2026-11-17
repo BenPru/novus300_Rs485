@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import PERCENTAGE
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .const import (
+    CONF_AWAY_DURATION_MINUTES,
     CONF_BAUDRATE,
+    CONF_DAILY_TIME_SYNC,
     CONF_BOOST_DURATION_MINUTES,
     CONF_FAN_AUTOMATIC_ENTITY,
-    CONF_FAN_AWAY_PERCENTAGE,
-    CONF_FAN_BOOST_PERCENTAGE,
     CONF_FAN_ENABLED,
     CONF_FAN_LEVEL_1_PERCENTAGE,
     CONF_FAN_LEVEL_2_PERCENTAGE,
@@ -23,11 +25,11 @@ from .const import (
     CONF_TINKERFORGE_HOST,
     CONF_TINKERFORGE_PORT,
     CONF_TINKERFORGE_UID,
+    DEFAULT_AWAY_DURATION_MINUTES,
     DEFAULT_BAUDRATE,
+    DEFAULT_DAILY_TIME_SYNC,
     DEFAULT_BOOST_DURATION_MINUTES,
     DEFAULT_FAN_AUTOMATIC_ENTITY,
-    DEFAULT_FAN_AWAY_PERCENTAGE,
-    DEFAULT_FAN_BOOST_PERCENTAGE,
     DEFAULT_FAN_ENABLED,
     DEFAULT_FAN_LEVEL_1_PERCENTAGE,
     DEFAULT_FAN_LEVEL_2_PERCENTAGE,
@@ -41,15 +43,45 @@ from .const import (
     PARITY_OPTIONS,
 )
 
-PERCENTAGE_SELECTOR = selector.NumberSelector(
-    selector.NumberSelectorConfig(
-        min=0,
-        max=100,
-        step=1,
-        unit_of_measurement=PERCENTAGE,
-        mode=selector.NumberSelectorMode.BOX,
-    )
+LOGGER = logging.getLogger(__name__)
+
+BUS_SETTING_KEYS = (
+    CONF_FAN_LEVEL_1_PERCENTAGE,
+    CONF_FAN_LEVEL_2_PERCENTAGE,
+    CONF_FAN_LEVEL_3_PERCENTAGE,
+    CONF_BOOST_DURATION_MINUTES,
+    CONF_AWAY_DURATION_MINUTES,
 )
+
+SETTING_GRIDS = {
+    CONF_FAN_LEVEL_1_PERCENTAGE: range(0, 101, 5),
+    CONF_FAN_LEVEL_2_PERCENTAGE: range(0, 101, 5),
+    CONF_FAN_LEVEL_3_PERCENTAGE: range(0, 101, 5),
+    CONF_BOOST_DURATION_MINUTES: range(5, 121, 5),
+    CONF_AWAY_DURATION_MINUTES: range(15, 241, 15),
+}
+
+
+def _label(key: str, value: int) -> str:
+    if key == CONF_AWAY_DURATION_MINUTES:
+        hours, minutes = divmod(value, 60)
+        if not hours:
+            return f"{minutes} min"
+        return f"{hours} h" if not minutes else f"{hours} h {minutes} min"
+    return f"{value} min" if key == CONF_BOOST_DURATION_MINUTES else f"{value} %"
+
+
+def _setting_selector(key: str, current: int) -> selector.SelectSelector:
+    """Return a dropdown for a unit setting, keeping an off-grid current value."""
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[
+                {"value": str(value), "label": _label(key, value)}
+                for value in sorted({*SETTING_GRIDS[key], current})
+            ],
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )
 
 
 class NovusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -98,7 +130,11 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         self._config_entry = config_entry
 
     def _value(self, key: str, default: str | int | bool) -> str | int | bool:
-        """Return an option, falling back to the original config entry data."""
+        """Return a bus setting as known by the unit, else the stored option."""
+        if key in BUS_SETTING_KEYS:
+            coordinator = getattr(self._config_entry, "runtime_data", None)
+            if coordinator is not None:
+                return coordinator.setting_value(key)
         return self._config_entry.options.get(
             key, self._config_entry.data.get(key, default)
         )
@@ -106,57 +142,51 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, str | int | bool] | None = None
     ) -> FlowResult:
-        """Configure serial transport and optional 0-10 V fan control."""
+        """Configure the bus, the unit's settings and optional 0-10 V control."""
         if user_input is not None:
+            user_input = {
+                key: int(value) if key in BUS_SETTING_KEYS else value
+                for key, value in user_input.items()
+            }
+            coordinator = getattr(self._config_entry, "runtime_data", None)
+            if coordinator is not None:
+                try:
+                    await coordinator.async_write_settings(
+                        {key: user_input[key] for key in BUS_SETTING_KEYS}
+                    )
+                except HomeAssistantError as err:
+                    LOGGER.warning("Unable to write settings to the Novus: %s", err)
             return self.async_create_entry(title="", data=user_input)
 
-        schema = vol.Schema(
+        fields: dict = {
+            vol.Required(
+                CONF_SERIAL_PORT,
+                default=self._value(CONF_SERIAL_PORT, DEFAULT_SERIAL_PORT),
+            ): str,
+            vol.Required(
+                CONF_BAUDRATE, default=self._value(CONF_BAUDRATE, DEFAULT_BAUDRATE)
+            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            vol.Required(
+                CONF_PARITY, default=self._value(CONF_PARITY, DEFAULT_PARITY)
+            ): vol.In(PARITY_OPTIONS),
+            vol.Required(
+                CONF_DAILY_TIME_SYNC,
+                default=self._value(CONF_DAILY_TIME_SYNC, DEFAULT_DAILY_TIME_SYNC),
+            ): bool,
+        }
+        for key, default in (
+            (CONF_FAN_LEVEL_1_PERCENTAGE, DEFAULT_FAN_LEVEL_1_PERCENTAGE),
+            (CONF_FAN_LEVEL_2_PERCENTAGE, DEFAULT_FAN_LEVEL_2_PERCENTAGE),
+            (CONF_FAN_LEVEL_3_PERCENTAGE, DEFAULT_FAN_LEVEL_3_PERCENTAGE),
+            (CONF_BOOST_DURATION_MINUTES, DEFAULT_BOOST_DURATION_MINUTES),
+            (CONF_AWAY_DURATION_MINUTES, DEFAULT_AWAY_DURATION_MINUTES),
+        ):
+            current = int(self._value(key, default))
+            fields[vol.Required(key, default=str(current))] = _setting_selector(
+                key, current
+            )
+        fields.update(
             {
-                vol.Required(
-                    CONF_SERIAL_PORT,
-                    default=self._value(CONF_SERIAL_PORT, DEFAULT_SERIAL_PORT),
-                ): str,
-                vol.Required(
-                    CONF_BAUDRATE,
-                    default=self._value(CONF_BAUDRATE, DEFAULT_BAUDRATE),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                vol.Required(
-                    CONF_PARITY,
-                    default=self._value(CONF_PARITY, DEFAULT_PARITY),
-                ): vol.In(PARITY_OPTIONS),
-                vol.Required(
-                    CONF_FAN_LEVEL_1_PERCENTAGE,
-                    default=self._value(
-                        CONF_FAN_LEVEL_1_PERCENTAGE,
-                        DEFAULT_FAN_LEVEL_1_PERCENTAGE,
-                    ),
-                ): PERCENTAGE_SELECTOR,
-                vol.Required(
-                    CONF_FAN_LEVEL_2_PERCENTAGE,
-                    default=self._value(
-                        CONF_FAN_LEVEL_2_PERCENTAGE,
-                        DEFAULT_FAN_LEVEL_2_PERCENTAGE,
-                    ),
-                ): PERCENTAGE_SELECTOR,
-                vol.Required(
-                    CONF_FAN_LEVEL_3_PERCENTAGE,
-                    default=self._value(
-                        CONF_FAN_LEVEL_3_PERCENTAGE,
-                        DEFAULT_FAN_LEVEL_3_PERCENTAGE,
-                    ),
-                ): PERCENTAGE_SELECTOR,
-                vol.Required(
-                    CONF_FAN_BOOST_PERCENTAGE,
-                    default=self._value(
-                        CONF_FAN_BOOST_PERCENTAGE, DEFAULT_FAN_BOOST_PERCENTAGE
-                    ),
-                ): PERCENTAGE_SELECTOR,
-                vol.Required(
-                    CONF_FAN_AWAY_PERCENTAGE,
-                    default=self._value(
-                        CONF_FAN_AWAY_PERCENTAGE, DEFAULT_FAN_AWAY_PERCENTAGE
-                    ),
-                ): PERCENTAGE_SELECTOR,
                 vol.Required(
                     CONF_FAN_ENABLED,
                     default=self._value(CONF_FAN_ENABLED, DEFAULT_FAN_ENABLED),
@@ -180,17 +210,9 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_FAN_AUTOMATIC_ENTITY,
                     default=self._value(
-                        CONF_FAN_AUTOMATIC_ENTITY,
-                        DEFAULT_FAN_AUTOMATIC_ENTITY,
+                        CONF_FAN_AUTOMATIC_ENTITY, DEFAULT_FAN_AUTOMATIC_ENTITY
                     ),
                 ): str,
-                vol.Required(
-                    CONF_BOOST_DURATION_MINUTES,
-                    default=self._value(
-                        CONF_BOOST_DURATION_MINUTES,
-                        DEFAULT_BOOST_DURATION_MINUTES,
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=120)),
             }
         )
-        return self.async_show_form(step_id="init", data_schema=schema)
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(fields))

@@ -8,6 +8,7 @@ from typing import Any
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -139,7 +140,7 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
-                ["sensor.novus300_ventilation_mode"],
+                ["select.novus300_ventilation_mode"],
                 self._handle_panel_mode_change,
             )
         )
@@ -236,10 +237,12 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
                 self._ipcon = None
                 self._analog_out = None
 
+    @callback
     def _handle_panel_mode_change(self, event) -> None:
         """Refresh fan controls after the panel mode changes."""
         self.async_write_ha_state()
 
+    @callback
     def _handle_automation_mode_change(self, event) -> None:
         """Refresh the displayed preset after an automation mode change."""
         self.async_write_ha_state()

@@ -5,20 +5,30 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import serial
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_AWAY_DURATION_MINUTES,
     CONF_BAUDRATE,
-    DEFAULT_FAN_AWAY_PERCENTAGE,
-    DEFAULT_FAN_BOOST_PERCENTAGE,
+    CONF_BOOST_DURATION_MINUTES,
+    CONF_FAN_LEVEL_1_PERCENTAGE,
+    CONF_FAN_LEVEL_2_PERCENTAGE,
+    CONF_FAN_LEVEL_3_PERCENTAGE,
+    DEFAULT_AWAY_DURATION_MINUTES,
+    DEFAULT_BOOST_DURATION_MINUTES,
+    CONF_DAILY_TIME_SYNC,
+    DAILY_TIME_SYNC_HOUR,
+    DEFAULT_DAILY_TIME_SYNC,
     CONF_PARITY,
     CONF_SERIAL_PORT,
     DEFAULT_FAN_LEVEL_1_PERCENTAGE,
@@ -26,7 +36,17 @@ from .const import (
     DEFAULT_FAN_LEVEL_3_PERCENTAGE,
     DOMAIN,
 )
-from .protocol import NovusFrameParser, NovusValue, VENTILATION_MODES
+from .protocol import (
+    MODE_REQUEST_VALUES,
+    NovusFrameParser,
+    SETTING_REGISTERS,
+    NovusValue,
+    VENTILATION_MODES,
+    build_date_frame,
+    build_mode_request,
+    build_setting_frame,
+    build_time_frame,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +61,15 @@ PERSISTED_KEYS = {
     *COUNTER_ENTITY_IDS,
     "ventilation_mode",
     "ventilation_mode_raw",
+    *SETTING_REGISTERS.values(),
+}
+
+SETTING_DEFAULTS = {
+    CONF_FAN_LEVEL_1_PERCENTAGE: DEFAULT_FAN_LEVEL_1_PERCENTAGE,
+    CONF_FAN_LEVEL_2_PERCENTAGE: DEFAULT_FAN_LEVEL_2_PERCENTAGE,
+    CONF_FAN_LEVEL_3_PERCENTAGE: DEFAULT_FAN_LEVEL_3_PERCENTAGE,
+    CONF_BOOST_DURATION_MINUTES: DEFAULT_BOOST_DURATION_MINUTES,
+    CONF_AWAY_DURATION_MINUTES: DEFAULT_AWAY_DURATION_MINUTES,
 }
 
 
@@ -61,6 +90,8 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         self._counter_store = Store[dict[str, NovusValue]](
             hass, 1, f"{DOMAIN}.{entry_id}.counters"
         )
+        self._cancel_time_sync = None
+        self._last_clock_at = 0.0
         self.data = {}
 
     async def async_start(self) -> None:
@@ -72,6 +103,16 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             daemon=True,
         )
         self._thread.start()
+        if self._config.get(CONF_DAILY_TIME_SYNC, DEFAULT_DAILY_TIME_SYNC) and str(
+            self._config[CONF_SERIAL_PORT]
+        ).startswith("socket://"):
+            self._cancel_time_sync = async_track_time_change(
+                self.hass,
+                self._async_daily_time_sync,
+                hour=DAILY_TIME_SYNC_HOUR,
+                minute=0,
+                second=0,
+            )
 
     async def _async_restore_counters(self) -> None:
         """Restore persisted counters, importing prior entity values once."""
@@ -121,6 +162,9 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     async def async_stop(self) -> None:
         """Stop the serial reader thread."""
         self._stop_event.set()
+        if self._cancel_time_sync is not None:
+            self._cancel_time_sync()
+            self._cancel_time_sync = None
         await self.hass.async_add_executor_job(self._close_serial)
         if self._thread is not None:
             await self.hass.async_add_executor_job(self._thread.join, 5)
@@ -178,33 +222,110 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                 with self._serial_lock:
                     self._serial = None
 
+    def _send_frame(self, frame: bytes) -> None:
+        """Write one frame to the bridge connection."""
+        with self._serial_lock:
+            serial_port = self._serial
+            if serial_port is None or not serial_port.port.startswith("socket://"):
+                raise HomeAssistantError(
+                    "Writing to the Novus bus requires the socket:// bridge connection"
+                )
+            serial_port.write(frame)
+
+    async def async_set_ventilation_mode(self, mode: str) -> None:
+        """Request a ventilation mode and wait until the unit reports it."""
+        if mode not in MODE_REQUEST_VALUES:
+            raise HomeAssistantError(f"Unsupported ventilation mode: {mode}")
+        frame = build_mode_request(mode)
+        for _ in range(3):
+            try:
+                await self.hass.async_add_executor_job(self._send_frame, frame)
+            except OSError as err:
+                raise HomeAssistantError(f"Unable to write to the Novus bus: {err}") from err
+            for _ in range(10):
+                await asyncio.sleep(0.5)
+                if self._values.get("ventilation_mode") == mode:
+                    return
+        raise HomeAssistantError(f"Novus did not confirm ventilation mode {mode}")
+
+    @callback
+    def _async_daily_time_sync(self, now: datetime) -> None:
+        """Start the scheduled clock synchronization."""
+        self.hass.async_create_task(self._async_sync_clock_logged())
+
+    async def _async_sync_clock_logged(self) -> None:
+        try:
+            await self.async_sync_clock()
+        except HomeAssistantError as err:
+            LOGGER.warning("Novus clock synchronization failed: %s", err)
+
+    async def _async_send(self, frame: bytes) -> None:
+        try:
+            await self.hass.async_add_executor_job(self._send_frame, frame)
+        except OSError as err:
+            raise HomeAssistantError(f"Unable to write to the Novus bus: {err}") from err
+
+    def setting_value(self, key: str) -> int:
+        """Return a menu setting last seen on the bus, else the configured one."""
+        value = self._values.get(key)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        configured = self._config.get(key, SETTING_DEFAULTS[key])
+        return int(configured)
+
+    async def async_write_settings(self, settings: dict[str, int]) -> None:
+        """Store menu settings in the unit, as the panel does when saving."""
+        for key, value in settings.items():
+            if key not in SETTING_DEFAULTS:
+                continue
+            await self._async_send(build_setting_frame(key, int(value)))
+            await asyncio.sleep(1)
+            self._values[key] = int(value)
+        self._counter_store.async_delay_save(self._persisted_values, 5)
+        self.async_set_updated_data(dict(self._values))
+
+    async def async_sync_clock(self) -> None:
+        """Set the unit's date and time to Home Assistant's local time."""
+        for _ in range(3):
+            moment = dt_util.now()
+            plant = self._values.get("clock")
+            if not isinstance(plant, str) or plant[:10] != moment.date().isoformat():
+                await self._async_send(build_date_frame(moment))
+                await asyncio.sleep(1.5)
+            await asyncio.sleep(1 - dt_util.now().microsecond / 1_000_000)
+            await self._async_send(build_time_frame(dt_util.now()))
+            for _ in range(30):
+                await asyncio.sleep(0.5)
+                drift = self._values.get("clock_drift")
+                if self._clock_seen_after_sync() and isinstance(drift, float) and abs(drift) <= 3:
+                    return
+        raise HomeAssistantError("Novus did not confirm the new time")
+
+    def _clock_seen_after_sync(self) -> bool:
+        """Return whether a clock broadcast arrived within the last 6 seconds."""
+        return (
+            dt_util.utcnow().timestamp() - self._last_clock_at < 6
+        )
+
     def _async_publish(self, readings: dict[str, NovusValue]) -> None:
         """Publish decoded readings on Home Assistant's event loop."""
+        clock = readings.get("clock")
+        if isinstance(clock, str):
+            now = dt_util.now().replace(tzinfo=None)
+            readings["clock_drift"] = round(
+                (datetime.fromisoformat(clock) - now).total_seconds(), 1
+            )
+            self._last_clock_at = dt_util.utcnow().timestamp()
         self._values.update(readings)
         if any(key in PERSISTED_KEYS for key in readings):
             self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))
 
     def fan_level_percentage(self, mode: str) -> int | None:
-        """Return the configured percentage for a fixed panel fan level."""
-        option = {
-            "level_1": (
-                "fan_level_1_percentage",
-                DEFAULT_FAN_LEVEL_1_PERCENTAGE,
-            ),
-            "level_2": (
-                "fan_level_2_percentage",
-                DEFAULT_FAN_LEVEL_2_PERCENTAGE,
-            ),
-            "level_3": (
-                "fan_level_3_percentage",
-                DEFAULT_FAN_LEVEL_3_PERCENTAGE,
-            ),
-            "boost": ("fan_boost_percentage", DEFAULT_FAN_BOOST_PERCENTAGE),
-            "away": ("fan_away_percentage", DEFAULT_FAN_AWAY_PERCENTAGE),
+        """Return the unit's percentage for a fixed ventilation level."""
+        key = {
+            "level_1": CONF_FAN_LEVEL_1_PERCENTAGE,
+            "level_2": CONF_FAN_LEVEL_2_PERCENTAGE,
+            "level_3": CONF_FAN_LEVEL_3_PERCENTAGE,
         }.get(mode)
-        if option is None:
-            return None
-        key, default = option
-        value = self._config.get(key, default)
-        return value if isinstance(value, int) else None
+        return None if key is None else self.setting_value(key)
