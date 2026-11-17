@@ -1,33 +1,33 @@
 # Changelog
 
-Versionierung als Datum: `JAHR.MONAT.TAG`.
+Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
 ## 2026.11.17
 
-### Neu
-- **Modus per RS-485 senden:** `select.novus300_ventilation_mode` setzt Automatik, Stufe 1–3, Abwesend und Stoßlüftung direkt auf dem Bus.
-- **`button.novus300_boost`** löst die Stufe Stoßlüftung auf dem Bus aus (nicht mehr per 0-10 V).
-- **Uhrzeit täglich synchronisieren:** neue Option (Standard: an), Sync täglich um 03:00 mit Prüfung der Abweichung.
-- **Anlageneinstellungen per Bus:** Lüfterstufen 1–3 in % sowie Dauer Stoßlüftung und Abwesend werden beim Speichern der Optionen in die Anlage geschrieben. Angezeigt werden die zuletzt auf dem Bus gesehenen Werte.
-- **Serielle Bridge (`tools/`):** Schreibzugriff nur für geprüfte Frames (Modus, Datum/Uhrzeit, Einstellungen) mit CRC- und Wertebereichsprüfung; optionales systemd-Beispiel.
-- Dokumentation (EN/DE) und Tests für Uhr-, Datums- und Einstellungsframes.
+### Added
+- **Send the ventilation mode over RS-485:** `select.novus300_ventilation_mode` sets automatic, levels 1–3, away and boost directly on the bus.
+- **`button.novus300_boost`** triggers the boost level on the bus (no longer via 0-10 V).
+- **Synchronize time daily:** new option (default: on), syncs every day at 03:00 and verifies the resulting drift.
+- **Unit settings over the bus:** fan levels 1–3 (%) and the boost/away durations are written to the unit when the options are saved. The values last seen on the bus are shown.
+- **Serial bridge (`tools/`):** write access only for validated frames (mode, date/time, settings) with CRC and range checks; example systemd unit included.
+- Documentation (EN/DE) and tests for clock, date and settings frames.
 
-### Geändert
-- Options-Dialog neu geordnet: Serielle Verbindung, tägliche Synchronisation, Stufen in %, Dauer Stoßlüftung, Dauer Abwesend, danach die 0-10-V-Einstellungen; Schieberegler wurden durch Auswahllisten ersetzt, Bezeichnungen vereinheitlicht.
+### Changed
+- Options dialog reordered: serial connection, daily sync, levels in %, boost duration, away duration, then the 0-10 V settings. Sliders replaced by dropdowns, labels unified.
 
-### Entfernt
-- Prozentwerte für Stoßlüftung und Abwesend.
-- `sensor.novus300_clock`, `sensor.novus300_clock_drift` und der Dienst `sync_clock`.
-- `sensor.novus300_ventilation_mode` (ersetzt durch `select.novus300_ventilation_mode`).
+### Removed
+- Percentage values for boost and away.
+- `sensor.novus300_clock`, `sensor.novus300_clock_drift` and the `sync_clock` service.
+- `sensor.novus300_ventilation_mode` (replaced by `select.novus300_ventilation_mode`).
 
-### Behoben
-- `fan.py`: Callback-Fehler beim Zustandswechsel.
+### Fixed
+- `fan.py`: callback error on state changes.
 
-### Hinweise
-- Die Anlage lässt sich nicht auslesen; die Wirkung geschriebener Einstellungen wurde nur mit unveränderten Werten geprüft.
-- Das Bedienteil zeigt nach einem Busbefehl evtl. weiter den alten Modus an.
-- Wer den Sensor im Dashboard nutzt, muss auf das Select umstellen.
+### Notes
+- The unit cannot be queried; the effect of written settings was only verified with unchanged values.
+- The control panel may keep showing the previous mode after a bus command.
+- If a dashboard uses the removed sensor, switch it to the select entity.
 
 ## 2026.11.2
 
-- Erstes HACS-fähiges Release: RS-485-Anbindung des Paul Novus 300, deutsche und englische Einrichtungsdokumentation, optionale Tinkerforge-Hinweise, HACS-Icon, GPL-3.0-only und Validierungs-Workflows.
+- First HACS-ready release: RS-485 integration for the Paul Novus 300, English and German setup documentation, optional Tinkerforge guidance, HACS brand icon, GPL-3.0-only license and validation workflows.
