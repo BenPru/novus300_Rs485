@@ -130,7 +130,7 @@ These values live in the unit. The ventilation levels are plain number fields
 The filter interval (30–180 days, 10-day steps) is a dropdown in the options; saving writes it to the unit. `button.novus300_filter_reset` and the `novus300bus.reset_filter` service reset the filter runtime (both registers set to the configured interval).
 
 Saving the options writes all five values to the unit over the RS-485 bridge.
-The unit sends them only when the panel menu *Settings → Fan levels* is opened and saved (not cyclically, not at start-up); the integration remembers the values last
+The unit broadcasts them only rarely (one register every few minutes in a slow rotation, not right at start-up) and they are stored in the options automatically once seen; the integration remembers the values last
 seen on the bus (when saved on the panel) and offers them as defaults. Boost and
 away have no percentage on the panel. Boost has a duration; away is the
 ventilation time per hour (min/h) at level 1 for moisture protection. `fan.novus300` uses
