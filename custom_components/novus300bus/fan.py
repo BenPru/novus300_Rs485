@@ -80,6 +80,11 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         }
 
     @property
+    def available(self) -> bool:
+        """Return whether the unit is switched on."""
+        return super().available and not self.coordinator.is_stopped
+
+    @property
     def percentage(self) -> int | None:
         """Return the percentage of the active level."""
         mode = self.coordinator.data.get("ventilation_mode")
@@ -269,8 +274,8 @@ class NovusFanEntity(NovusBusFanEntity):
 
     @property
     def available(self) -> bool:
-        """Stay available; the level control works without Tinkerforge."""
-        return True
+        """Return whether the unit is switched on; works without Tinkerforge."""
+        return not self.coordinator.is_stopped
 
     async def async_added_to_hass(self) -> None:
         """Read the existing analog output without changing it."""

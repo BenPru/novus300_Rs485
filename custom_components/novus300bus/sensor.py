@@ -262,7 +262,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             return self._restored_value
         if self._description.key == "message":
             transient = self.coordinator.transient_event()
-            if value == "none" and transient is not None:
+            if transient is not None:
                 return describe_status_event(transient)
             return MESSAGE_TEXTS.get(value, f"Meldung {value.removeprefix('code_')}")
         if self._description.key in (
@@ -283,6 +283,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     def icon(self) -> str | None:
         """Return an icon matching the current operating state."""
         if self._description.key == "message":
+            if self.coordinator.transient_event() is not None:
+                return "mdi:message-processing-outline"
             return (
                 "mdi:message-check-outline"
                 if self.native_value == "Keine Meldung"
@@ -297,7 +299,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             attributes = {"code": self.coordinator.data.get("message_code")}
             time = self.coordinator.message_time()
             transient = self.coordinator.transient_event()
-            if self.coordinator.data.get("message") == "none" and transient:
+            if transient:
                 time = datetime.fromisoformat(transient["time"])
             if time is not None:
                 attributes["occurred_at"] = time.isoformat(timespec="seconds")

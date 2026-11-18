@@ -38,6 +38,11 @@ class NovusModeSelect(CoordinatorEntity[NovusCoordinator], SelectEntity):
         }
 
     @property
+    def available(self) -> bool:
+        """Return whether the unit is switched on."""
+        return super().available and not self.coordinator.is_stopped
+
+    @property
     def current_option(self) -> str | None:
         """Return the mode last reported by the unit."""
         mode = self.coordinator.data.get("ventilation_mode")

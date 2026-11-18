@@ -159,6 +159,8 @@ Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.
 
 ## Angelegte Entitäten
 
+Vollständige Liste mit allen Attributen: [docs/ENTITIES.de.md](docs/ENTITIES.de.md).
+
 - Temperaturen für Zu-, Außen-, Ab- und Fortluft
 - `select.novus300_ventilation_mode` zum Anzeigen und Setzen von Automatik,
   Stufe 1–3, Abwesend und Stoßlüftung
@@ -213,7 +215,7 @@ prüft das Ergebnis am Zeit-Broadcast der Anlage. Voraussetzung ist die
 
 ## Schreibschutz der Bridge
 
-`tools/novus300_serial_bridge.py` leitet nur bekannte Lüftungsmodus-Frames sowie
-gültige Uhrzeit- und Einstellungs-Frames (CRC und Wertebereich geprüft) weiter,
+`tools/novus300_serial_bridge.py` leitet nur bekannte Lüftungsmodus-Frames sowie die
+Power-Frames (Aus/Ein) und gültige Uhrzeit- und Einstellungs-Frames (CRC und Wertebereich geprüft) weiter,
 gesendet im Bus-Slot des Bedienteils. Schreiben aktiviert man mit
 `--allow-command-frames`.

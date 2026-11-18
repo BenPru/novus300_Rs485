@@ -7,8 +7,9 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 ### Added
 - **`switch.novus300_power` ("Betriebsstatus")** switches the unit on and off over the bus (panel frames for register 0x07) and shows the run state with its icon and the attribute `run_state`. Switching on is only accepted by the unit about 30 seconds after switching off.
 - **`switch.novus300_bypass`**: read-only bypass state (opening/closing is not known yet), attributes `air_path` and `raw_value`.
-- **Status changes in `sensor.novus300_message`:** every change of the run state (e.g. "Anlage startet") or the air path (e.g. "Bypass in Bewegung") is logged in the attribute `status_events` and shown as the message for 5 minutes (or while in transition) when the unit reports no message of its own.
+- **Status changes in `sensor.novus300_message`:** every change of the run state (e.g. "Anlage startet") or the air path (e.g. "Bypass in Bewegung") is logged in the attribute `status_events` and shown as the message for 5 minutes (or while in transition), taking precedence over the unit's own message.
 - `fan.novus300` has the attributes `bus_setpoint` and, in away mode, `away_minutes_per_hour`.
+- **Documentation:** complete list of all entities and attributes in [docs/ENTITIES.md](docs/ENTITIES.md).
 - **Serial bridge (`tools/`):** the power frames (off/on) are now allowed.
 
 ### Fixed
@@ -16,6 +17,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 
 ### Changed
 - `sensor.novus300_message` is now a diagnostic entity.
+- `fan.novus300`, `select.novus300_ventilation_mode` and `button.novus300_boost` are unavailable while the unit is off.
 - Level percentages in the options dialog start at 17 % (levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %). `fan.novus300` raises targets of 1–16 % to 17 %, also with 0-10 V (the Home Assistant slider itself cannot be limited). 0 % (and turn off) selects away mode; the fan then shows 0 % / off.
 
 ## 2026.11.17

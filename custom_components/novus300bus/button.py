@@ -9,6 +9,8 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from .const import CONF_BOOST_DURATION_MINUTES
 from .coordinator import NovusCoordinator
 
@@ -24,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     )
 
 
-class NovusBoostButton(ButtonEntity):
+class NovusBoostButton(CoordinatorEntity[NovusCoordinator], ButtonEntity):
     """Trigger the boost ventilation mode on the bus."""
 
     _attr_name = "Stoßlüftung"
@@ -38,6 +40,7 @@ class NovusBoostButton(ButtonEntity):
         config: dict[str, Any],
     ) -> None:
         """Initialize the boost button."""
+        super().__init__(coordinator)
         self.hass = hass
         self.entity_id = "button.novus300_boost"
         self._coordinator = coordinator
@@ -50,6 +53,11 @@ class NovusBoostButton(ButtonEntity):
             "model": "Novus 300 (FOCUS250)",
             "sw_version": "BUS 1.7.1",
         }
+
+    @property
+    def available(self) -> bool:
+        """Return whether the unit is switched on."""
+        return super().available and not self._coordinator.is_stopped
 
     async def async_press(self) -> None:
         """Start boost ventilation and return to the previous mode afterwards."""

@@ -144,6 +144,8 @@ value for the fan setpoint.
 
 ## Entities
 
+A complete list with all attributes: [docs/ENTITIES.md](docs/ENTITIES.md).
+
 - supply, outdoor, extract, and exhaust air temperatures
 - `select.novus300_ventilation_mode` to show and set automatic, levels 1–3,
   away, and boost
@@ -200,5 +202,5 @@ from the unit's clock broadcast. It requires the `socket://` bridge.
 ## Bridge write protection
 
 `tools/novus300_serial_bridge.py` forwards only known ventilation-mode frames
-and valid clock and setting frames (CRC and value range checked), sent in the
+power frames (off/on) and valid clock and setting frames (CRC and value range checked), sent in the
 panel's bus slot. Start it with `--allow-command-frames` to enable writing.
