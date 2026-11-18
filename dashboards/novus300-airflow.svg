@@ -7,10 +7,10 @@
   <path d="M40 215H330M870 215H1130M70 455H330M870 455H1160" stroke="#8ad9f8" stroke-width="24" stroke-linecap="round"/>
   <path d="M368 215l-40-30v60zM1170 215l-40-30v60zM30 455l40-30v60zM832 455l40-30v60z" fill="#8ad9f8"/>
   <g fill="#d9f9f4" font-family="sans-serif" font-size="30" font-weight="bold">
-    <text x="90" y="155">AUSSENLUFT</text>
-    <text x="1110" y="155" text-anchor="end">ZULUFT</text>
-    <text x="90" y="395">FORTLUFT</text>
-    <text x="1110" y="395" text-anchor="end">ABLUFT</text>
-    <text x="600" y="510" font-size="28" text-anchor="middle">BYPASS</text>
+    <text x="125" y="155">AUSSENLUFT</text>
+    <text x="1075" y="155" text-anchor="end">ZULUFT</text>
+    <text x="125" y="395">FORTLUFT</text>
+    <text x="1075" y="395" text-anchor="end">ABLUFT</text>
+    <text x="600" y="490" font-size="28" text-anchor="middle">BYPASS</text>
   </g>
 </svg>
