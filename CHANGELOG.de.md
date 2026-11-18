@@ -7,7 +7,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 ### Neu
 - **`switch.novus300_power` („Betriebsstatus“)** schaltet die Anlage über den Bus ein und aus (Panel-Frames für Register 0x07) und zeigt den Betriebsstatus mit Icon und Attribut `run_state`. Das Einschalten nimmt die Anlage erst etwa 30 Sekunden nach dem Ausschalten an.
 - **`switch.novus300_bypass` („Bypass geöffnet“)**: Bypass-Zustand, nur lesbar (Öffnen/Schließen ist noch nicht bekannt), Attribute `air_path` und `raw_value`.
-- **Statuswechsel in `sensor.novus300_message`:** jeder Wechsel des Betriebsstatus (z. B. „Anlage startet“) oder des Luftwegs (z. B. „Bypass in Bewegung“) steht im Attribut `status_events` und ; nur Übergänge („Anlage startet“, „Bypass in Bewegung“, unbekannte Werte) werden solange sie andauern als Meldung angezeigt, vor der eigenen Meldung der Anlage. Stabile Zustände zeigen die Schalter.
+- **Statuswechsel in `sensor.novus300_message`:** jeder Wechsel des Betriebsstatus (z. B. „Anlage fährt hoch“) oder des Luftwegs (z. B. „Bypass in Bewegung“) steht im Attribut `status_events` und ; nur Übergänge („Anlage startet“, „Bypass in Bewegung“, unbekannte Werte) werden solange sie andauern als Meldung angezeigt, vor der eigenen Meldung der Anlage. Stabile Zustände zeigen die Schalter.
 - `fan.novus300` hat die Attribute `bus_setpoint` und im Modus Abwesend `away_minutes_per_hour`.
 - **Dokumentation:** vollständige Liste aller Entitäten und Attribute in [docs/ENTITIES.de.md](docs/ENTITIES.de.md).
 - **Serielle Bridge (`tools/`):** die Power-Frames (Aus/Ein) sind jetzt freigegeben.

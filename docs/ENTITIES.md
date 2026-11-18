@@ -125,8 +125,10 @@ measurement, no extra attributes.
 Diagnostic. The state is either a status change or the unit's own message.
 
 * **Transition** (only while it lasts; stable states are shown by the
-  switches): "Anlage startet", "Anlagenstatus unbekannt (Wert n)",
-  "Bypass in Bewegung", "Luftweg unbekannt".
+  switches): "Anlage fährt hoch", "Anlagenstatus unbekannt (Wert n)",
+  "Bypass in Bewegung", "Luftweg unbekannt" (only while running), and
+  "Anlage fährt runter" for 45 s after switching off (the unit reports no
+  shutdown phase). While off, the last real unit message is shown.
 * **Unit message** otherwise: "Keine Meldung", "Filter wechseln",
   "Fehler am Eingang", "Fehler Bypass" or "Meldung <code>".
 

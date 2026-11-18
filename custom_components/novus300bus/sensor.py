@@ -35,7 +35,7 @@ STATUS_EVENT_TEXTS = {
     "run_state": {
         "stopped": "Anlage ausgeschaltet",
         "running": "Anlage läuft",
-        "starting": "Anlage startet",
+        "starting": "Anlage fährt hoch",
         "unknown": "Anlagenstatus unbekannt",
     },
     "air_path": {
@@ -47,8 +47,10 @@ STATUS_EVENT_TEXTS = {
 }
 
 
-def describe_status_event(event: dict[str, str]) -> str:
+def describe_status_event(event: dict[str, str], transient: bool = False) -> str:
     """Return a readable text for a run state or air path change."""
+    if transient and event["kind"] == "run_state" and event["state"] == "stopped":
+        return "Anlage fährt runter"
     text = STATUS_EVENT_TEXTS[event["kind"]].get(event["state"], event["state"])
     if event["state"] == "unknown" and event.get("raw"):
         text = f"{text} (Wert {event['raw']})"
@@ -263,7 +265,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         if self._description.key == "message":
             transient = self.coordinator.transient_event()
             if transient is not None:
-                return describe_status_event(transient)
+                return describe_status_event(transient, True)
             return MESSAGE_TEXTS.get(value, f"Meldung {value.removeprefix('code_')}")
         if self._description.key in (
             "operating_time",

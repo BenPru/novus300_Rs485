@@ -390,12 +390,32 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     def transient_event(self) -> dict[str, str] | None:
         """Return the newest status event of a state that is still a transition."""
         data = self._values
-        pending = {
-            "run_state": data.get("run_state") not in (None, "running", "stopped"),
-            "air_path": data.get("air_path") not in (None, "heat_recovery", "bypass"),
-        }
-        for event in self.status_events():
-            if pending.get(event["kind"]):
+        run_state = data.get("run_state")
+        events = self.status_events()
+        if run_state == "stopped":
+            # The unit reports no shutdown phase; show it briefly after the change.
+            for event in events:
+                if event["kind"] == "run_state":
+                    age = dt_util.now() - datetime.fromisoformat(event["time"])
+                    return event if event["state"] == "stopped" and age < timedelta(seconds=45) else None
+            return None
+        for event in events:
+            if event["kind"] == "run_state" and run_state not in (None, "running"):
+                return event
+            if (
+                event["kind"] == "air_path"
+                and run_state == "running"
+                and data.get("air_path") not in (None, "heat_recovery", "bypass")
+            ):
+                run_event = next((e for e in events if e["kind"] == "run_state"), None)
+                if (
+                    event["state"] == "unknown"
+                    and run_event
+                    and dt_util.now() - datetime.fromisoformat(run_event["time"])
+                    < timedelta(minutes=2)
+                ):
+                    # Air path is unknown while the unit ramps up after switching on.
+                    return {**run_event, "state": "starting"}
                 return event
         return None
 

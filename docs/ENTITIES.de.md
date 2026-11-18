@@ -130,8 +130,11 @@ Diagnose. Der Zustand ist entweder ein Statuswechsel oder die eigene Meldung
 der Anlage.
 
 * **Übergang** (nur solange er andauert; stabile Zustände zeigen die
-  Schalter): „Anlage startet“, „Anlagenstatus unbekannt (Wert n)“,
-  „Bypass in Bewegung“, „Luftweg unbekannt“.
+  Schalter): „Anlage fährt hoch“, „Anlagenstatus unbekannt (Wert n)“,
+  „Bypass in Bewegung“, „Luftweg unbekannt“ (nur im Betrieb) sowie
+  „Anlage fährt runter“ für 45 s nach dem Ausschalten (die Anlage meldet keine
+  Abschaltphase). Bei ausgeschalteter Anlage steht wieder die letzte echte
+  Meldung.
 * **Meldung der Anlage** sonst: „Keine Meldung“, „Filter wechseln“,
   „Fehler am Eingang“, „Fehler Bypass“ oder „Meldung <Code>“.
 
