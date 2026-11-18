@@ -68,6 +68,9 @@ class NovusPowerSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
         raw = self.coordinator.data.get("run_state_raw")
         if isinstance(raw, int):
             attributes["raw_value"] = raw
+        for key in ("serial_panel", "serial_fan_slave", "serial_defroster"):
+            if isinstance(serial := self.coordinator.data.get(key), str):
+                attributes[key] = serial
         return attributes
 
     async def async_turn_on(self, **kwargs: Any) -> None:

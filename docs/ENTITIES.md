@@ -48,6 +48,7 @@ Switches the unit on and off over the bus (the panel's frames for register
 | --- | --- |
 | `run_state` | `stopped` (raw 0), `running` (raw 1), `starting` (raw 3) or `unknown` |
 | `raw_value` | raw value of the run-state register |
+| `serial_panel`, `serial_fan_slave`, `serial_defroster` | serial numbers of the connected components (once seen on the bus) |
 
 The icon follows the run state (stop, play, progress clock, help). After
 sending, the integration waits up to 5 s for the new run state and retries up

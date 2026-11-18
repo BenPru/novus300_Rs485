@@ -10,52 +10,56 @@ views:
           - type: state-label
             entity: sensor.novus300_outdoor_air_temperature
             style:
-              top: 34%
-              left: 13%
+              top: 42%
+              left: 12.5%
               color: "#ffffff"
-              font-size: 24px
+              font-size: 20px
+              font-weight: bold
           - type: state-label
             entity: sensor.novus300_supply_air_temperature
             style:
-              top: 34%
-              left: 87%
+              top: 42%
+              left: 87.5%
               color: "#ffffff"
-              font-size: 24px
+              font-size: 20px
+              font-weight: bold
           - type: state-label
             entity: sensor.novus300_exhaust_air_temperature
             style:
-              top: 69%
-              left: 13%
+              top: 78%
+              left: 12.5%
               color: "#ffffff"
-              font-size: 24px
+              font-size: 20px
+              font-weight: bold
           - type: state-label
             entity: sensor.novus300_extract_air_temperature
             style:
-              top: 69%
-              left: 87%
+              top: 78%
+              left: 87.5%
               color: "#ffffff"
-              font-size: 24px
-          - type: state-label
+              font-size: 20px
+              font-weight: bold
+          - type: state-icon
             entity: switch.novus300_bypass
             style:
-              top: 89%
+              top: 83%
               left: 50%
+              "--mdc-icon-size": 44px
               color: "#ffffff"
-              font-size: 22px
       - type: entities
         title: Lüftungsstatus
         show_header_toggle: false
         entities:
           - entity: select.novus300_ventilation_mode
             name: Lüftungsstufe
-          - entity: switch.novus300_power
-            name: Betriebsstatus
-          - entity: switch.novus300_bypass
-            name: Bypass
           - entity: fan.novus300
             name: Lüftung
           - entity: button.novus300_boost
             name: Stoßlüftung
+          - entity: switch.novus300_power
+            name: Betriebsstatus
+          - entity: switch.novus300_bypass
+            name: Bypass geöffnet
       - type: history-graph
         title: Lufttemperaturen
         hours_to_show: 24
@@ -72,6 +76,10 @@ views:
         title: Wartung
         show_header_toggle: false
         entities:
+          - entity: sensor.novus300_message
+            name: Meldung
+          - entity: button.novus300_filter_reset
+            name: Filter zurücksetzen
           - entity: sensor.novus300_filter_time_remaining
             name: Filter-Restlaufzeit
           - entity: sensor.novus300_operating_time
@@ -147,7 +155,20 @@ views:
             name: Vorherige Meldung 3
       - type: markdown
         title: Statuswechsel
-        content: >-
+        content: |
           {% set events = state_attr('sensor.novus300_message', 'status_events') or [] %}
-          {% for event in events %}- {{ event }}
-          {% else %}Keine Statuswechsel beobachtet.{% endfor %}
+          {% for event in events %}
+          {{ event }}<br>
+          {% else %}
+          Keine Statuswechsel beobachtet.
+          {% endfor %}
+      - type: markdown
+        title: Geräte und Versionen
+        content: |
+          {% set sw = 'switch.novus300_power' %}
+          **{{ device_attr(sw, 'name') }}**<br>
+          {{ device_attr(sw, 'manufacturer') }} {{ device_attr(sw, 'model') }}<br>
+          Firmware: {{ device_attr(sw, 'sw_version') }}<br>
+          Bedienteil: {{ state_attr(sw, 'serial_panel') or '–' }}<br>
+          Lüfter-Slave: {{ state_attr(sw, 'serial_fan_slave') or '–' }}<br>
+          Defroster: {{ state_attr(sw, 'serial_defroster') or '–' }}

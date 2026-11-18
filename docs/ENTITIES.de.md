@@ -48,6 +48,7 @@ Schaltet die Anlage über den Bus ein und aus (die Panel-Frames für Register
 | Attribut | Beschreibung |
 | --- | --- |
 | `run_state` | `stopped` (Rohwert 0), `running` (1), `starting` (3) oder `unknown` |
+| `serial_panel`, `serial_fan_slave`, `serial_defroster` | Seriennummern der angeschlossenen Komponenten (sobald am Bus gesehen) |
 | `raw_value` | Rohwert des Betriebsstatus-Registers |
 
 Das Icon folgt dem Betriebsstatus (Stopp, Play, Fortschrittsuhr, Hilfe). Nach

@@ -9,6 +9,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - **`switch.novus300_bypass` („Bypass geöffnet“)**: Bypass-Zustand, nur lesbar (Öffnen/Schließen ist noch nicht bekannt), Attribute `air_path` und `raw_value`.
 - **Statuswechsel in `sensor.novus300_message`:** jeder Wechsel des Betriebsstatus (z. B. „Anlage fährt hoch“) oder des Luftwegs (z. B. „Bypass in Bewegung“) steht im Attribut `status_events` und ; nur Übergänge („Anlage startet“, „Bypass in Bewegung“, unbekannte Werte) werden solange sie andauern als Meldung angezeigt, vor der eigenen Meldung der Anlage. Stabile Zustände zeigen die Schalter.
 - `fan.novus300` hat die Attribute `bus_setpoint` und im Modus Abwesend `away_minutes_per_hour`.
+- `switch.novus300_power` zeigt zusätzlich die Seriennummern von Bedienteil, Lüfter-Slave und Defroster als Attribute.
 - **Dashboard:** fertiges `dashboards/novus300.yaml` mit Attribut-Details und Liste der Statuswechsel.
 - **Dokumentation:** vollständige Liste aller Entitäten und Attribute in [docs/ENTITIES.de.md](docs/ENTITIES.de.md).
 - **Serielle Bridge (`tools/`):** die Power-Frames (Aus/Ein) sind jetzt freigegeben.

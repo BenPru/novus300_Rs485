@@ -9,6 +9,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - **`switch.novus300_bypass` ("Bypass geöffnet")**: read-only bypass state (opening/closing is not known yet), attributes `air_path` and `raw_value`.
 - **Status changes in `sensor.novus300_message`:** every change of the run state (e.g. "Anlage fährt hoch") or the air path (e.g. "Bypass in Bewegung") is logged in the attribute `status_events`; transitions only ("Anlage startet", "Bypass in Bewegung", unknown values) are shown as the message while they last, taking precedence over the unit's own message. Stable states are not shown (see the switches).
 - `fan.novus300` has the attributes `bus_setpoint` and, in away mode, `away_minutes_per_hour`.
+- `switch.novus300_power` also exposes the serial numbers of the panel, fan slave and defroster as attributes.
 - **Dashboard:** ready-made `dashboards/novus300.yaml` with attribute details and status-change list.
 - **Documentation:** complete list of all entities and attributes in [docs/ENTITIES.md](docs/ENTITIES.md).
 - **Serial bridge (`tools/`):** the power frames (off/on) are now allowed.
