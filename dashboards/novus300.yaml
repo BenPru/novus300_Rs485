@@ -124,6 +124,7 @@ views:
             - type: tile
               entity: button.novus300_boost
               name: Stoßlüftung
+              hide_state: true
               color: blue
               visibility:
                 - condition: state
@@ -133,6 +134,7 @@ views:
             - type: tile
               entity: button.novus300_boost
               name: Stoßlüftung
+              hide_state: true
               visibility:
                 - condition: state
                   entity: fan.novus300
