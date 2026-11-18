@@ -5,40 +5,68 @@ views:
     icon: mdi:fan
     cards:
       - type: picture-elements
-        image: /local/novus300-airflow.svg
+        image: /local/novus300-airflow.svg?v=3
         elements:
           - type: state-label
             entity: sensor.novus300_outdoor_air_temperature
             style:
-              top: 42%
-              left: 12.5%
+              top: 46%
+              left: 16%
               color: "#ffffff"
               font-size: 20px
               font-weight: bold
           - type: state-label
             entity: sensor.novus300_supply_air_temperature
             style:
-              top: 42%
-              left: 87.5%
+              top: 46%
+              left: 84%
               color: "#ffffff"
               font-size: 20px
               font-weight: bold
           - type: state-label
             entity: sensor.novus300_exhaust_air_temperature
             style:
-              top: 78%
-              left: 12.5%
+              top: 84%
+              left: 16%
               color: "#ffffff"
               font-size: 20px
               font-weight: bold
           - type: state-label
             entity: sensor.novus300_extract_air_temperature
             style:
-              top: 78%
-              left: 87.5%
+              top: 84%
+              left: 84%
               color: "#ffffff"
               font-size: 20px
               font-weight: bold
+          - type: icon
+            icon: mdi:weather-partly-cloudy
+            style:
+              top: 22.7%
+              left: 4.2%
+              color: "#8ad9f8"
+              "--mdc-icon-size": 34px
+          - type: icon
+            icon: mdi:home-import-outline
+            style:
+              top: 22.7%
+              left: 95.8%
+              color: "#8ad9f8"
+              "--mdc-icon-size": 34px
+          - type: icon
+            icon: mdi:weather-windy
+            style:
+              top: 60%
+              left: 4.2%
+              color: "#8ad9f8"
+              "--mdc-icon-size": 34px
+          - type: icon
+            icon: mdi:home-export-outline
+            style:
+              top: 60%
+              left: 95.8%
+              color: "#8ad9f8"
+              "--mdc-icon-size": 34px
           - type: state-icon
             entity: switch.novus300_bypass
             style:
@@ -52,6 +80,80 @@ views:
         entities:
           - entity: select.novus300_ventilation_mode
             name: Lüftungsstufe
+          - type: buttons
+            entities:
+              - entity: select.novus300_ventilation_mode
+                name: "Auto"
+                icon: mdi:autorenew
+                show_icon: true
+                show_name: true
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  target:
+                    entity_id: select.novus300_ventilation_mode
+                  data:
+                    option: automatic
+              - entity: select.novus300_ventilation_mode
+                name: "1"
+                icon: mdi:numeric-1-box-outline
+                show_icon: true
+                show_name: true
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  target:
+                    entity_id: select.novus300_ventilation_mode
+                  data:
+                    option: level_1
+              - entity: select.novus300_ventilation_mode
+                name: "2"
+                icon: mdi:numeric-2-box-outline
+                show_icon: true
+                show_name: true
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  target:
+                    entity_id: select.novus300_ventilation_mode
+                  data:
+                    option: level_2
+              - entity: select.novus300_ventilation_mode
+                name: "3"
+                icon: mdi:numeric-3-box-outline
+                show_icon: true
+                show_name: true
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  target:
+                    entity_id: select.novus300_ventilation_mode
+                  data:
+                    option: level_3
+              - entity: select.novus300_ventilation_mode
+                name: "Abw."
+                icon: mdi:home-export-outline
+                show_icon: true
+                show_name: true
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  target:
+                    entity_id: select.novus300_ventilation_mode
+                  data:
+                    option: away
+              - entity: select.novus300_ventilation_mode
+                name: "Boost"
+                icon: mdi:fan-plus
+                show_icon: true
+                show_name: true
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  target:
+                    entity_id: select.novus300_ventilation_mode
+                  data:
+                    option: boost
           - entity: fan.novus300
             name: Lüftung
           - entity: button.novus300_boost
@@ -78,6 +180,11 @@ views:
         entities:
           - entity: sensor.novus300_message
             name: Meldung
+          - type: attribute
+            entity: sensor.novus300_message
+            attribute: occurred_at
+            name: Zeitpunkt der Meldung
+            format: datetime
           - entity: button.novus300_filter_reset
             name: Filter zurücksetzen
           - entity: sensor.novus300_filter_time_remaining
@@ -166,9 +273,18 @@ views:
         title: Geräte und Versionen
         content: |
           {% set sw = 'switch.novus300_power' %}
-          **{{ device_attr(sw, 'name') }}**<br>
-          {{ device_attr(sw, 'manufacturer') }} {{ device_attr(sw, 'model') }}<br>
-          Firmware: {{ device_attr(sw, 'sw_version') }}<br>
-          Bedienteil: {{ state_attr(sw, 'serial_panel') or '–' }}<br>
-          Lüfter-Slave: {{ state_attr(sw, 'serial_fan_slave') or '–' }}<br>
-          Defroster: {{ state_attr(sw, 'serial_defroster') or '–' }}
+          **[{{ device_attr(sw, 'name') }}](/config/devices/device/{{ device_id(sw) }})**<br>
+          {{ device_attr(sw, 'manufacturer') }} {{ device_attr(sw, 'model') }}, Firmware {{ device_attr(sw, 'sw_version') }}<br>
+          {% for name, key in [('Bedienteil', 'serial_panel'), ('Lüfter-Slave', 'serial_fan_slave'), ('Defroster', 'serial_defroster')] %}
+          {% set id = device_id('Paul Novus 300 ' ~ name) %}
+          {% if id %}[{{ name }}](/config/devices/device/{{ id }}){% else %}{{ name }}{% endif %}: {{ state_attr(sw, key) or '–' }}<br>
+          {% endfor %}
+      - type: markdown
+        title: Konfiguration
+        content: |
+          {% set sw = 'switch.novus300_power' %}
+          Stufe 1 / 2 / 3: {{ state_attr(sw, 'config_fan_level_1_percentage') }} / {{ state_attr(sw, 'config_fan_level_2_percentage') }} / {{ state_attr(sw, 'config_fan_level_3_percentage') }} %<br>
+          Stoßlüftung: {{ state_attr(sw, 'config_boost_duration_minutes') }} min<br>
+          Abwesend: {{ state_attr(sw, 'config_away_minutes_per_hour') }} min pro Stunde<br>
+          Filterintervall: {{ state_attr(sw, 'config_filter_interval_days') }} Tage<br>
+          [Einstellungen ändern](/config/integrations/integration/novus300bus)

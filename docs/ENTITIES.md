@@ -48,6 +48,7 @@ Switches the unit on and off over the bus (the panel's frames for register
 | --- | --- |
 | `run_state` | `stopped` (raw 0), `running` (raw 1), `starting` (raw 3) or `unknown` |
 | `raw_value` | raw value of the run-state register |
+| `config_fan_level_1_percentage`, `_2_`, `_3_`, `config_boost_duration_minutes`, `config_away_minutes_per_hour`, `config_filter_interval_days` | current settings (from the bus, else from the options) |
 | `serial_panel`, `serial_fan_slave`, `serial_defroster` | serial numbers of the connected components (once seen on the bus) |
 
 The icon follows the run state (stop, play, progress clock, help). After

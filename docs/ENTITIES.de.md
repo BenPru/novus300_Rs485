@@ -48,6 +48,7 @@ Schaltet die Anlage über den Bus ein und aus (die Panel-Frames für Register
 | Attribut | Beschreibung |
 | --- | --- |
 | `run_state` | `stopped` (Rohwert 0), `running` (1), `starting` (3) oder `unknown` |
+| `config_fan_level_1_percentage`, `_2_`, `_3_`, `config_boost_duration_minutes`, `config_away_minutes_per_hour`, `config_filter_interval_days` | aktuelle Einstellungen (vom Bus, sonst aus den Optionen) |
 | `serial_panel`, `serial_fan_slave`, `serial_defroster` | Seriennummern der angeschlossenen Komponenten (sobald am Bus gesehen) |
 | `raw_value` | Rohwert des Betriebsstatus-Registers |
 

@@ -8,6 +8,13 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import (
+    CONF_AWAY_DURATION_MINUTES,
+    CONF_BOOST_DURATION_MINUTES,
+    CONF_FAN_LEVEL_1_PERCENTAGE,
+    CONF_FAN_LEVEL_2_PERCENTAGE,
+    CONF_FAN_LEVEL_3_PERCENTAGE,
+)
 from .coordinator import NovusCoordinator
 
 DEVICE_INFO = {
@@ -71,6 +78,25 @@ class NovusPowerSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
         for key in ("serial_panel", "serial_fan_slave", "serial_defroster"):
             if isinstance(serial := self.coordinator.data.get(key), str):
                 attributes[key] = serial
+        settings = self.coordinator.setting_value
+        attributes["config_fan_level_1_percentage"] = settings(
+            CONF_FAN_LEVEL_1_PERCENTAGE
+        )
+        attributes["config_fan_level_2_percentage"] = settings(
+            CONF_FAN_LEVEL_2_PERCENTAGE
+        )
+        attributes["config_fan_level_3_percentage"] = settings(
+            CONF_FAN_LEVEL_3_PERCENTAGE
+        )
+        attributes["config_boost_duration_minutes"] = settings(
+            CONF_BOOST_DURATION_MINUTES
+        )
+        attributes["config_away_minutes_per_hour"] = settings(
+            CONF_AWAY_DURATION_MINUTES
+        )
+        attributes["config_filter_interval_days"] = (
+            self.coordinator.filter_interval_days()
+        )
         return attributes
 
     async def async_turn_on(self, **kwargs: Any) -> None:
