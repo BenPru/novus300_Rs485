@@ -8,7 +8,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - `fan.turn_on` schlug mit Fehler fehl (auch mit 0-10 V); 0 % / `turn_off` ohne 0-10 V läuft jetzt mit der kleinsten Stufe 1 (17 %), da Standby über den Bus nicht angefordert werden kann.
 
 ### Geändert
-- Stufen-Prozentwerte im Optionsdialog beginnen bei 17 % (es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %). `fan.novus300` begrenzt Soll-Werte unter 17 % auf 17 % (der HA-Schieberegler selbst lässt sich nicht einschränken).
+- Stufen-Prozentwerte im Optionsdialog beginnen bei 17 % (es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %). `fan.novus300` hebt Soll-Werte von 1–16 % auf 17 % an, auch mit 0-10 V (der HA-Schieberegler selbst lässt sich nicht einschränken). Standby (Modus 0) nimmt die Anlage über den Bus nicht an, daher bleibt 0 % ohne 0-10 V bei Stufe 1 mit 17 %; mit 0-10 V schreibt 0 % 0 V.
 
 ## 2026.11.17
 

@@ -116,7 +116,7 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Run at the minimum level (standby cannot be requested over the bus)."""
+        """Run at the minimum level (0 V with 0-10 V)."""
         await self.async_set_percentage(0)
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -127,7 +127,8 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self._busy = True
         try:
             keep = None
-            # The unit cannot be put into standby over the bus: 0 means minimum.
+            # The unit did not accept standby (mode 0) over the bus: 0 means minimum.
+            target = max(MIN_LEVEL_PERCENTAGE, target)
             if target == level_2:
                 mode = "level_2"
             elif target < level_2:
@@ -334,6 +335,8 @@ class NovusFanEntity(NovusBusFanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Select automatic mode and write the percentage as 0-10 V."""
         target = max(0, min(100, round(percentage)))
+        if 0 < target < MIN_LEVEL_PERCENTAGE:
+            target = MIN_LEVEL_PERCENTAGE
         if not self._analog_active:
             await self.coordinator.async_set_ventilation_mode("automatic")
         try:
