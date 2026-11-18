@@ -47,6 +47,7 @@ def _register_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
             )
 
 PLATFORMS = (
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.FAN,
     Platform.BUTTON,

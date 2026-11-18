@@ -107,95 +107,36 @@ views:
               color: "#ffffff"
       - type: vertical-stack
         cards:
-        - type: entities
-          title: Lüftungsstatus
-          show_header_toggle: false
-          entities:
-            - entity: select.novus300_ventilation_mode
-              name: Lüftungsstufe
-        - type: custom:mushroom-chips-card
-          alignment: center
-          chips:
-            - type: template
-              icon: mdi:autorenew
-              content: "Auto"
-              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'automatic') else 'grey' }}"
-              tap_action:
-                action: call-service
-                service: select.select_option
-                target:
-                  entity_id: select.novus300_ventilation_mode
-                data:
-                  option: automatic
-            - type: template
-              icon: mdi:numeric-1-circle
-              content: "1"
-              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'level_1') else 'grey' }}"
-              tap_action:
-                action: call-service
-                service: select.select_option
-                target:
-                  entity_id: select.novus300_ventilation_mode
-                data:
-                  option: level_1
-            - type: template
-              icon: mdi:numeric-2-circle
-              content: "2"
-              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'level_2') else 'grey' }}"
-              tap_action:
-                action: call-service
-                service: select.select_option
-                target:
-                  entity_id: select.novus300_ventilation_mode
-                data:
-                  option: level_2
-            - type: template
-              icon: mdi:numeric-3-circle
-              content: "3"
-              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'level_3') else 'grey' }}"
-              tap_action:
-                action: call-service
-                service: select.select_option
-                target:
-                  entity_id: select.novus300_ventilation_mode
-                data:
-                  option: level_3
-            - type: template
-              icon: mdi:home-export-outline
-              content: "Abw."
-              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'away') else 'grey' }}"
-              tap_action:
-                action: call-service
-                service: select.select_option
-                target:
-                  entity_id: select.novus300_ventilation_mode
-                data:
-                  option: away
-            - type: template
-              icon: mdi:fan-plus
-              content: "Boost"
-              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'boost') else 'grey' }}"
-              tap_action:
-                action: call-service
-                service: select.select_option
-                target:
-                  entity_id: select.novus300_ventilation_mode
-                data:
-                  option: boost
+        - type: tile
+          entity: select.novus300_ventilation_mode
+          name: Lüftungsstufe
+          color: green
+          features:
+            - type: select-options
+              style: buttons
         - type: tile
           entity: fan.novus300
           name: Lüftung
           features:
             - type: fan-speed
-        - type: entities
-          show_header_toggle: false
-          entities:
-            - entity: button.novus300_boost
+        - type: horizontal-stack
+          cards:
+            - type: tile
+              entity: binary_sensor.novus300_boost_active
               name: Stoßlüftung
-            - entity: switch.novus300_power
-              name: Betriebsstatus
-            - entity: switch.novus300_bypass
+              color: blue
+              icon_tap_action:
+                action: perform-action
+                perform_action: button.press
+                target:
+                  entity_id: button.novus300_boost
+            - type: tile
+              entity: switch.novus300_bypass
               name: Bypass geöffnet
+              color: orange
+        - type: tile
+          entity: switch.novus300_power
+          name: Betriebsstatus
       - type: history-graph
         title: Lufttemperaturen
         hours_to_show: 24
@@ -208,21 +149,33 @@ views:
             name: Abluft
           - entity: sensor.novus300_exhaust_air_temperature
             name: Fortluft
-      - type: entities
-        title: Wartung
-        show_header_toggle: false
-        entities:
-          - entity: sensor.novus300_message
-            name: Meldung
-            secondary_info: occurred_at
-          - entity: button.novus300_filter_reset
-            name: Filter zurücksetzen
-          - entity: sensor.novus300_filter_time_remaining
-            name: Filter-Restlaufzeit
-          - entity: sensor.novus300_operating_time
-            name: Gesamtbetriebszeit
-          - entity: sensor.novus300_fan_operating_time
-            name: Lüfterbetriebszeit
+      - type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: binary_sensor.novus300_message_active
+                name: Meldung
+                color: red
+              - type: tile
+                entity: binary_sensor.novus300_filter_due
+                name: Filterwechsel
+                color: red
+          - type: entities
+            title: Wartung
+            show_header_toggle: false
+            entities:
+            - entity: sensor.novus300_message
+              name: Meldung
+              secondary_info: occurred_at
+            - entity: button.novus300_filter_reset
+              name: Filter zurücksetzen
+            - entity: sensor.novus300_filter_time_remaining
+              name: Filter-Restlaufzeit
+            - entity: sensor.novus300_operating_time
+              name: Gesamtbetriebszeit
+            - entity: sensor.novus300_fan_operating_time
+              name: Lüfterbetriebszeit
       - type: entities
         title: Details (Attribute)
         show_header_toggle: false

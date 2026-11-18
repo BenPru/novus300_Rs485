@@ -12,6 +12,9 @@ key shown below.
 | --- | --- | --- | --- | --- |
 | `switch.novus300_power` | switch | Betriebsstatus | – | yes |
 | `switch.novus300_bypass` | switch | Bypass geöffnet | – | no |
+| `binary_sensor.novus300_message_active` | binary_sensor | Message active | – | no |
+| `binary_sensor.novus300_filter_due` | binary_sensor | Filter due | – | no |
+| `binary_sensor.novus300_boost_active` | binary_sensor | Boost active | – | no |
 | `fan.novus300` | fan | Lüftung | – | no |
 | `select.novus300_ventilation_mode` | select | Lüftungsmodus | – | no |
 | `button.novus300_boost` | button | Stoßlüftung | – | no |
