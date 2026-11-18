@@ -29,6 +29,7 @@ anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 - [RS-485 anschließen und konfigurieren](#rs-485-anschließen-und-konfigurieren)
 - [Lüfter ohne 0-10 V](#lüfter-ohne-0-10-v)
 - [Optional: Tinkerforge 0-10-V-Lüftersteuerung](#optional-tinkerforge-0-10-v-lüftersteuerung)
+- [Optionen (Einstellungsdialog)](#optionen-einstellungsdialog)
 - [Anlageneinstellungen](#anlageneinstellungen)
 - [Angelegte Entitäten](#angelegte-entitäten) · [Dashboard](#dashboard) · [Automatisierungsbeispiele](#automatisierungsbeispiele)
 - [Fehlerdiagnose](#fehlerdiagnose)
@@ -149,6 +150,30 @@ den vorherigen Modus wieder her, sofern die Anlage noch in Stoßlüftung steht.
 Wenn der konfigurierte Automatik-Helfer vorhanden ist, bietet `fan.novus300`
 zusätzlich die Presets **Automatik** und **Manuell**. Sie schalten ausschließlich
 diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
+
+## Optionen (Einstellungsdialog)
+
+Öffnen über **Einstellungen → Geräte & Dienste → Paul Novus 300 RS-485 Bus → Zahnrad**. Alle Felder stehen in einem Dialog; ein Hinweis oben nennt die Werte, die die Anlage noch nicht gesendet hat (sie zeigen dann Standardwerte). Beim Speichern werden die Anlageneinstellungen in die Anlage geschrieben (Bridge mit Befehls-Whitelist erforderlich).
+
+| Feld | Bedeutung | Werte / Standard |
+|---|---|---|
+| **Serielles Gerät / Bridge-URL** | RS-485-Verbindung: Gerätepfad (`/dev/serial/by-id/...`) oder `socket://Host:Port` der seriellen Bridge. Schreiben (Modus, Ein/Aus, Einstellungen, Uhrzeit) geht nur über die Bridge, die mit `--allow-command-frames` gestartet wurde. | `/dev/ttyNovus300` |
+| **Baudrate** | Busgeschwindigkeit. | 9600 |
+| **Parität** | Parität des Busses. | none (der Bus nutzt MARK-Parität; das übernimmt die Bridge) |
+| **Uhrzeit täglich synchronisieren** | Setzt Datum und Uhrzeit der Anlage täglich um 03:00 auf die Zeit von Home Assistant und prüft die Abweichung. | an |
+| **Lüftungsstufe 1 / 2 / 3 (%)** | Lüfter-Prozentwert der drei Stufen, wird in die Anlage geschrieben. Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %, sonst zeigt der Dialog einen Fehler. Zeigt den ursprünglichen Wert, auch wenn gerade ein Prozentwert Stufe 1 oder 3 vorübergehend überschreibt. | 35 / 60 / 90 % |
+| **Dauer Stoßlüftung** | Wie lange die Stoßlüftung nach `button.novus300_boost` läuft. Auswahl in 5-Minuten-Schritten (5–120). | 15 min |
+| **Abwesend: Lüftungszeit (min/h)** | Lüftungsminuten pro Stunde auf Stufe 1 im Modus Abwesend. | 15 / 30 / 45, Standard 30 |
+| **Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird** | Aus: Die Modus-Auswahl bleibt auf *Automatik*, solange `fan.novus300` einen Prozentwert setzt. An: Sie zeigt Stufe 1 oder 3. | aus |
+| **Filterintervall** | Wechselintervall, wird in die Anlage geschrieben und beim Filter-Reset verwendet. Auswahl 30–180 Tage in 10er-Schritten. | 90 Tage |
+| **0-10 V: Lüftersteuerung aktivieren** | Optionaler Hardware-Weg über ein Tinkerforge Industrial Analog Out V2 (siehe unten). Für die Bus-Steuerung nicht nötig. | aus |
+| **0-10 V: Tinkerforge-Host / -Port / UID** | Adresse des Tinkerforge-Brick-Daemons und UID des Analog-Out-Moduls. | `10.0.17.45` / 4223 / `Hob` |
+| **0-10 V: Helfer-Entität für Automatikmodus** | `input_boolean`, die den Automatikmodus für den 0-10-V-Ausgang markiert. | `input_boolean.luftung_automatik` |
+
+Hinweise:
+- Werte, die die Anlage selbst sendet (Menüänderungen am Bedienteil), werden automatisch in die Optionen übernommen.
+- Beim Speichern werden vorübergehende Stufen-Überschreibungen (Lüfter-Prozentwert) verworfen und die ursprünglichen Stufen wiederhergestellt.
+- Eine Änderung des Filterintervalls wird ebenfalls in die Anlage geschrieben.
 
 ## Anlageneinstellungen
 

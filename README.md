@@ -25,6 +25,7 @@ with the command whitelist enabled, can request a ventilation mode via
 - [Connect and configure RS-485](#connect-and-configure-rs-485)
 - [Fan without 0-10 V](#fan-without-0-10-v)
 - [Optional Tinkerforge 0-10 V fan control](#optional-tinkerforge-0-10-v-fan-control)
+- [Options (settings dialog)](#options-settings-dialog)
 - [Unit settings](#unit-settings)
 - [Entities](#entities) · [Dashboard](#dashboard) · [Automation examples](#automation-examples)
 - [Troubleshooting](#troubleshooting)
@@ -136,6 +137,30 @@ and are also available only in panel Automatic mode. The
 `button.novus300_boost` button requests the panel **boost** mode on the RS-485
 bus and, after the configured duration, restores the previous mode if the unit
 is still in boost.
+
+## Options (settings dialog)
+
+Open **Settings → Devices & services → Paul Novus 300 RS-485 Bus → gear icon**. All fields are in one dialog; a note at the top lists the values the unit has not broadcast yet (they still show defaults). Saving writes the unit settings to the unit (bridge with command whitelist required).
+
+| Field | What it does | Values / default |
+|---|---|---|
+| **Serial device / bridge URL** | RS-485 connection: a device path (`/dev/serial/by-id/...`) or `socket://host:port` of the serial bridge. Writing (mode, power, settings, clock) only works through the bridge started with `--allow-command-frames`. | `/dev/ttyNovus300` |
+| **Baud rate** | Bus speed. | 9600 |
+| **Parity** | Bus parity. | none (the bus uses MARK parity; the bridge handles it) |
+| **Synchronize time daily** | Sets the unit's date and time to Home Assistant's time every day at 03:00 and checks the drift. | on |
+| **Ventilation level 1 / 2 / 3 (%)** | Fan percentage of the three levels, written to the unit. Must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %, otherwise the dialog shows an error. Shows the original value even while a percentage temporarily overrides level 1 or 3. | 35 / 60 / 90 % |
+| **Boost duration** | How long the boost level runs after `button.novus300_boost`. Dropdown in 5-minute steps (5–120). | 15 min |
+| **Away: ventilation time (min/h)** | Ventilation minutes per hour at level 1 in away mode. | 15 / 30 / 45, default 30 |
+| **Show levels instead of automatic when the fan is set by percentage** | Off: the mode select stays on *Automatic* while `fan.novus300` sets a percentage. On: it shows level 1 or 3. | off |
+| **Filter interval** | Replacement interval written to the unit; used by the filter reset. Dropdown 30–180 days in 10-day steps. | 90 days |
+| **0-10 V: Enable fan control** | Optional hardware path via a Tinkerforge Industrial Analog Out V2 (see below). Not needed for bus control. | off |
+| **0-10 V: Tinkerforge host / port / UID** | Address of the Tinkerforge brick daemon and the UID of the analog out module. | `10.0.17.45` / 4223 / `Hob` |
+| **0-10 V: Automatic mode helper entity** | `input_boolean` that marks automatic mode for the 0-10 V output. | `input_boolean.luftung_automatik` |
+
+Notes:
+- Values the unit sends itself (menu changes at the panel) are stored in the options automatically.
+- Saving discards temporary level overrides set via the fan percentage and restores the original levels.
+- Changing the filter interval also writes it to the unit.
 
 ## Unit settings
 
