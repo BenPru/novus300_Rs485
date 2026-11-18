@@ -11,6 +11,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - `fan.novus300` has the attributes `bus_setpoint` and, in away mode, `away_minutes_per_hour`.
 - `switch.novus300_power` also exposes the serial numbers of the panel, fan slave and defroster and the current settings (`config_*`) as attributes.
 - **Fan (bus mode):** the state is now the percentage (or `off`) like with 0-10 V, so the slider and percentage are shown instead of on/off.
+- **Fan (bus mode):** in automatic mode the percentage is the 0-10 V signal the unit measures (`bus_setpoint`, last known value if it drops to 0) instead of 0 %/off.
 - **Fan levels:** when the fan percentage temporarily overrides level 1/3, the mode select shows `automatic` by default (new option to show the real level); selecting a level restores its original percentage. The options now show the original level percentage instead of the temporary one.
 - **Dashboard:** ready-made `dashboards/novus300.yaml` with attribute details and status-change list.
 - **Documentation:** complete list of all entities and attributes in [docs/ENTITIES.md](docs/ENTITIES.md).

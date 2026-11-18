@@ -79,7 +79,9 @@ werden.
 
 Immer vorhanden. Zeigt den Prozentwert der aktiven Stufe (z. B. 60 % in Stufe 2)
 und steuert die Lüftung über einen Soll-Prozentwert. Der Zustand ist der
-Prozentwert (z. B. `60`) oder `aus`, mit und ohne 0-10 V.
+Prozentwert (z. B. `60`) oder `aus`, mit und ohne 0-10 V. Im Automatikmodus
+(Bus-Modus) ist der Prozentwert das gemessene 0-10-V-Signal (`bus_setpoint`;
+bei 0 der letzte bekannte Wert).
 
 * Ohne 0-10 V: Ein Soll-Wert unter Stufe 2 wählt Stufe 1 und setzt deren
   Prozentwert vorübergehend auf den Soll-Wert, darüber entsprechend Stufe 3;

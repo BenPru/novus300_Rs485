@@ -71,6 +71,7 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self.entity_id = "fan.novus300"
         self._busy = False
         self._retry_at = 0.0
+        self._last_automatic: int | None = None
         self._attr_device_info = {
             "identifiers": {("novus300bus", "novus300")},
             "name": "Paul Novus 300",
@@ -90,6 +91,11 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         mode = self.coordinator.data.get("ventilation_mode")
         if self.coordinator.is_stopped or mode in ("standby", "away"):
             return 0
+        if mode == "automatic":
+            setpoint = self.coordinator.data.get("fan_setpoint")
+            if isinstance(setpoint, float | int) and setpoint > 0:
+                self._last_automatic = round(setpoint)
+            return self._last_automatic
         return self.coordinator.fan_level_percentage(mode)
 
     @property
