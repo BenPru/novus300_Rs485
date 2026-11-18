@@ -92,7 +92,7 @@ Home-Assistant-Verbindung trennen.
 
 ## Lüfter ohne 0-10 V
 
-Ist die 0-10-V-Steuerung deaktiviert, steuert `fan.novus300` die Anlage über den Bus: Ein Soll unter Stufe 2 wählt Stufe 1 und setzt deren Prozentwert auf das Soll (mind. 17 %), über Stufe 2 entsprechend Stufe 3; Soll gleich Stufe 2 wählt Stufe 2. Die ursprünglichen Prozentwerte von Stufe 1/3 werden gemerkt und beim Verlassen der Stufe (auch nach Neustart) zurückgeschrieben.
+`fan.novus300` ist immer verfügbar und zeigt den Prozentwert der aktiven Stufe. Mit 0-10 V wählt das Setzen eines Prozentwerts Automatik und schreibt ihn per Tinkerforge. Ist die 0-10-V-Steuerung deaktiviert, steuert die Entität die Anlage über den Bus: Ein Soll unter Stufe 2 wählt Stufe 1 und setzt deren Prozentwert auf das Soll (mind. 17 %), über Stufe 2 entsprechend Stufe 3; Soll gleich Stufe 2 wählt Stufe 2. Die ursprünglichen Prozentwerte von Stufe 1/3 werden gemerkt und beim Verlassen der Stufe (auch nach Neustart) zurückgeschrieben.
 
 ## Optional: Tinkerforge 0-10-V-Lüftersteuerung
 

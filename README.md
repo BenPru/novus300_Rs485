@@ -81,7 +81,7 @@ second concurrent connection can replace the Home Assistant connection.
 
 ## Fan without 0-10 V
 
-If 0-10 V control is disabled, `fan.novus300` controls the unit over the bus: a target below level 2 selects level 1 and sets its percentage to the target (min. 17 %), above level 2 it selects level 3 likewise; the target equal to level 2 selects level 2. The original level 1/3 percentages are stored and restored when the level is left (also after a restart).
+`fan.novus300` is always available and shows the percentage of the active level. With 0-10 V enabled, setting a percentage selects automatic mode and writes it via Tinkerforge. If 0-10 V control is disabled, it controls the unit over the bus: a target below level 2 selects level 1 and sets its percentage to the target (min. 17 %), above level 2 it selects level 3 likewise; the target equal to level 2 selects level 2. The original level 1/3 percentages are stored and restored when the level is left (also after a restart).
 
 ## Optional Tinkerforge 0-10 V fan control
 

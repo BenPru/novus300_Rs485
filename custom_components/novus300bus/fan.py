@@ -42,10 +42,10 @@ LEVEL_KEYS = {
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up the optional Tinkerforge fan."""
     config = {**entry.data, **entry.options}
-    if not config.get(CONF_FAN_ENABLED, False):
+    if config.get(CONF_FAN_ENABLED, False):
+        async_add_entities([NovusFanEntity(entry.runtime_data, config)])
+    else:
         async_add_entities([NovusBusFanEntity(entry.runtime_data)])
-        return
-    async_add_entities([NovusFanEntity(entry.runtime_data, config)])
 
 
 class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
@@ -162,16 +162,12 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
             self._busy = False
 
 
-class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
-    """Control the Novus 0-10 V fan input via Tinkerforge."""
-
-    _attr_name = "Lüftung"
-    _attr_unique_id = "novus300bus_fan"
+class NovusFanEntity(NovusBusFanEntity):
+    """Control the Novus 0-10 V fan input via Tinkerforge (automatic mode)."""
 
     def __init__(self, coordinator: NovusCoordinator, config: dict[str, Any]) -> None:
         """Initialize the fan controller."""
         super().__init__(coordinator)
-        self.entity_id = "fan.novus300"
         self._host = config[CONF_TINKERFORGE_HOST]
         self._port = config[CONF_TINKERFORGE_PORT]
         self._uid = config[CONF_TINKERFORGE_UID]
@@ -185,38 +181,29 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self._ipcon: IPConnection | None = None
         self._analog_out: BrickletIndustrialAnalogOutV2 | None = None
         self._lock = threading.Lock()
-        self._attr_device_info = {
-            "identifiers": {("novus300bus", "novus300")},
-            "name": "Paul Novus 300",
-            "manufacturer": "Paul",
-            "model": "Novus 300 (FOCUS250)",
-            "sw_version": "BUS 1.7.1",
-        }
 
     @property
-    def available(self) -> bool:
-        """Return whether the Tinkerforge controller is reachable."""
-        return self._available
+    def _analog_active(self) -> bool:
+        return self.coordinator.data.get("ventilation_mode") == "automatic"
 
     @property
     def percentage(self) -> int | None:
-        """Return the current 0-10 V control value."""
+        """Return the 0-10 V value in automatic mode, else the active level."""
         if self.coordinator.is_stopped:
             return 0
-        return self._percentage
-
-    @property
-    def percentage_step(self) -> int:
-        """Return the UI increment for the analog control value."""
-        return 5
+        if self._analog_active:
+            return self._percentage
+        return super().percentage
 
     @property
     def supported_features(self) -> FanEntityFeature:
-        """Return controls only while the panel selects automatic mode."""
-        if self.coordinator.data.get("ventilation_mode") != "automatic":
-            return FanEntityFeature(0)
-        features = FanEntityFeature.SET_SPEED
-        if self._has_automatic_entity:
+        """Return the controls; presets only while the unit is in automatic."""
+        features = (
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+        )
+        if self._analog_active and self._has_automatic_entity:
             features |= FanEntityFeature.PRESET_MODE
         return features
 
@@ -233,6 +220,8 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return whether a non-zero voltage is output."""
+        if not self._analog_active:
+            return super().is_on
         return (
             self._percentage is not None
             and self._percentage > 0
@@ -242,12 +231,16 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     @property
     def state(self) -> str:
         """Return the legacy numeric state used by existing automations."""
-        return str(self._percentage) if self.is_on else STATE_OFF
+        return str(self.percentage) if self.is_on else STATE_OFF
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose the unit's run state next to the analog output."""
-        return {"run_state": self.coordinator.data.get("run_state")}
+        return {
+            **super().extra_state_attributes,
+            "run_state": self.coordinator.data.get("run_state"),
+            "analog_percentage": self._percentage,
+        }
 
     @property
     def preset_mode(self) -> str | None:
@@ -259,6 +252,11 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
             if self.hass.states.is_state(self._automatic_entity, STATE_ON)
             else "Manuell"
         )
+
+    @property
+    def available(self) -> bool:
+        """Stay available; the level control works without Tinkerforge."""
+        return True
 
     async def async_added_to_hass(self) -> None:
         """Read the existing analog output without changing it."""
@@ -324,9 +322,10 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         )
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the 0-10 V output percentage in panel automatic mode."""
-        self._ensure_panel_automatic()
+        """Select automatic mode and write the percentage as 0-10 V."""
         target = max(0, min(100, round(percentage)))
+        if not self._analog_active:
+            await self.coordinator.async_set_ventilation_mode("automatic")
         try:
             await self.hass.async_add_executor_job(self._set_percentage, target)
         except (Error, OSError) as err:
@@ -375,7 +374,11 @@ class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
 
     @callback
     def _handle_panel_mode_change(self, event) -> None:
-        """Refresh fan controls after the panel mode changes."""
+        """Refresh the analog value and controls after the panel mode changes."""
+        self.hass.async_create_task(self._async_refresh_state())
+
+    async def _async_refresh_state(self) -> None:
+        await self.async_update()
         self.async_write_ha_state()
 
     @callback
