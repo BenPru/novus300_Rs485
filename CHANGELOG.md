@@ -2,7 +2,7 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
-## 2026.11.18 (unreleased)
+## 2026.11.18
 
 ### Added
 - **`switch.novus300_power` ("Betriebsstatus")** switches the unit on and off over the bus (panel frames for register 0x07) and shows the run state with its icon and the attribute `run_state`. Switching on is only accepted by the unit about 30 seconds after switching off.
@@ -13,11 +13,13 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - **Fan (bus mode):** the state is now the percentage (or `off`) like with 0-10 V, so the slider and percentage are shown instead of on/off.
 - **Fan (bus mode):** in automatic mode the percentage is the 0-10 V signal the unit measures (`bus_setpoint`, last known value if it drops to 0) instead of 0 %/off.
 - **Fan levels:** when the fan percentage temporarily overrides level 1/3, the mode select shows `automatic` by default (new option to show the real level); selecting a level restores its original percentage. The options now show the original level percentage instead of the temporary one.
-- **Dashboard:** ready-made `dashboards/novus300.yaml` with attribute details and status-change list.
+- **Dashboard:** ready-made `dashboards/novus300.yaml` built from standard Home Assistant cards only (no HACS cards): airflow graphic with clickable temperatures, mode buttons with the active level highlighted (`select-options` tile feature), fan slider, boost / bypass / run-state tiles, colour-highlighted tiles that appear only when relevant (boost active = blue, message present = red, filter remaining time 0 = red), maintenance card, attribute details and status-change list. Screenshots: [docs/images/dashboard.png](docs/images/dashboard.png).
+- **Option "Show levels instead of automatic when the fan is set by percentage"** (`show_fan_levels`, off by default): off = the mode select stays on `automatic` while a fan percentage is active; on = it shows level 1/3 like the unit.
 - **Documentation:** complete list of all entities and attributes in [docs/ENTITIES.md](docs/ENTITIES.md).
 - **Serial bridge (`tools/`):** the power frames (off/on) are now allowed.
 
 ### Fixed
+- Switching from a level to automatic no longer leaves the unit at 0 %; the last automatic percentage is used.
 - `fan.turn_on` failed with an error (also with 0-10 V); 0 % / `turn_off` now select away mode.
 
 ### Changed

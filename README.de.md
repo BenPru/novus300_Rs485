@@ -165,6 +165,73 @@ Vollständige Liste mit allen Attributen: [docs/ENTITIES.de.md](docs/ENTITIES.de
 
 [`dashboards/novus300.yaml`](dashboards/novus300.yaml) ist ein fertiges Dashboard (nur Standard-Karten, mit Karte „Details (Attribute)“ und Liste der Statuswechsel). Die Datei in das YAML-Dashboard kopieren (oder in den Rohkonfigurationseditor einfügen) und `dashboards/novus300-airflow.svg` nach `config/www/` kopieren (wird als `/local/novus300-airflow.svg` verwendet).
 
+![Dashboard-Übersicht](docs/images/dashboard.png)
+
+Die Modus-Tasten heben die aktive Stufe hervor; die Kacheln für Stoßlüftung, Meldung und Filter werden nur bei Bedarf farbig eingeblendet:
+
+![Bedienelemente](docs/images/dashboard-controls.png)
+
+Verwendete Entitäten (alle von dieser Integration): `select.novus300_ventilation_mode`, `fan.novus300`, `button.novus300_boost`, `switch.novus300_power`, `switch.novus300_bypass`, `sensor.novus300_message`, `button.novus300_filter_reset` sowie die Temperatur- und Filtersensoren.
+
+#### Automatisierungsbeispiele
+
+```yaml
+# Stoßlüftung bei hoher Luftfeuchtigkeit im Bad
+automation:
+  - alias: "Novus: Stoßlüftung bei Feuchte"
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.bad_luftfeuchtigkeit
+        above: 70
+    actions:
+      - action: button.press
+        target:
+          entity_id: button.novus300_boost
+
+# Abwesend, wenn niemand zu Hause ist, sonst Automatik
+  - alias: "Novus: Modus nach Anwesenheit"
+    triggers:
+      - trigger: state
+        entity_id: group.family
+    actions:
+      - action: select.select_option
+        target:
+          entity_id: select.novus300_ventilation_mode
+        data:
+          option: "{{ 'away' if is_state('group.family', 'not_home') else 'automatic' }}"
+
+# Lüfter in Prozent (Bus-Modus, Stufe 1/3 wird vorübergehend überschrieben)
+  - alias: "Novus: abends 45 %"
+    triggers:
+      - trigger: time
+        at: "18:00:00"
+    actions:
+      - action: fan.set_percentage
+        target:
+          entity_id: fan.novus300
+        data:
+          percentage: 45
+
+# Meldungen der Anlage melden
+  - alias: "Novus: Meldung"
+    triggers:
+      - trigger: state
+        entity_id: sensor.novus300_message
+    conditions:
+      - "{{ trigger.to_state.state not in ['Keine Meldung', 'unavailable'] }}"
+    actions:
+      - action: notify.notify
+        data:
+          message: "Novus 300: {{ trigger.to_state.state }}"
+```
+
+Nach dem Filterwechsel `button.novus300_filter_reset` drücken (oder den Dienst `novus300bus.reset_filter` aufrufen).
+
+#### Option: echte Lüfterstufen
+
+Standardmäßig bleibt die Modus-Auswahl auf **Automatik**, solange ein Lüfter-Prozentwert aktiv ist. In den Optionen der Integration lässt sich **Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird** (`show_fan_levels`) aktivieren, dann erscheint Stufe 1/3. Die Wahl einer Stufe stellt immer deren ursprünglichen Prozentwert wieder her.
+
+
 - Temperaturen für Zu-, Außen-, Ab- und Fortluft
 - `select.novus300_ventilation_mode` zum Anzeigen und Setzen von Automatik,
   Stufe 1–3, Abwesend und Stoßlüftung

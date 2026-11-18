@@ -2,7 +2,7 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
-## 2026.11.18 (unveröffentlicht)
+## 2026.11.18
 
 ### Neu
 - **`switch.novus300_power` („Betriebsstatus“)** schaltet die Anlage über den Bus ein und aus (Panel-Frames für Register 0x07) und zeigt den Betriebsstatus mit Icon und Attribut `run_state`. Das Einschalten nimmt die Anlage erst etwa 30 Sekunden nach dem Ausschalten an.
@@ -13,11 +13,13 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - **Fan (Bus-Modus):** Der Zustand ist jetzt der Prozentwert (oder `aus`) wie bei 0-10 V; Regler und Prozentanzeige statt Ein/Aus.
 - **Fan (Bus-Modus):** Im Automatikmodus ist der Prozentwert das von der Anlage gemessene 0-10-V-Signal (`bus_setpoint`, bei 0 der letzte bekannte Wert) statt 0 %/aus.
 - **Lüfterstufen:** Überschreibt der Lüfter-Prozentwert vorübergehend Stufe 1/3, zeigt die Modus-Auswahl standardmäßig `Automatik` (neue Option für die echte Stufe); die Wahl einer Stufe stellt deren ursprünglichen Prozentwert wieder her. Die Optionen zeigen jetzt den ursprünglichen Stufenwert statt des temporären.
-- **Dashboard:** fertiges `dashboards/novus300.yaml` mit Attribut-Details und Liste der Statuswechsel.
+- **Dashboard:** fertiges `dashboards/novus300.yaml` nur aus Standard-Karten von Home Assistant (keine HACS-Karten): Luftstrom-Grafik mit klickbaren Temperaturen, Modus-Tasten mit hervorgehobener aktiver Stufe (Tile-Feature `select-options`), Lüfter-Regler, Kacheln für Stoßlüftung / Bypass / Betriebsstatus, farbig hervorgehobene Kacheln, die nur bei Bedarf erscheinen (Boost aktiv = blau, Meldung vorhanden = rot, Filter-Restlaufzeit 0 = rot), Wartungskarte, Attribut-Details und Liste der Statuswechsel. Screenshots: [docs/images/dashboard.png](docs/images/dashboard.png).
+- **Option „Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird“** (`show_fan_levels`, standardmäßig aus): aus = die Modus-Auswahl bleibt auf `Automatik`, solange ein Lüfter-Prozentwert aktiv ist; an = sie zeigt Stufe 1/3 wie die Anlage.
 - **Dokumentation:** vollständige Liste aller Entitäten und Attribute in [docs/ENTITIES.de.md](docs/ENTITIES.de.md).
 - **Serielle Bridge (`tools/`):** die Power-Frames (Aus/Ein) sind jetzt freigegeben.
 
 ### Behoben
+- Der Wechsel von einer Stufe auf Automatik lässt die Anlage nicht mehr auf 0 %; es wird der letzte Automatik-Prozentwert verwendet.
 - `fan.turn_on` schlug mit Fehler fehl (auch mit 0-10 V); 0 % / `turn_off` wählen jetzt den Modus Abwesend.
 
 ### Geändert

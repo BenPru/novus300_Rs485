@@ -150,6 +150,73 @@ A complete list with all attributes: [docs/ENTITIES.md](docs/ENTITIES.md).
 
 [`dashboards/novus300.yaml`](dashboards/novus300.yaml) is a ready-made dashboard (standard cards only, including a "Details (Attribute)" card and the status-change list). Copy the file into your YAML dashboard (or paste it into the raw configuration editor) and copy `dashboards/novus300-airflow.svg` to `config/www/` (used as `/local/novus300-airflow.svg`).
 
+![Dashboard overview](docs/images/dashboard.png)
+
+The mode buttons highlight the active level; the boost, message and filter tiles are coloured only when they apply:
+
+![Controls](docs/images/dashboard-controls.png)
+
+Entities used (all provided by this integration): `select.novus300_ventilation_mode`, `fan.novus300`, `button.novus300_boost`, `switch.novus300_power`, `switch.novus300_bypass`, `sensor.novus300_message`, `button.novus300_filter_reset` and the temperature and filter sensors.
+
+#### Automation examples
+
+```yaml
+# Boost when the bathroom humidity is high
+automation:
+  - alias: "Novus: boost on high humidity"
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.bathroom_humidity
+        above: 70
+    actions:
+      - action: button.press
+        target:
+          entity_id: button.novus300_boost
+
+# Set level 2 when nobody is home away, automatic when home
+  - alias: "Novus: level by presence"
+    triggers:
+      - trigger: state
+        entity_id: group.family
+    actions:
+      - action: select.select_option
+        target:
+          entity_id: select.novus300_ventilation_mode
+        data:
+          option: "{{ 'away' if is_state('group.family', 'not_home') else 'automatic' }}"
+
+# Fan speed in percent (bus mode, level 1/3 is overridden temporarily)
+  - alias: "Novus: 45 % in the evening"
+    triggers:
+      - trigger: time
+        at: "18:00:00"
+    actions:
+      - action: fan.set_percentage
+        target:
+          entity_id: fan.novus300
+        data:
+          percentage: 45
+
+# Notify about unit messages
+  - alias: "Novus: message"
+    triggers:
+      - trigger: state
+        entity_id: sensor.novus300_message
+    conditions:
+      - "{{ trigger.to_state.state not in ['Keine Meldung', 'unavailable'] }}"
+    actions:
+      - action: notify.notify
+        data:
+          message: "Novus 300: {{ trigger.to_state.state }}"
+```
+
+After changing the filter, press `button.novus300_filter_reset` (or call `novus300bus.reset_filter`).
+
+#### Option: real fan levels
+
+By default the mode select stays on **Automatic** while a fan percentage is active. Enable **Show levels instead of automatic when the fan is set by percentage** (`show_fan_levels`) in the integration options to show level 1/3 instead. Selecting a level always restores its original percentage.
+
+
 - supply, outdoor, extract, and exhaust air temperatures
 - `select.novus300_ventilation_mode` to show and set automatic, levels 1–3,
   away, and boost
