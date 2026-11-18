@@ -1,0 +1,153 @@
+title: Lüftung
+views:
+  - title: Übersicht
+    path: novus300
+    icon: mdi:fan
+    cards:
+      - type: picture-elements
+        image: /local/novus300-airflow.svg
+        elements:
+          - type: state-label
+            entity: sensor.novus300_outdoor_air_temperature
+            style:
+              top: 34%
+              left: 13%
+              color: "#ffffff"
+              font-size: 24px
+          - type: state-label
+            entity: sensor.novus300_supply_air_temperature
+            style:
+              top: 34%
+              left: 87%
+              color: "#ffffff"
+              font-size: 24px
+          - type: state-label
+            entity: sensor.novus300_exhaust_air_temperature
+            style:
+              top: 69%
+              left: 13%
+              color: "#ffffff"
+              font-size: 24px
+          - type: state-label
+            entity: sensor.novus300_extract_air_temperature
+            style:
+              top: 69%
+              left: 87%
+              color: "#ffffff"
+              font-size: 24px
+          - type: state-label
+            entity: switch.novus300_bypass
+            style:
+              top: 89%
+              left: 50%
+              color: "#ffffff"
+              font-size: 22px
+      - type: entities
+        title: Lüftungsstatus
+        show_header_toggle: false
+        entities:
+          - entity: select.novus300_ventilation_mode
+            name: Lüftungsstufe
+          - entity: switch.novus300_power
+            name: Betriebsstatus
+          - entity: switch.novus300_bypass
+            name: Bypass
+          - entity: fan.novus300
+            name: Lüftung
+          - entity: button.novus300_boost
+            name: Stoßlüftung
+      - type: history-graph
+        title: Lufttemperaturen
+        hours_to_show: 24
+        entities:
+          - entity: sensor.novus300_outdoor_air_temperature
+            name: Außenluft
+          - entity: sensor.novus300_supply_air_temperature
+            name: Zuluft
+          - entity: sensor.novus300_extract_air_temperature
+            name: Abluft
+          - entity: sensor.novus300_exhaust_air_temperature
+            name: Fortluft
+      - type: entities
+        title: Wartung
+        show_header_toggle: false
+        entities:
+          - entity: sensor.novus300_filter_time_remaining
+            name: Filter-Restlaufzeit
+          - entity: sensor.novus300_operating_time
+            name: Gesamtbetriebszeit
+          - entity: sensor.novus300_fan_operating_time
+            name: Lüfterbetriebszeit
+      - type: entities
+        title: Details (Attribute)
+        show_header_toggle: false
+        entities:
+          - type: section
+            label: Fan
+          - type: attribute
+            entity: fan.novus300
+            attribute: ventilation_mode
+            name: Lüftungsmodus
+          - type: attribute
+            entity: fan.novus300
+            attribute: bus_setpoint
+            name: Sollwert vom Bus
+            suffix: "%"
+          - type: attribute
+            entity: fan.novus300
+            attribute: away_minutes_per_hour
+            name: Abwesend, Minuten pro Stunde
+          - type: attribute
+            entity: fan.novus300
+            attribute: analog_percentage
+            name: 0-10 V Ausgang
+            suffix: "%"
+          - type: section
+            label: Betriebsstatus
+          - type: attribute
+            entity: switch.novus300_power
+            attribute: run_state
+            name: Status
+          - type: attribute
+            entity: switch.novus300_power
+            attribute: raw_value
+            name: Rohwert
+          - type: section
+            label: Bypass
+          - type: attribute
+            entity: switch.novus300_bypass
+            attribute: air_path
+            name: Luftweg
+          - type: attribute
+            entity: switch.novus300_bypass
+            attribute: raw_value
+            name: Statuswort
+          - type: section
+            label: Meldung
+          - type: attribute
+            entity: sensor.novus300_message
+            attribute: code
+            name: Code
+          - type: attribute
+            entity: sensor.novus300_message
+            attribute: occurred_at
+            name: Zeitpunkt
+            format: datetime
+          - type: attribute
+            entity: sensor.novus300_message
+            attribute: previous_message
+            name: Vorherige Meldung
+          - type: attribute
+            entity: sensor.novus300_message
+            attribute: previous_message_2
+            name: Vorherige Meldung 2
+          - type: attribute
+            entity: sensor.novus300_message
+            attribute: previous_message_3
+            name: Vorherige Meldung 3
+      - type: markdown
+        title: Statuswechsel
+        content: >-
+          {% set events = state_attr('sensor.novus300_message', 'status_events') or [] %}
+          {% for event in events %}- {{ event }}
+          {% else %}Keine Statuswechsel beobachtet.{% endfor %}

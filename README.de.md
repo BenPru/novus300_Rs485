@@ -161,6 +161,10 @@ Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.
 
 Vollständige Liste mit allen Attributen: [docs/ENTITIES.de.md](docs/ENTITIES.de.md).
 
+### Dashboard
+
+[`dashboards/novus300.yaml`](dashboards/novus300.yaml) ist ein fertiges Dashboard (nur Standard-Karten, mit Karte „Details (Attribute)“ und Liste der Statuswechsel). Die Datei in das YAML-Dashboard kopieren (oder in den Rohkonfigurationseditor einfügen) und `dashboards/novus300-airflow.svg` nach `config/www/` kopieren (wird als `/local/novus300-airflow.svg` verwendet).
+
 - Temperaturen für Zu-, Außen-, Ab- und Fortluft
 - `select.novus300_ventilation_mode` zum Anzeigen und Setzen von Automatik,
   Stufe 1–3, Abwesend und Stoßlüftung

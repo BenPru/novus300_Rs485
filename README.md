@@ -146,6 +146,10 @@ value for the fan setpoint.
 
 A complete list with all attributes: [docs/ENTITIES.md](docs/ENTITIES.md).
 
+### Dashboard
+
+[`dashboards/novus300.yaml`](dashboards/novus300.yaml) is a ready-made dashboard (standard cards only, including a "Details (Attribute)" card and the status-change list). Copy the file into your YAML dashboard (or paste it into the raw configuration editor) and copy `dashboards/novus300-airflow.svg` to `config/www/` (used as `/local/novus300-airflow.svg`).
+
 - supply, outdoor, extract, and exhaust air temperatures
 - `select.novus300_ventilation_mode` to show and set automatic, levels 1–3,
   away, and boost

@@ -109,8 +109,7 @@ duration. Unavailable while the unit is off.
 
 ### `button.novus300_filter_reset` – Filterlaufzeit zurücksetzen
 
-Restarts the filter run time (writes the filter interval to the unit). Stays
-available while the unit is off.
+Restarts the filter run time (writes the filter interval to the unit). Unavailable while the unit is off.
 
 ## Sensors
 

@@ -114,7 +114,7 @@ zum vorherigen Modus zurück. Nicht verfügbar, solange die Anlage aus ist.
 ### `button.novus300_filter_reset` – Filterlaufzeit zurücksetzen
 
 Startet die Filterlaufzeit neu (schreibt das Filterintervall in die Anlage).
-Bleibt bei ausgeschalteter Anlage verfügbar.
+Bei ausgeschalteter Anlage nicht verfügbar.
 
 ## Sensoren
 
