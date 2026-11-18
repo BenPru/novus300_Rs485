@@ -39,29 +39,41 @@ views:
               color: "#ffffff"
               font-size: 20px
               font-weight: bold
-          - type: icon
+          - type: state-icon
+            entity: sensor.novus300_outdoor_air_temperature
             icon: mdi:weather-partly-cloudy
+            tap_action:
+              action: more-info
             style:
               top: 22.7%
               left: 4.2%
               color: "#8ad9f8"
               "--mdc-icon-size": 34px
-          - type: icon
+          - type: state-icon
+            entity: sensor.novus300_supply_air_temperature
             icon: mdi:home-import-outline
+            tap_action:
+              action: more-info
             style:
               top: 22.7%
               left: 95.8%
               color: "#8ad9f8"
               "--mdc-icon-size": 34px
-          - type: icon
+          - type: state-icon
+            entity: sensor.novus300_exhaust_air_temperature
             icon: mdi:weather-windy
+            tap_action:
+              action: more-info
             style:
               top: 60%
               left: 4.2%
               color: "#8ad9f8"
               "--mdc-icon-size": 34px
-          - type: icon
+          - type: state-icon
+            entity: sensor.novus300_extract_air_temperature
             icon: mdi:home-export-outline
+            tap_action:
+              action: more-info
             style:
               transform: translate(-50%, -50%) scaleX(-1)
               top: 60%
