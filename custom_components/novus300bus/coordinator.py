@@ -29,6 +29,8 @@ from .const import (
     DEFAULT_BOOST_DURATION_MINUTES,
     DEFAULT_FILTER_INTERVAL_DAYS,
     CONF_DAILY_TIME_SYNC,
+    CONF_SHOW_FAN_LEVELS,
+    DEFAULT_SHOW_FAN_LEVELS,
     DAILY_TIME_SYNC_HOUR,
     DEFAULT_DAILY_TIME_SYNC,
     CONF_PARITY,
@@ -303,8 +305,15 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         except OSError as err:
             raise HomeAssistantError(f"Unable to write to the Novus bus: {err}") from err
 
-    def setting_value(self, key: str) -> int:
-        """Return a menu setting last seen on the bus, else the configured one."""
+    def setting_value(self, key: str, actual: bool = False) -> int:
+        """Return a menu setting last seen on the bus, else the configured one.
+
+        While a setting is temporarily overridden, the original value is
+        returned unless `actual` asks for what the unit currently runs.
+        """
+        original = self._values.get(f"{ORIGINAL_PREFIX}{key}")
+        if not actual and isinstance(original, int) and not isinstance(original, bool):
+            return original
         value = self._values.get(key)
         if isinstance(value, int) and not isinstance(value, bool):
             return value
@@ -328,6 +337,16 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             for key, value in self._values.items()
             if key.startswith(ORIGINAL_PREFIX) and isinstance(value, int)
         }
+
+    def clear_temporary_settings(self) -> None:
+        """Forget temporary overrides (their values were just written on purpose)."""
+        for key in list(self.temporary_settings()):
+            self._values.pop(f"{ORIGINAL_PREFIX}{key}", None)
+
+    @property
+    def show_fan_levels(self) -> bool:
+        """Return whether regulated levels are shown instead of automatic."""
+        return bool(self._config.get(CONF_SHOW_FAN_LEVELS, DEFAULT_SHOW_FAN_LEVELS))
 
     async def async_set_temporary_setting(self, key: str, value: int) -> None:
         """Write a setting, remembering its original value for later restore."""
@@ -547,4 +566,4 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             "boost": CONF_FAN_LEVEL_3_PERCENTAGE,
             "away": CONF_FAN_LEVEL_1_PERCENTAGE,
         }.get(mode)
-        return None if key is None else self.setting_value(key)
+        return None if key is None else self.setting_value(key, actual=True)

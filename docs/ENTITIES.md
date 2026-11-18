@@ -102,7 +102,10 @@ level 2) and controls the ventilation with a target percentage.
 
 Options: `automatic`, `level_1`, `level_2`, `level_3`, `away`, `boost`. The
 current option is the mode the unit reports. Standby is not accepted by the
-unit. Unavailable while the unit is off.
+unit. Unavailable while the unit is off. While the fan percentage has temporarily
+changed level 1 or 3, the select shows `automatic` (option **Show levels instead of
+automatic…** shows the real level instead). Selecting a level restores its original
+percentage.
 
 ### `button.novus300_boost` – Stoßlüftung
 

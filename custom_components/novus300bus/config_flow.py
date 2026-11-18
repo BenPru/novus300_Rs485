@@ -16,6 +16,8 @@ from .const import (
     CONF_DAILY_TIME_SYNC,
     CONF_BOOST_DURATION_MINUTES,
     CONF_FILTER_INTERVAL_DAYS,
+    CONF_SHOW_FAN_LEVELS,
+    DEFAULT_SHOW_FAN_LEVELS,
     CONF_FAN_AUTOMATIC_ENTITY,
     CONF_FAN_ENABLED,
     CONF_FAN_LEVEL_1_PERCENTAGE,
@@ -195,6 +197,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                     await coordinator.async_write_settings(
                         {key: user_input[key] for key in BUS_SETTING_KEYS}
                     )
+                    coordinator.clear_temporary_settings()
                     interval = user_input[CONF_FILTER_INTERVAL_DAYS]
                     if interval != coordinator.filter_interval_days():
                         await coordinator.async_set_filter_interval(interval)
@@ -219,6 +222,12 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                 default=self._value(CONF_DAILY_TIME_SYNC, DEFAULT_DAILY_TIME_SYNC),
             ): bool,
         }
+        fields[
+            vol.Required(
+                CONF_SHOW_FAN_LEVELS,
+                default=self._value(CONF_SHOW_FAN_LEVELS, DEFAULT_SHOW_FAN_LEVELS),
+            )
+        ] = bool
         for key, default in (
             (CONF_FAN_LEVEL_1_PERCENTAGE, DEFAULT_FAN_LEVEL_1_PERCENTAGE),
             (CONF_FAN_LEVEL_2_PERCENTAGE, DEFAULT_FAN_LEVEL_2_PERCENTAGE),

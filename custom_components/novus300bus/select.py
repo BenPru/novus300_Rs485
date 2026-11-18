@@ -6,6 +6,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import NovusCoordinator
+from .fan import LEVEL_KEYS
 from .protocol import MODE_REQUEST_VALUES
 
 MODE_ORDER = ("automatic", "level_1", "level_2", "level_3", "away", "boost")
@@ -46,8 +47,15 @@ class NovusModeSelect(CoordinatorEntity[NovusCoordinator], SelectEntity):
     def current_option(self) -> str | None:
         """Return the mode last reported by the unit."""
         mode = self.coordinator.data.get("ventilation_mode")
+        if (
+            not self.coordinator.show_fan_levels
+            and LEVEL_KEYS.get(mode) in self.coordinator.temporary_settings()
+        ):
+            return "automatic"
         return mode if mode in self._attr_options else None
 
     async def async_select_option(self, option: str) -> None:
         """Request the selected mode on the bus."""
         await self.coordinator.async_set_ventilation_mode(option)
+        await self.coordinator.async_restore_settings()
+        self.async_write_ha_state()

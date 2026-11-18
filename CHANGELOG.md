@@ -10,6 +10,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - **Status changes in `sensor.novus300_message`:** every change of the run state (e.g. "Anlage fährt hoch") or the air path (e.g. "Bypass in Bewegung") is logged in the attribute `status_events`; transitions only ("Anlage startet", "Bypass in Bewegung", unknown values) are shown as the message while they last, taking precedence over the unit's own message. Stable states are not shown (see the switches).
 - `fan.novus300` has the attributes `bus_setpoint` and, in away mode, `away_minutes_per_hour`.
 - `switch.novus300_power` also exposes the serial numbers of the panel, fan slave and defroster and the current settings (`config_*`) as attributes.
+- **Fan levels:** when the fan percentage temporarily overrides level 1/3, the mode select shows `automatic` by default (new option to show the real level); selecting a level restores its original percentage. The options now show the original level percentage instead of the temporary one.
 - **Dashboard:** ready-made `dashboards/novus300.yaml` with attribute details and status-change list.
 - **Documentation:** complete list of all entities and attributes in [docs/ENTITIES.md](docs/ENTITIES.md).
 - **Serial bridge (`tools/`):** the power frames (off/on) are now allowed.

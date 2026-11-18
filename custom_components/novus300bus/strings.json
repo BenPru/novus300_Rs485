@@ -23,6 +23,7 @@
           "fan_level_3_percentage": "Ventilation level 3 (%)",
           "boost_duration_minutes": "Boost duration",
           "away_duration_minutes": "Away: ventilation time (min/h)",
+          "show_fan_levels": "Show levels instead of automatic when the fan is set by percentage",
           "fan_enabled": "0-10 V: Enable fan control",
           "tinkerforge_host": "0-10 V: Tinkerforge host",
           "tinkerforge_port": "0-10 V: Tinkerforge port",

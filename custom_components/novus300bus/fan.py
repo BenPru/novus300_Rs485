@@ -151,7 +151,7 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
             else:
                 mode, keep = "level_3", CONF_FAN_LEVEL_3_PERCENTAGE
                 target = min(100, max(target, level_2 + 1))
-            if keep is not None and coordinator.setting_value(keep) != target:
+            if keep is not None and coordinator.setting_value(keep, actual=True) != target:
                 await coordinator.async_set_temporary_setting(keep, target)
             await coordinator.async_set_ventilation_mode(mode)
             await coordinator.async_restore_settings(keep=keep)

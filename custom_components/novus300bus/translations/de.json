@@ -23,6 +23,7 @@
           "fan_level_3_percentage": "Lüftungsstufe 3 (%)",
           "boost_duration_minutes": "Dauer Stoßlüftung",
           "away_duration_minutes": "Abwesend: Lüftungszeit (min/h)",
+          "show_fan_levels": "Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird",
           "fan_enabled": "0-10 V: Lüftersteuerung aktivieren",
           "tinkerforge_host": "0-10 V: Tinkerforge-Host",
           "tinkerforge_port": "0-10 V: Tinkerforge-Port",

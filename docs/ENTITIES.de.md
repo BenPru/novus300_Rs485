@@ -106,7 +106,7 @@ und steuert die Lüftung über einen Soll-Prozentwert.
 
 Optionen: `automatic`, `level_1`, `level_2`, `level_3`, `away`, `boost`. Die
 aktuelle Option ist der von der Anlage gemeldete Modus. Standby nimmt die
-Anlage nicht an. Nicht verfügbar, solange die Anlage aus ist.
+Anlage nicht an. Nicht verfügbar, solange die Anlage aus ist. Hat der Lüfter-Prozentwert Stufe 1 oder 3 vorübergehend geändert, zeigt die Auswahl `Automatik` (die Option „Stufen statt Automatik anzeigen…“ zeigt die echte Stufe). Die Wahl einer Stufe stellt deren ursprünglichen Prozentwert wieder her.
 
 ### `button.novus300_boost` – Stoßlüftung
 
