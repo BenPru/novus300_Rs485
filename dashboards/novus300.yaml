@@ -5,7 +5,7 @@ views:
     icon: mdi:fan
     cards:
       - type: picture-elements
-        image: /local/novus300-airflow.svg?v=4
+        image: /local/novus300-airflow.svg?v=5
         elements:
           - type: state-label
             entity: sensor.novus300_outdoor_air_temperature
@@ -71,7 +71,7 @@ views:
           - type: state-icon
             entity: switch.novus300_bypass
             style:
-              top: 83%
+              top: 78%
               left: 50%
               "--mdc-icon-size": 44px
               color: "#ffffff"
@@ -85,8 +85,7 @@ views:
             entities:
               - entity: select.novus300_ventilation_mode
                 name: "Auto"
-                icon: mdi:autorenew
-                show_icon: true
+                show_icon: false
                 show_name: true
                 tap_action:
                   action: call-service
@@ -97,8 +96,7 @@ views:
                     option: automatic
               - entity: select.novus300_ventilation_mode
                 name: "1"
-                icon: mdi:numeric-1-box-outline
-                show_icon: true
+                show_icon: false
                 show_name: true
                 tap_action:
                   action: call-service
@@ -109,8 +107,7 @@ views:
                     option: level_1
               - entity: select.novus300_ventilation_mode
                 name: "2"
-                icon: mdi:numeric-2-box-outline
-                show_icon: true
+                show_icon: false
                 show_name: true
                 tap_action:
                   action: call-service
@@ -121,8 +118,7 @@ views:
                     option: level_2
               - entity: select.novus300_ventilation_mode
                 name: "3"
-                icon: mdi:numeric-3-box-outline
-                show_icon: true
+                show_icon: false
                 show_name: true
                 tap_action:
                   action: call-service
@@ -133,8 +129,7 @@ views:
                     option: level_3
               - entity: select.novus300_ventilation_mode
                 name: "Abw."
-                icon: mdi:home-export-outline
-                show_icon: true
+                show_icon: false
                 show_name: true
                 tap_action:
                   action: call-service
@@ -145,8 +140,7 @@ views:
                     option: away
               - entity: select.novus300_ventilation_mode
                 name: "Boost"
-                icon: mdi:fan-plus
-                show_icon: true
+                show_icon: false
                 show_name: true
                 tap_action:
                   action: call-service
@@ -163,6 +157,11 @@ views:
             name: Betriebsstatus
           - entity: switch.novus300_bypass
             name: Bypass geöffnet
+      - type: tile
+        entity: fan.novus300
+        name: Lüftung
+        features:
+          - type: fan-speed
       - type: history-graph
         title: Lufttemperaturen
         hours_to_show: 24
