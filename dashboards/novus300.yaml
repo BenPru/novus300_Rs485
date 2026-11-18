@@ -5,7 +5,7 @@ views:
     icon: mdi:fan
     cards:
       - type: picture-elements
-        image: /local/novus300-airflow.svg?v=6
+        image: /local/novus300-airflow.svg?v=7
         elements:
           - type: state-label
             entity: sensor.novus300_outdoor_air_temperature
@@ -101,74 +101,75 @@ views:
           entities:
             - entity: select.novus300_ventilation_mode
               name: Lüftungsstufe
-            - type: buttons
-              entities:
-                - entity: select.novus300_ventilation_mode
-                  name: "Auto"
-                  show_icon: false
-                  show_name: true
-                  tap_action:
-                    action: call-service
-                    service: select.select_option
-                    target:
-                      entity_id: select.novus300_ventilation_mode
-                    data:
-                      option: automatic
-                - entity: select.novus300_ventilation_mode
-                  name: "1"
-                  show_icon: false
-                  show_name: true
-                  tap_action:
-                    action: call-service
-                    service: select.select_option
-                    target:
-                      entity_id: select.novus300_ventilation_mode
-                    data:
-                      option: level_1
-                - entity: select.novus300_ventilation_mode
-                  name: "2"
-                  show_icon: false
-                  show_name: true
-                  tap_action:
-                    action: call-service
-                    service: select.select_option
-                    target:
-                      entity_id: select.novus300_ventilation_mode
-                    data:
-                      option: level_2
-                - entity: select.novus300_ventilation_mode
-                  name: "3"
-                  show_icon: false
-                  show_name: true
-                  tap_action:
-                    action: call-service
-                    service: select.select_option
-                    target:
-                      entity_id: select.novus300_ventilation_mode
-                    data:
-                      option: level_3
-                - entity: select.novus300_ventilation_mode
-                  name: "Abw."
-                  show_icon: false
-                  show_name: true
-                  tap_action:
-                    action: call-service
-                    service: select.select_option
-                    target:
-                      entity_id: select.novus300_ventilation_mode
-                    data:
-                      option: away
-                - entity: select.novus300_ventilation_mode
-                  name: "Boost"
-                  show_icon: false
-                  show_name: true
-                  tap_action:
-                    action: call-service
-                    service: select.select_option
-                    target:
-                      entity_id: select.novus300_ventilation_mode
-                    data:
-                      option: boost
+        - type: custom:mushroom-chips-card
+          alignment: center
+          chips:
+            - type: template
+              icon: mdi:autorenew
+              content: "Auto"
+              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'automatic') else 'grey' }}"
+              tap_action:
+                action: call-service
+                service: select.select_option
+                target:
+                  entity_id: select.novus300_ventilation_mode
+                data:
+                  option: automatic
+            - type: template
+              icon: mdi:numeric-1-circle
+              content: "1"
+              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'level_1') else 'grey' }}"
+              tap_action:
+                action: call-service
+                service: select.select_option
+                target:
+                  entity_id: select.novus300_ventilation_mode
+                data:
+                  option: level_1
+            - type: template
+              icon: mdi:numeric-2-circle
+              content: "2"
+              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'level_2') else 'grey' }}"
+              tap_action:
+                action: call-service
+                service: select.select_option
+                target:
+                  entity_id: select.novus300_ventilation_mode
+                data:
+                  option: level_2
+            - type: template
+              icon: mdi:numeric-3-circle
+              content: "3"
+              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'level_3') else 'grey' }}"
+              tap_action:
+                action: call-service
+                service: select.select_option
+                target:
+                  entity_id: select.novus300_ventilation_mode
+                data:
+                  option: level_3
+            - type: template
+              icon: mdi:home-export-outline
+              content: "Abw."
+              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'away') else 'grey' }}"
+              tap_action:
+                action: call-service
+                service: select.select_option
+                target:
+                  entity_id: select.novus300_ventilation_mode
+                data:
+                  option: away
+            - type: template
+              icon: mdi:fan-plus
+              content: "Boost"
+              icon_color: "{{ 'green' if is_state('select.novus300_ventilation_mode', 'boost') else 'grey' }}"
+              tap_action:
+                action: call-service
+                service: select.select_option
+                target:
+                  entity_id: select.novus300_ventilation_mode
+                data:
+                  option: boost
         - type: tile
           entity: fan.novus300
           name: Lüftung
