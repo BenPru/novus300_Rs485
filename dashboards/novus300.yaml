@@ -5,7 +5,7 @@ views:
     icon: mdi:fan
     cards:
       - type: picture-elements
-        image: /local/novus300-airflow.svg?v=5
+        image: /local/novus300-airflow.svg?v=6
         elements:
           - type: state-label
             entity: sensor.novus300_outdoor_air_temperature
@@ -68,6 +68,24 @@ views:
               left: 95.8%
               color: "#8ad9f8"
               "--mdc-icon-size": 34px
+          - type: state-label
+            entity: select.novus300_ventilation_mode
+            style:
+              top: 62%
+              left: 41%
+              color: "#ffffff"
+              font-size: 16px
+              font-weight: bold
+          - type: state-label
+            entity: fan.novus300
+            attribute: percentage
+            suffix: " %"
+            style:
+              top: 62%
+              left: 60%
+              color: "#ffffff"
+              font-size: 16px
+              font-weight: bold
           - type: state-icon
             entity: switch.novus300_bypass
             style:
@@ -75,93 +93,96 @@ views:
               left: 50%
               "--mdc-icon-size": 44px
               color: "#ffffff"
-      - type: entities
-        title: Lüftungsstatus
-        show_header_toggle: false
-        entities:
-          - entity: select.novus300_ventilation_mode
-            name: Lüftungsstufe
-          - type: buttons
-            entities:
-              - entity: select.novus300_ventilation_mode
-                name: "Auto"
-                show_icon: false
-                show_name: true
-                tap_action:
-                  action: call-service
-                  service: select.select_option
-                  target:
-                    entity_id: select.novus300_ventilation_mode
-                  data:
-                    option: automatic
-              - entity: select.novus300_ventilation_mode
-                name: "1"
-                show_icon: false
-                show_name: true
-                tap_action:
-                  action: call-service
-                  service: select.select_option
-                  target:
-                    entity_id: select.novus300_ventilation_mode
-                  data:
-                    option: level_1
-              - entity: select.novus300_ventilation_mode
-                name: "2"
-                show_icon: false
-                show_name: true
-                tap_action:
-                  action: call-service
-                  service: select.select_option
-                  target:
-                    entity_id: select.novus300_ventilation_mode
-                  data:
-                    option: level_2
-              - entity: select.novus300_ventilation_mode
-                name: "3"
-                show_icon: false
-                show_name: true
-                tap_action:
-                  action: call-service
-                  service: select.select_option
-                  target:
-                    entity_id: select.novus300_ventilation_mode
-                  data:
-                    option: level_3
-              - entity: select.novus300_ventilation_mode
-                name: "Abw."
-                show_icon: false
-                show_name: true
-                tap_action:
-                  action: call-service
-                  service: select.select_option
-                  target:
-                    entity_id: select.novus300_ventilation_mode
-                  data:
-                    option: away
-              - entity: select.novus300_ventilation_mode
-                name: "Boost"
-                show_icon: false
-                show_name: true
-                tap_action:
-                  action: call-service
-                  service: select.select_option
-                  target:
-                    entity_id: select.novus300_ventilation_mode
-                  data:
-                    option: boost
-          - entity: fan.novus300
-            name: Lüftung
-          - entity: button.novus300_boost
-            name: Stoßlüftung
-          - entity: switch.novus300_power
-            name: Betriebsstatus
-          - entity: switch.novus300_bypass
-            name: Bypass geöffnet
-      - type: tile
-        entity: fan.novus300
-        name: Lüftung
-        features:
-          - type: fan-speed
+      - type: vertical-stack
+        cards:
+        - type: entities
+          title: Lüftungsstatus
+          show_header_toggle: false
+          entities:
+            - entity: select.novus300_ventilation_mode
+              name: Lüftungsstufe
+            - type: buttons
+              entities:
+                - entity: select.novus300_ventilation_mode
+                  name: "Auto"
+                  show_icon: false
+                  show_name: true
+                  tap_action:
+                    action: call-service
+                    service: select.select_option
+                    target:
+                      entity_id: select.novus300_ventilation_mode
+                    data:
+                      option: automatic
+                - entity: select.novus300_ventilation_mode
+                  name: "1"
+                  show_icon: false
+                  show_name: true
+                  tap_action:
+                    action: call-service
+                    service: select.select_option
+                    target:
+                      entity_id: select.novus300_ventilation_mode
+                    data:
+                      option: level_1
+                - entity: select.novus300_ventilation_mode
+                  name: "2"
+                  show_icon: false
+                  show_name: true
+                  tap_action:
+                    action: call-service
+                    service: select.select_option
+                    target:
+                      entity_id: select.novus300_ventilation_mode
+                    data:
+                      option: level_2
+                - entity: select.novus300_ventilation_mode
+                  name: "3"
+                  show_icon: false
+                  show_name: true
+                  tap_action:
+                    action: call-service
+                    service: select.select_option
+                    target:
+                      entity_id: select.novus300_ventilation_mode
+                    data:
+                      option: level_3
+                - entity: select.novus300_ventilation_mode
+                  name: "Abw."
+                  show_icon: false
+                  show_name: true
+                  tap_action:
+                    action: call-service
+                    service: select.select_option
+                    target:
+                      entity_id: select.novus300_ventilation_mode
+                    data:
+                      option: away
+                - entity: select.novus300_ventilation_mode
+                  name: "Boost"
+                  show_icon: false
+                  show_name: true
+                  tap_action:
+                    action: call-service
+                    service: select.select_option
+                    target:
+                      entity_id: select.novus300_ventilation_mode
+                    data:
+                      option: boost
+        - type: tile
+          entity: fan.novus300
+          name: Lüftung
+          features:
+            - type: fan-speed
+        - type: entities
+          show_header_toggle: false
+          entities:
+            - entity: button.novus300_boost
+              name: Stoßlüftung
+            - entity: switch.novus300_power
+              name: Betriebsstatus
+            - entity: switch.novus300_bypass
+              name: Bypass geöffnet
       - type: history-graph
         title: Lufttemperaturen
         hours_to_show: 24
