@@ -292,6 +292,13 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
                 if self.native_value == "Keine Meldung"
                 else "mdi:message-alert-outline"
             )
+        if self._description.key == "filter_time_remaining":
+            remaining = self.coordinator.data.get("filter_time_remaining")
+            return (
+                "mdi:air-filter"
+                if not isinstance(remaining, float | int) or remaining > 0
+                else "mdi:alert-circle-outline"
+            )
         return None
 
     @property

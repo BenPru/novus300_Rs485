@@ -31,7 +31,6 @@ class NovusBoostButton(CoordinatorEntity[NovusCoordinator], ButtonEntity):
 
     _attr_name = "Stoßlüftung"
     _attr_unique_id = "novus300bus_boost"
-    _attr_icon = "mdi:weather-windy"
 
     def __init__(
         self,
@@ -58,6 +57,13 @@ class NovusBoostButton(CoordinatorEntity[NovusCoordinator], ButtonEntity):
     def available(self) -> bool:
         """Return whether the unit is switched on."""
         return super().available and not self._coordinator.is_stopped
+
+    @property
+    def icon(self) -> str:
+        """Return a different icon while boost ventilation is active."""
+        if self._coordinator.data.get("ventilation_mode") == "boost":
+            return "mdi:fan-alert"
+        return "mdi:weather-windy"
 
     async def async_press(self) -> None:
         """Start boost ventilation and return to the previous mode afterwards."""
