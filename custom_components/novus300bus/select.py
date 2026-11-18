@@ -20,7 +20,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
 class NovusModeSelect(CoordinatorEntity[NovusCoordinator], SelectEntity):
     """Select the ventilation mode on the RS-485 bus."""
 
-    _attr_name = "Lüftungsmodus"
+    _attr_has_entity_name = True
     _attr_unique_id = "novus300bus_mode_select"
     _attr_translation_key = "ventilation_mode"
     _attr_icon = "mdi:fan"

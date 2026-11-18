@@ -8,24 +8,24 @@ key shown below.
 
 ## Overview
 
-| Entity ID | Platform | Name | Category | Available when the unit is off |
+| Entity ID | Platform | Name (English; German in [ENTITIES.de.md](ENTITIES.de.md)) | Category | Available when the unit is off |
 | --- | --- | --- | --- | --- |
-| `switch.novus300_power` | switch | Betriebsstatus | – | yes |
-| `switch.novus300_bypass` | switch | Bypass geöffnet | – | no |
-| `fan.novus300` | fan | Lüftung | – | no |
-| `select.novus300_ventilation_mode` | select | Lüftungsmodus | – | no |
-| `button.novus300_boost` | button | Stoßlüftung | – | no |
-| `button.novus300_filter_reset` | button | Filterlaufzeit zurücksetzen | – | no |
-| `sensor.novus300_supply_air_temperature` | sensor | Zuluft Temperatur Räume | – | no |
-| `sensor.novus300_outdoor_air_temperature` | sensor | Außenluft Temperatur | – | no |
-| `sensor.novus300_extract_air_temperature` | sensor | Abluft Temperatur Räume | – | no |
-| `sensor.novus300_exhaust_air_temperature` | sensor | Fortluft Temperatur | – | no |
-| `sensor.novus300_message` | sensor | Meldung | diagnostic | yes |
-| `sensor.novus300_operating_time` | sensor | Gesamtbetriebszeit | diagnostic | yes |
-| `sensor.novus300_fan_operating_time` | sensor | Lüfterbetriebszeit | diagnostic | yes |
-| `sensor.novus300_filter_time_remaining` | sensor | Filter Restlaufzeit | diagnostic | yes |
-| `sensor.novus300_register_44` | sensor | Register 0x44 (Rohwert, unbekannt) | diagnostic, disabled by default | yes |
-| `sensor.novus300_register_62` | sensor | Register 0x62 (Rohwert, unbekannt) | diagnostic, disabled by default | yes |
+| `switch.novus300_power` | switch | Operating state | – | yes |
+| `switch.novus300_bypass` | switch | Bypass open | – | no |
+| `fan.novus300` | fan | Ventilation | – | no |
+| `select.novus300_ventilation_mode` | select | Ventilation mode | – | no |
+| `button.novus300_boost` | button | Boost ventilation | – | no |
+| `button.novus300_filter_reset` | button | Reset filter run time | – | no |
+| `sensor.novus300_supply_air_temperature` | sensor | Supply air temperature | – | no |
+| `sensor.novus300_outdoor_air_temperature` | sensor | Outdoor air temperature | – | no |
+| `sensor.novus300_extract_air_temperature` | sensor | Extract air temperature | – | no |
+| `sensor.novus300_exhaust_air_temperature` | sensor | Exhaust air temperature | – | no |
+| `sensor.novus300_message` | sensor | Message | diagnostic | yes |
+| `sensor.novus300_operating_time` | sensor | Total operating time | diagnostic | yes |
+| `sensor.novus300_fan_operating_time` | sensor | Fan operating time | diagnostic | yes |
+| `sensor.novus300_filter_time_remaining` | sensor | Filter remaining time | diagnostic | yes |
+| `sensor.novus300_register_44` | sensor | Register 0x44 (raw value, unknown) | diagnostic, disabled by default | yes |
+| `sensor.novus300_register_62` | sensor | Register 0x62 (raw value, unknown) | diagnostic, disabled by default | yes |
 
 An entity is also unavailable until its register has been seen on the bus
 (the unit broadcasts some registers only occasionally, e.g. when it starts).
@@ -33,7 +33,7 @@ An entity is also unavailable until its register has been seen on the bus
 
 ## Switches
 
-### `switch.novus300_power` – Betriebsstatus
+### `switch.novus300_power` – Operating state
 
 Switches the unit on and off over the bus (the panel's frames for register
 0x07) and shows the run state.
@@ -57,7 +57,7 @@ to three times before it raises an error. The unit accepts "on" only about 30
 seconds after "off", because the panel shows a message first. Requires the
 `socket://` bridge started with `--allow-command-frames`.
 
-### `switch.novus300_bypass` – Bypass geöffnet
+### `switch.novus300_bypass` – Bypass open
 
 Read-only: `turn_on` and `turn_off` raise an error until opening and closing
 the bypass is known. `on` means the bypass is open or moving.
@@ -72,7 +72,7 @@ Note: the bypass actuator of the author's unit is defective, so the states
 
 ## Fan
 
-### `fan.novus300` – Lüftung
+### `fan.novus300` – Ventilation
 
 Always present. It shows the percentage of the active level (e.g. 60 % in
 level 2) and controls the ventilation with a target percentage. Its state is the
@@ -101,7 +101,7 @@ value if it is 0).
 
 ## Select and buttons
 
-### `select.novus300_ventilation_mode` – Lüftungsmodus
+### `select.novus300_ventilation_mode` – Ventilation mode
 
 Options: `automatic`, `level_1`, `level_2`, `level_3`, `away`, `boost`. The
 current option is the mode the unit reports. Standby is not accepted by the
@@ -110,12 +110,12 @@ changed level 1 or 3, the select shows `automatic` (option **Show levels instead
 automatic…** shows the real level instead). Selecting a level restores its original
 percentage.
 
-### `button.novus300_boost` – Stoßlüftung
+### `button.novus300_boost` – Boost ventilation
 
 Selects boost mode and returns to the previous mode after the configured boost
 duration. Unavailable while the unit is off.
 
-### `button.novus300_filter_reset` – Filterlaufzeit zurücksetzen
+### `button.novus300_filter_reset` – Reset filter run time
 
 Restarts the filter run time (writes the filter interval to the unit). Unavailable while the unit is off.
 
@@ -127,7 +127,7 @@ Restarts the filter run time (writes the filter interval to the unit). Unavailab
 and `exhaust_air_temperature`: °C, device class temperature, state class
 measurement, no extra attributes.
 
-### `sensor.novus300_message` – Meldung
+### `sensor.novus300_message` – Message
 
 Diagnostic. The state is either a status change or the unit's own message.
 

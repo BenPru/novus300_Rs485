@@ -2,6 +2,14 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.18.1
+
+### Changed
+- **Entity names are now translatable:** English is the default (e.g. "Boost ventilation", "Operating state", "Supply air temperature"), German remains available for German installations. Entity IDs are unchanged. [docs/ENTITIES.md](docs/ENTITIES.md) lists the English names.
+
+### Documentation
+- New table of contents, updated introduction (the integration no longer only reads) and a detailed description of every field in the options dialog.
+
 ## 2026.11.18
 
 ### Highlights

@@ -187,7 +187,6 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._description = description
-        self._attr_name = description.name
         self._attr_unique_id = f"novus300bus_{description.key}"
         self._attr_device_class = description.device_class
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
@@ -195,7 +194,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         self._attr_entity_category = description.entity_category
         self._attr_entity_registry_enabled_default = description.enabled_default
         self._attr_options = description.options
-        self._attr_translation_key = description.translation_key
+        self._attr_translation_key = description.key
         self._restored_value: float | None = None
         self.entity_id = f"sensor.novus300_{description.key}"
         self._attr_device_info = {

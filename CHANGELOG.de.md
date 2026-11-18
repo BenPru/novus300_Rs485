@@ -2,6 +2,14 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.18.1
+
+### Geändert
+- **Entitätsnamen sind jetzt übersetzbar:** Englisch ist die Standardsprache (z. B. „Boost ventilation“, „Operating state“, „Supply air temperature“), Deutsch bleibt für deutsche Installationen erhalten. Die Entity-IDs ändern sich nicht. [docs/ENTITIES.md](docs/ENTITIES.md) nennt die englischen Namen, [docs/ENTITIES.de.md](docs/ENTITIES.de.md) die deutschen.
+
+### Dokumentation
+- Neues Inhaltsverzeichnis, überarbeitete Einleitung (die Integration liest nicht mehr nur) und ausführliche Beschreibung jedes Feldes im Optionsdialog.
+
 ## 2026.11.18
 
 ### Highlights

@@ -29,7 +29,8 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
 class NovusBoostButton(CoordinatorEntity[NovusCoordinator], ButtonEntity):
     """Trigger the boost ventilation mode on the bus."""
 
-    _attr_name = "Stoßlüftung"
+    _attr_has_entity_name = True
+    _attr_translation_key = "boost"
     _attr_unique_id = "novus300bus_boost"
 
     def __init__(
@@ -103,7 +104,8 @@ class NovusBoostButton(CoordinatorEntity[NovusCoordinator], ButtonEntity):
 class NovusFilterResetButton(ButtonEntity):
     """Restart the filter run time in the unit."""
 
-    _attr_name = "Filterlaufzeit zurücksetzen"
+    _attr_has_entity_name = True
+    _attr_translation_key = "filter_reset"
     _attr_unique_id = "novus300bus_filter_reset"
     _attr_icon = "mdi:air-filter"
 

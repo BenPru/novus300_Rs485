@@ -48,7 +48,61 @@
           "level_3": "3",
           "boost": "Stoßlüftung",
           "away": "Abwesend"
-        }
+        },
+        "name": "Lüftungsmodus"
+      }
+    },
+    "sensor": {
+      "supply_air_temperature": {
+        "name": "Zuluft Temperatur Räume"
+      },
+      "outdoor_air_temperature": {
+        "name": "Außenluft Temperatur"
+      },
+      "extract_air_temperature": {
+        "name": "Abluft Temperatur Räume"
+      },
+      "exhaust_air_temperature": {
+        "name": "Fortluft Temperatur"
+      },
+      "message": {
+        "name": "Meldung"
+      },
+      "register_44": {
+        "name": "Register 0x44 (Rohwert, unbekannt)"
+      },
+      "register_62": {
+        "name": "Register 0x62 (Rohwert, unbekannt)"
+      },
+      "operating_time": {
+        "name": "Gesamtbetriebszeit"
+      },
+      "fan_operating_time": {
+        "name": "Lüfterbetriebszeit"
+      },
+      "filter_time_remaining": {
+        "name": "Filter Restlaufzeit"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Betriebsstatus"
+      },
+      "bypass": {
+        "name": "Bypass geöffnet"
+      }
+    },
+    "fan": {
+      "ventilation": {
+        "name": "Lüftung"
+      }
+    },
+    "button": {
+      "boost": {
+        "name": "Stoßlüftung"
+      },
+      "filter_reset": {
+        "name": "Filterlaufzeit zurücksetzen"
       }
     }
   },

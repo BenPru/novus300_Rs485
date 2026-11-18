@@ -56,7 +56,8 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     it sets level 3. The original percentage is restored when the level is left.
     """
 
-    _attr_name = "Lüftung"
+    _attr_has_entity_name = True
+    _attr_translation_key = "ventilation"
     _attr_unique_id = "novus300bus_fan"
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED

@@ -1,0 +1,119 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "serial_port": "Serial device",
+          "baudrate": "Baud rate",
+          "parity": "Parity"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "serial_port": "Serial device / bridge URL",
+          "baudrate": "Baud rate",
+          "parity": "Parity",
+          "daily_time_sync": "Synchronize time daily",
+          "fan_level_1_percentage": "Ventilation level 1 (%)",
+          "fan_level_2_percentage": "Ventilation level 2 (%)",
+          "fan_level_3_percentage": "Ventilation level 3 (%)",
+          "boost_duration_minutes": "Boost duration",
+          "away_duration_minutes": "Away: ventilation time (min/h)",
+          "show_fan_levels": "Show levels instead of automatic when the fan is set by percentage",
+          "fan_enabled": "0-10 V: Enable fan control",
+          "tinkerforge_host": "0-10 V: Tinkerforge host",
+          "tinkerforge_port": "0-10 V: Tinkerforge port",
+          "tinkerforge_uid": "0-10 V: Industrial Analog Out UID",
+          "fan_automatic_entity": "0-10 V: Automatic mode helper entity",
+          "filter_interval_days": "Filter interval"
+        },
+        "description": "{source}"
+      }
+    },
+    "error": {
+      "levels_order": "Levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %."
+    }
+  },
+  "entity": {
+    "select": {
+      "ventilation_mode": {
+        "state": {
+          "automatic": "Automatic",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "boost": "Boost ventilation",
+          "away": "Away"
+        },
+        "name": "Ventilation mode"
+      }
+    },
+    "sensor": {
+      "supply_air_temperature": {
+        "name": "Supply air temperature"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "extract_air_temperature": {
+        "name": "Extract air temperature"
+      },
+      "exhaust_air_temperature": {
+        "name": "Exhaust air temperature"
+      },
+      "message": {
+        "name": "Message"
+      },
+      "register_44": {
+        "name": "Register 0x44 (raw value, unknown)"
+      },
+      "register_62": {
+        "name": "Register 0x62 (raw value, unknown)"
+      },
+      "operating_time": {
+        "name": "Total operating time"
+      },
+      "fan_operating_time": {
+        "name": "Fan operating time"
+      },
+      "filter_time_remaining": {
+        "name": "Filter remaining time"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Operating state"
+      },
+      "bypass": {
+        "name": "Bypass open"
+      }
+    },
+    "fan": {
+      "ventilation": {
+        "name": "Ventilation"
+      }
+    },
+    "button": {
+      "boost": {
+        "name": "Boost ventilation"
+      },
+      "filter_reset": {
+        "name": "Reset filter run time"
+      }
+    }
+  },
+  "services": {
+    "sync_clock": {
+      "name": "Synchronize clock",
+      "description": "Sets the unit's date and time to Home Assistant's local time."
+    },
+    "reset_filter": {
+      "name": "Reset filter run time",
+      "description": "Restarts the filter run time at the configured interval."
+    }
+  }
+}

@@ -42,7 +42,7 @@ class NovusPowerSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
     """Show and switch the unit's operating state on the bus."""
 
     _attr_has_entity_name = True
-    _attr_name = "Betriebsstatus"
+    _attr_translation_key = "power"
     _attr_unique_id = "novus300bus_power"
 
     def __init__(self, coordinator: NovusCoordinator) -> None:
@@ -112,7 +112,7 @@ class NovusBypassSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
     """Show whether the bypass is open (read-only until writing is known)."""
 
     _attr_has_entity_name = True
-    _attr_name = "Bypass geöffnet"
+    _attr_translation_key = "bypass"
     _attr_unique_id = "novus300bus_bypass"
 
     def __init__(self, coordinator: NovusCoordinator) -> None:
