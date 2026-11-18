@@ -4,10 +4,18 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
 ## 2026.11.18 (unveröffentlicht)
 
+### Neu
+- **`switch.novus300_power` („Betriebsstatus“)** schaltet die Anlage über den Bus ein und aus (Panel-Frames für Register 0x07) und zeigt den Betriebsstatus mit Icon und Attribut `run_state`. Das Einschalten nimmt die Anlage erst etwa 30 Sekunden nach dem Ausschalten an.
+- **`switch.novus300_bypass`**: Bypass-Zustand, nur lesbar (Öffnen/Schließen ist noch nicht bekannt), Attribute `air_path` und `raw_value`.
+- **Statuswechsel in `sensor.novus300_message`:** jeder Wechsel des Betriebsstatus (z. B. „Anlage startet“) oder des Luftwegs (z. B. „Bypass in Bewegung“) steht im Attribut `status_events` und wird 5 Minuten lang (oder solange der Zustand andauert) als Meldung angezeigt, wenn die Anlage keine eigene Meldung hat.
+- `fan.novus300` hat die Attribute `bus_setpoint` und im Modus Abwesend `away_minutes_per_hour`.
+- **Serielle Bridge (`tools/`):** die Power-Frames (Aus/Ein) sind jetzt freigegeben.
+
 ### Behoben
 - `fan.turn_on` schlug mit Fehler fehl (auch mit 0-10 V); 0 % / `turn_off` wählen jetzt den Modus Abwesend.
 
 ### Geändert
+- `sensor.novus300_message` ist jetzt eine Diagnose-Entität.
 - Stufen-Prozentwerte im Optionsdialog beginnen bei 17 % (es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %). `fan.novus300` hebt Soll-Werte von 1–16 % auf 17 % an, auch mit 0-10 V (der HA-Schieberegler selbst lässt sich nicht einschränken). 0 % (und Ausschalten) wählt den Modus Abwesend; der Fan zeigt dann 0 % / aus.
 
 ## 2026.11.17

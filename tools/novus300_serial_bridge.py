@@ -32,6 +32,9 @@ def _mode_request(mode: int) -> bytes:
 
 MODE_NAMES = {1: "level_1", 2: "level_2", 3: "level_3", 4: "boost", 5: "away", 6: "automatic"}
 ALLOWED_COMMAND_FRAMES = {_mode_request(m): "slot05_" + n for m, n in MODE_NAMES.items()}
+# Panel power frames: register 0x07 = 0 (off) and register 0x07 = 1 plus 0x90 = 0 (on).
+ALLOWED_COMMAND_FRAMES[bytes.fromhex("01008503aaa7070000")] = "slot05_power_off"
+ALLOWED_COMMAND_FRAMES[bytes.fromhex("0100850693bd070001900000")] = "slot05_power_on"
 
 
 def parse_args() -> argparse.Namespace:

@@ -8,6 +8,7 @@ from custom_components.novus300bus.protocol import (
     build_date_frame,
     build_filter_interval_frame,
     build_filter_reset_frame,
+    build_power_frame,
     build_setting_frame,
     build_time_frame,
     crc16_ccitt,
@@ -156,6 +157,10 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(
             build_filter_reset_frame(90).hex(), "0100850e48973d0000005a00003e0000005a0000"
         )
+
+    def test_builds_power_frames(self):
+        self.assertEqual(build_power_frame(False).hex(), "01008503aaa7070000")
+        self.assertEqual(build_power_frame(True).hex(), "0100850693bd070001900000")
 
     def test_decodes_stored_message(self):
         frame = bytes.fromhex(

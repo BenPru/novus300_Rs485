@@ -10,12 +10,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
+from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_AWAY_DURATION_MINUTES
 from .coordinator import NovusCoordinator
 from .protocol import MESSAGES
 
@@ -30,6 +29,30 @@ MESSAGE_TEXTS = {
 DETAIL_TEXTS = {
     "Out of range": "Wert außerhalb des Bereichs",
 }
+
+
+STATUS_EVENT_TEXTS = {
+    "run_state": {
+        "stopped": "Anlage ausgeschaltet",
+        "running": "Anlage läuft",
+        "starting": "Anlage startet",
+        "unknown": "Anlagenstatus unbekannt",
+    },
+    "air_path": {
+        "heat_recovery": "Wärmerückgewinnung aktiv",
+        "bypass": "Bypass offen",
+        "transition": "Bypass in Bewegung",
+        "unknown": "Luftweg unbekannt",
+    },
+}
+
+
+def describe_status_event(event: dict[str, str]) -> str:
+    """Return a readable text for a run state or air path change."""
+    text = STATUS_EVENT_TEXTS[event["kind"]].get(event["state"], event["state"])
+    if event["state"] == "unknown" and event.get("raw"):
+        text = f"{text} (Wert {event['raw']})"
+    return text
 
 
 def describe_message(entry: dict[str, str | int]) -> str:
@@ -50,8 +73,6 @@ LIVE_KEYS = (
     "outdoor_air_temperature",
     "extract_air_temperature",
     "exhaust_air_temperature",
-    "fan_setpoint",
-    "air_path",
 )
 
 
@@ -100,28 +121,9 @@ SENSORS = (
         SensorStateClass.MEASUREMENT,
     ),
     NovusSensorDescription(
-        "fan_setpoint",
-        "Lüfteransteuerung",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    NovusSensorDescription(
-        "run_state",
-        "Betriebsstatus",
-        SensorDeviceClass.ENUM,
-        options=("stopped", "running", "starting", "unknown"),
-        translation_key="run_state",
-    ),
-    NovusSensorDescription(
         "message",
         "Meldung",
-    ),
-    NovusSensorDescription(
-        "air_path",
-        "Luftweg",
-        SensorDeviceClass.ENUM,
-        options=("heat_recovery", "bypass", "transition", "unknown"),
-        translation_key="air_path",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NovusSensorDescription(
         "register_44",
@@ -259,13 +261,10 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         if value is None:
             return self._restored_value
         if self._description.key == "message":
+            transient = self.coordinator.transient_event()
+            if value == "none" and transient is not None:
+                return describe_status_event(transient)
             return MESSAGE_TEXTS.get(value, f"Meldung {value.removeprefix('code_')}")
-        if self._description.key == "fan_setpoint":
-            fixed_level_value = self.coordinator.fan_level_percentage(
-                self.coordinator.data.get("ventilation_mode", "")
-            )
-            if fixed_level_value is not None:
-                return fixed_level_value
         if self._description.key in (
             "operating_time",
             "fan_operating_time",
@@ -283,61 +282,33 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def icon(self) -> str | None:
         """Return an icon matching the current operating state."""
-        if self._description.key == "fan_setpoint":
-            return "mdi:fan"
         if self._description.key == "message":
             return (
                 "mdi:message-check-outline"
                 if self.native_value == "Keine Meldung"
                 else "mdi:message-alert-outline"
             )
-        state_icons = {
-            "run_state": {
-                "stopped": "mdi:stop-circle-outline",
-                "running": "mdi:play-circle-outline",
-                "starting": "mdi:progress-clock",
-                "unknown": "mdi:help-circle-outline",
-            },
-            "air_path": {
-                "heat_recovery": "mdi:heat-wave",
-                "bypass": "mdi:arrow-right-bold-circle-outline",
-                "transition": "mdi:swap-horizontal-circle-outline",
-                "unknown": "mdi:help-circle-outline",
-            },
-        }
-        return state_icons.get(self._description.key, {}).get(self.native_value)
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, float | int | str]:
-        """Expose source registers and mapped fixed levels as attributes."""
-        if self._description.key == "fan_setpoint":
-            bus_value = self.coordinator.data.get("fan_setpoint")
-            panel_mode = self.coordinator.data.get("ventilation_mode")
-            if isinstance(bus_value, float | int) and isinstance(panel_mode, str):
-                attributes: dict[str, float | int | str] = {
-                    "bus_value": bus_value,
-                    "panel_mode": panel_mode,
-                }
-                if panel_mode == "away":
-                    attributes["away_minutes_per_hour"] = (
-                        self.coordinator.setting_value(CONF_AWAY_DURATION_MINUTES)
-                    )
-                return attributes
+        """Expose the message details and observed status changes."""
         if self._description.key == "message":
             attributes = {"code": self.coordinator.data.get("message_code")}
             time = self.coordinator.message_time()
+            transient = self.coordinator.transient_event()
+            if self.coordinator.data.get("message") == "none" and transient:
+                time = datetime.fromisoformat(transient["time"])
             if time is not None:
                 attributes["occurred_at"] = time.isoformat(timespec="seconds")
             names = ("previous_message", "previous_message_2", "previous_message_3")
             for name, entry in zip(names, self.coordinator.message_log(), strict=False):
                 attributes[name] = describe_message(entry)
             attributes["observed"] = self.coordinator.message_history()
+            attributes["status_events"] = [
+                f"{datetime.fromisoformat(event['time']):%d.%m.%Y %H:%M:%S} · "
+                f"{describe_status_event(event)}"
+                for event in self.coordinator.status_events()
+            ]
             return attributes
-        raw_key = {
-            "run_state": "run_state_raw",
-            "air_path": "status_word",
-        }.get(self._description.key)
-        if raw_key is None:
-            return {}
-        raw_value = self.coordinator.data.get(raw_key)
-        return {"raw_value": raw_value} if isinstance(raw_value, int) else {}
+        return {}

@@ -147,8 +147,7 @@ value for the fan setpoint.
 - supply, outdoor, extract, and exhaust air temperatures
 - `select.novus300_ventilation_mode` to show and set automatic, levels 1–3,
   away, and boost
-- `sensor.novus300_fan_setpoint` for the fan control value
-- run state, air path, and bypass state
+- `switch.novus300_power` ("Betriebsstatus") to switch the unit on/off and show the run state, and `switch.novus300_bypass` (read-only bypass state)
 - operating time, fan operating time, filter interval, and remaining filter
   time when the controller broadcasts its complete register dump
 - `sensor.novus300_message` with the current unit message (e.g. filter change) and `previous_message*` attributes with the unit's last three messages, `occurred_at` with when the latest occurred (sent only when the unit starts up, then stored)

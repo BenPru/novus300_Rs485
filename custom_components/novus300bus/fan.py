@@ -19,6 +19,7 @@ from tinkerforge.bricklet_industrial_analog_out_v2 import (
 from tinkerforge.ip_connection import Error, IPConnection
 
 from .const import (
+    CONF_AWAY_DURATION_MINUTES,
     CONF_FAN_AUTOMATIC_ENTITY,
     CONF_FAN_ENABLED,
     CONF_FAN_LEVEL_1_PERCENTAGE,
@@ -97,10 +98,18 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose the active mode and temporarily changed levels."""
-        return {
-            "ventilation_mode": self.coordinator.data.get("ventilation_mode"),
+        data = self.coordinator.data
+        attributes: dict[str, Any] = {
+            "ventilation_mode": data.get("ventilation_mode"),
             "original_levels": self.coordinator.temporary_settings(),
         }
+        if isinstance(setpoint := data.get("fan_setpoint"), float | int):
+            attributes["bus_setpoint"] = setpoint
+        if data.get("ventilation_mode") == "away":
+            attributes["away_minutes_per_hour"] = self.coordinator.setting_value(
+                CONF_AWAY_DURATION_MINUTES
+            )
+        return attributes
 
     async def async_turn_on(
         self,

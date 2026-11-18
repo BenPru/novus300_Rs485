@@ -162,8 +162,7 @@ Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.
 - Temperaturen für Zu-, Außen-, Ab- und Fortluft
 - `select.novus300_ventilation_mode` zum Anzeigen und Setzen von Automatik,
   Stufe 1–3, Abwesend und Stoßlüftung
-- `sensor.novus300_fan_setpoint` für die Lüfteransteuerung
-- Betriebsstatus, Luftweg und Bypass
+- `switch.novus300_power` („Betriebsstatus“) zum Ein-/Ausschalten der Anlage und zur Anzeige des Betriebsstatus sowie `switch.novus300_bypass` (Bypass-Zustand, nur lesbar)
 - Gesamt- und Lüfterbetriebszeit sowie Filterintervall und Filterrestlaufzeit,
   sobald die Anlage den vollständigen Register-Dump sendet
 - `sensor.novus300_message` mit der aktuellen Meldung der Anlage (z. B. Filter wechseln) und Attribute `previous_message*` mit den letzten drei Meldungen der Anlage, `occurred_at` mit dem Zeitpunkt der letzten Meldung (nur beim Start der Anlage gesendet, dann gespeichert)

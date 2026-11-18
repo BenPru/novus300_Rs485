@@ -148,6 +148,13 @@ def build_time_frame(moment: datetime) -> bytes:
     )
 
 
+def build_power_frame(on: bool) -> bytes:
+    """Return the panel frame that switches the unit on or off (register 0x07)."""
+    return _build_register_write(
+        bytes((0x07, 0x00, 0x01, 0x90, 0x00, 0x00)) if on else bytes((0x07, 0x00, 0x00))
+    )
+
+
 def build_date_frame(moment: datetime) -> bytes:
     """Return the panel frame that sets the unit's date and weekday."""
     return _build_register_write(

@@ -49,6 +49,7 @@ from .protocol import (
     build_filter_interval_frame,
     build_filter_reset_frame,
     build_mode_request,
+    build_power_frame,
     build_setting_frame,
     build_time_frame,
 )
@@ -74,6 +75,7 @@ PERSISTED_KEYS = {
     "message_log_1",
     "message_log_2",
     "message_history",
+    "status_events",
     "message",
     "message_code",
     *KNOWN_IDENTITIES,
@@ -271,6 +273,19 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                     return
         raise HomeAssistantError(f"Novus did not confirm ventilation mode {mode}")
 
+    async def async_set_power(self, on: bool) -> None:
+        """Switch the unit on or off and wait until it reports the new state."""
+        wanted = ("running", "starting") if on else ("stopped",)
+        for _ in range(3):
+            await self._async_send(build_power_frame(on))
+            for _ in range(10):
+                await asyncio.sleep(0.5)
+                if self._values.get("run_state") in wanted:
+                    return
+        raise HomeAssistantError(
+            f"Novus did not confirm switching {'on' if on else 'off'}"
+        )
+
     @callback
     def _async_daily_time_sync(self, now: datetime) -> None:
         """Start the scheduled clock synchronization."""
@@ -365,6 +380,51 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         except ValueError:
             return []
 
+    def status_events(self) -> list[dict[str, str]]:
+        """Return the last run state and air path changes (newest first)."""
+        try:
+            return json.loads(str(self._values.get("status_events", "[]")))
+        except ValueError:
+            return []
+
+    def transient_event(self) -> dict[str, str] | None:
+        """Return the newest status event while in transition or less than 5 min old."""
+        data = self._values
+        pending = {
+            "run_state": data.get("run_state") not in (None, "running", "stopped"),
+            "air_path": data.get("air_path") not in (None, "heat_recovery", "bypass"),
+        }
+        events = self.status_events()
+        if events:
+            age = dt_util.now() - datetime.fromisoformat(events[0]["time"])
+            if age < timedelta(minutes=5):
+                return events[0]
+        for event in events:
+            if pending.get(event["kind"]):
+                return event
+        return None
+
+    def _record_status_events(self, readings: dict[str, NovusValue]) -> None:
+        """Log every change of the run state or the air path."""
+        history = self.status_events()
+        for kind in ("run_state", "air_path"):
+            new = readings.get(kind)
+            old = self._values.get(kind)
+            if new is None or old is None or new == old:
+                continue
+            raw = readings.get("run_state_raw") if kind == "run_state" else None
+            history.insert(
+                0,
+                {
+                    "time": dt_util.now().isoformat(timespec="seconds"),
+                    "kind": kind,
+                    "state": str(new),
+                    "raw": "" if raw is None else str(raw),
+                },
+            )
+        if history != self.status_events():
+            self._values["status_events"] = json.dumps(history[:10])
+
     def _record_message(self, message: str) -> None:
         """Remember when a message appeared or was cleared."""
         if self._values.get("message") is None and message == "none":
@@ -450,8 +510,11 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             self._last_clock_at = dt_util.utcnow().timestamp()
         if "message" in readings and readings["message"] != self._values.get("message"):
             self._record_message(str(readings["message"]))
+        self._record_status_events(readings)
         self._values.update(readings)
-        if any(key in PERSISTED_KEYS for key in readings):
+        if any(key in PERSISTED_KEYS for key in readings) or (
+            "status_events" in self._values and ("run_state" in readings or "air_path" in readings)
+        ):
             self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))
 
