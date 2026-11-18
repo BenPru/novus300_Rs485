@@ -10,9 +10,10 @@ Konfiguration:
 <img width="514" height="1412" alt="image" src="https://github.com/user-attachments/assets/0a9ccba9-3791-4983-b426-eef009aa0f55" />
 
 
-Home-Assistant-Integration zum passiven Auslesen einer Paul Novus 300 über
+Home-Assistant-Integration zum Auslesen und Steuern einer Paul Novus 300 über
 RS-485. Sie stellt Temperaturen, Betriebszustand, Luftweg, Filter- und
-Betriebszeiten sowie die am Bedienpanel gewählte Lüftungsstufe bereit.
+Betriebszeiten, Meldungen und den Lüftungsmodus bereit und schaltet (über die
+`socket://`-Bridge) die Anlage ein/aus und setzt Modus, Stufen und Uhrzeit.
 
 Optional kann sie einen vorhandenen Tinkerforge Industrial Analog Out V2 für
 den 0-10-V-Eingang der Anlage als `fan.novus300` einbinden. Diese Ausgabe wird
@@ -20,6 +21,21 @@ ausschließlich im Panel-Modus **Automatik** steuerbar. Die RS-485-Schnittstelle
 liest fortlaufend und kann nur über die `socket://`-Bridge mit aktivierter
 Befehls-Whitelist per `select.novus300_ventilation_mode` einen Lüftungsmodus
 anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
+
+## Inhalt
+
+- [Voraussetzungen](#voraussetzungen)
+- [Installation mit HACS](#installation-mit-hacs)
+- [RS-485 anschließen und konfigurieren](#rs-485-anschließen-und-konfigurieren)
+- [Lüfter ohne 0-10 V](#lüfter-ohne-0-10-v)
+- [Optional: Tinkerforge 0-10-V-Lüftersteuerung](#optional-tinkerforge-0-10-v-lüftersteuerung)
+- [Anlageneinstellungen](#anlageneinstellungen)
+- [Angelegte Entitäten](#angelegte-entitäten) · [Dashboard](#dashboard) · [Automatisierungsbeispiele](#automatisierungsbeispiele)
+- [Fehlerdiagnose](#fehlerdiagnose)
+- [Vorbereitung der passiven Busaufzeichnung](#vorbereitung-der-passiven-busaufzeichnung)
+- [HACS-Status und Aufnahme](#hacs-status-und-aufnahme)
+- [Uhrzeit-Synchronisation](#uhrzeit-synchronisation)
+- [Schreibschutz der Bridge](#schreibschutz-der-bridge)
 
 ## Voraussetzungen
 

@@ -5,10 +5,11 @@
 
 [Deutsche Dokumentation](README.de.md)
 
-Home Assistant integration for passively reading a Paul Novus 300 ventilation
-unit through its RS-485 bus. It exposes temperatures, operating state, air
-path, filter and operating times, and the ventilation level selected at the
-unit's panel.
+Home Assistant integration for reading and controlling a Paul Novus 300
+ventilation unit through its RS-485 bus. It exposes temperatures, operating
+state, air path, filter and operating times, messages and the ventilation
+mode, and (through the `socket://` bridge) switches the unit on/off and sets
+mode, levels and clock.
 
 An existing Tinkerforge Industrial Analog Out V2 can optionally be exposed as
 `fan.novus300` to control the unit's external 0-10 V input. This output is
@@ -16,6 +17,22 @@ controllable only while the unit panel is in **Automatic** mode. The RS-485
 connection reads continuously and, only through the `socket://` bridge
 with the command whitelist enabled, can request a ventilation mode via
 `select.novus300_ventilation_mode` (Automatic, levels 1–3, away, boost).
+
+## Contents
+
+- [Requirements](#requirements)
+- [Install with HACS](#install-with-hacs)
+- [Connect and configure RS-485](#connect-and-configure-rs-485)
+- [Fan without 0-10 V](#fan-without-0-10-v)
+- [Optional Tinkerforge 0-10 V fan control](#optional-tinkerforge-0-10-v-fan-control)
+- [Unit settings](#unit-settings)
+- [Entities](#entities) · [Dashboard](#dashboard) · [Automation examples](#automation-examples)
+- [Troubleshooting](#troubleshooting)
+- [Passive bus capture preparation](#passive-bus-capture-preparation)
+- [HACS](#hacs)
+- [License](#license)
+- [Clock synchronization](#clock-synchronization)
+- [Bridge write protection](#bridge-write-protection)
 
 ## Requirements
 
