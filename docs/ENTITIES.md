@@ -11,11 +11,11 @@ key shown below.
 | Entity ID | Platform | Name | Category | Available when the unit is off |
 | --- | --- | --- | --- | --- |
 | `switch.novus300_power` | switch | Betriebsstatus | – | yes |
-| `switch.novus300_bypass` | switch | Bypass | – | no |
+| `switch.novus300_bypass` | switch | Bypass geöffnet | – | no |
 | `fan.novus300` | fan | Lüftung | – | no |
 | `select.novus300_ventilation_mode` | select | Lüftungsmodus | – | no |
 | `button.novus300_boost` | button | Stoßlüftung | – | no |
-| `button.novus300_filter_reset` | button | Filterlaufzeit zurücksetzen | – | yes |
+| `button.novus300_filter_reset` | button | Filterlaufzeit zurücksetzen | – | no |
 | `sensor.novus300_supply_air_temperature` | sensor | Zuluft Temperatur Räume | – | no |
 | `sensor.novus300_outdoor_air_temperature` | sensor | Außenluft Temperatur | – | no |
 | `sensor.novus300_extract_air_temperature` | sensor | Abluft Temperatur Räume | – | no |
@@ -55,7 +55,7 @@ to three times before it raises an error. The unit accepts "on" only about 30
 seconds after "off", because the panel shows a message first. Requires the
 `socket://` bridge started with `--allow-command-frames`.
 
-### `switch.novus300_bypass` – Bypass
+### `switch.novus300_bypass` – Bypass geöffnet
 
 Read-only: `turn_on` and `turn_off` raise an error until opening and closing
 the bypass is known. `on` means the bypass is open or moving.
@@ -124,10 +124,9 @@ measurement, no extra attributes.
 
 Diagnostic. The state is either a status change or the unit's own message.
 
-* **Status change** (for 5 minutes after the change, or while the state is a
-  transition): "Anlage ausgeschaltet", "Anlage läuft", "Anlage startet",
-  "Anlagenstatus unbekannt (Wert n)", "Wärmerückgewinnung aktiv",
-  "Bypass offen", "Bypass in Bewegung", "Luftweg unbekannt".
+* **Transition** (only while it lasts; stable states are shown by the
+  switches): "Anlage startet", "Anlagenstatus unbekannt (Wert n)",
+  "Bypass in Bewegung", "Luftweg unbekannt".
 * **Unit message** otherwise: "Keine Meldung", "Filter wechseln",
   "Fehler am Eingang", "Fehler Bypass" or "Meldung <code>".
 

@@ -113,6 +113,11 @@ class NovusFilterResetButton(ButtonEntity):
             "sw_version": "BUS 1.7.1",
         }
 
+    @property
+    def available(self) -> bool:
+        """Return False while the unit is off."""
+        return not self._coordinator.is_stopped
+
     async def async_press(self) -> None:
         """Reset the filter run time."""
         await self._coordinator.async_reset_filter()

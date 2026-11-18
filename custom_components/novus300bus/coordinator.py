@@ -388,18 +388,13 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             return []
 
     def transient_event(self) -> dict[str, str] | None:
-        """Return the newest status event while in transition or less than 5 min old."""
+        """Return the newest status event of a state that is still a transition."""
         data = self._values
         pending = {
             "run_state": data.get("run_state") not in (None, "running", "stopped"),
             "air_path": data.get("air_path") not in (None, "heat_recovery", "bypass"),
         }
-        events = self.status_events()
-        if events:
-            age = dt_util.now() - datetime.fromisoformat(events[0]["time"])
-            if age < timedelta(minutes=5):
-                return events[0]
-        for event in events:
+        for event in self.status_events():
             if pending.get(event["kind"]):
                 return event
         return None

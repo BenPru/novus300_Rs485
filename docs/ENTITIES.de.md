@@ -11,11 +11,11 @@ gefolgt vom unten genannten Schlüssel.
 | Entity-ID | Plattform | Name | Kategorie | Bei ausgeschalteter Anlage verfügbar |
 | --- | --- | --- | --- | --- |
 | `switch.novus300_power` | switch | Betriebsstatus | – | ja |
-| `switch.novus300_bypass` | switch | Bypass | – | nein |
+| `switch.novus300_bypass` | switch | Bypass geöffnet | – | nein |
 | `fan.novus300` | fan | Lüftung | – | nein |
 | `select.novus300_ventilation_mode` | select | Lüftungsmodus | – | nein |
 | `button.novus300_boost` | button | Stoßlüftung | – | nein |
-| `button.novus300_filter_reset` | button | Filterlaufzeit zurücksetzen | – | ja |
+| `button.novus300_filter_reset` | button | Filterlaufzeit zurücksetzen | – | nein |
 | `sensor.novus300_supply_air_temperature` | sensor | Zuluft Temperatur Räume | – | nein |
 | `sensor.novus300_outdoor_air_temperature` | sensor | Außenluft Temperatur | – | nein |
 | `sensor.novus300_extract_air_temperature` | sensor | Abluft Temperatur Räume | – | nein |
@@ -56,7 +56,7 @@ versucht es bis zu dreimal, bevor sie einen Fehler meldet. Die Anlage nimmt
 „Ein“ erst etwa 30 Sekunden nach „Aus“ an, weil das Panel zuerst eine Meldung
 zeigt. Voraussetzung ist die `socket://`-Bridge mit `--allow-command-frames`.
 
-### `switch.novus300_bypass` – Bypass
+### `switch.novus300_bypass` – Bypass geöffnet
 
 Nur lesbar: `turn_on` und `turn_off` lösen einen Fehler aus, bis das Öffnen und
 Schließen des Bypasses bekannt ist. `on` bedeutet, der Bypass ist offen oder in
@@ -129,10 +129,9 @@ Messwert, keine weiteren Attribute.
 Diagnose. Der Zustand ist entweder ein Statuswechsel oder die eigene Meldung
 der Anlage.
 
-* **Statuswechsel** (5 Minuten nach dem Wechsel oder solange der Zustand ein
-  Übergang ist): „Anlage ausgeschaltet“, „Anlage läuft“, „Anlage startet“,
-  „Anlagenstatus unbekannt (Wert n)“, „Wärmerückgewinnung aktiv“,
-  „Bypass offen“, „Bypass in Bewegung“, „Luftweg unbekannt“.
+* **Übergang** (nur solange er andauert; stabile Zustände zeigen die
+  Schalter): „Anlage startet“, „Anlagenstatus unbekannt (Wert n)“,
+  „Bypass in Bewegung“, „Luftweg unbekannt“.
 * **Meldung der Anlage** sonst: „Keine Meldung“, „Filter wechseln“,
   „Fehler am Eingang“, „Fehler Bypass“ oder „Meldung <Code>“.
 
