@@ -82,7 +82,7 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
     def percentage(self) -> int | None:
         """Return the percentage of the active level."""
         mode = self.coordinator.data.get("ventilation_mode")
-        if self.coordinator.is_stopped or mode == "standby":
+        if self.coordinator.is_stopped or mode in ("standby", "away"):
             return 0
         return self.coordinator.fan_level_percentage(mode)
 
@@ -92,7 +92,7 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         mode = self.coordinator.data.get("ventilation_mode")
         if mode is None:
             return None
-        return mode != "standby" and not self.coordinator.is_stopped
+        return mode not in ("standby", "away") and not self.coordinator.is_stopped
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -116,7 +116,7 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Run at the minimum level (0 V with 0-10 V)."""
+        """Switch to away mode (0 %)."""
         await self.async_set_percentage(0)
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -127,9 +127,9 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self._busy = True
         try:
             keep = None
-            # The unit did not accept standby (mode 0) over the bus: 0 means minimum.
-            target = max(MIN_LEVEL_PERCENTAGE, target)
-            if target == level_2:
+            if target == 0:
+                mode = "away"
+            elif target == level_2:
                 mode = "level_2"
             elif target < level_2:
                 mode, keep = "level_1", CONF_FAN_LEVEL_1_PERCENTAGE
@@ -313,7 +313,7 @@ class NovusFanEntity(NovusBusFanEntity):
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Set the analog output to zero."""
+        """Switch to away mode (0 %)."""
         await self.async_set_percentage(0)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -335,8 +335,10 @@ class NovusFanEntity(NovusBusFanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Select automatic mode and write the percentage as 0-10 V."""
         target = max(0, min(100, round(percentage)))
-        if 0 < target < MIN_LEVEL_PERCENTAGE:
-            target = MIN_LEVEL_PERCENTAGE
+        if target == 0:
+            await super().async_set_percentage(0)
+            return
+        target = max(MIN_LEVEL_PERCENTAGE, target)
         if not self._analog_active:
             await self.coordinator.async_set_ventilation_mode("automatic")
         try:

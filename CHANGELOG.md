@@ -5,10 +5,10 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 ## 2026.11.18 (unreleased)
 
 ### Fixed
-- `fan.turn_on` failed with an error (also with 0-10 V); 0 % / `turn_off` without 0-10 V now runs the minimum level 1 (17 %) because standby cannot be requested over the bus.
+- `fan.turn_on` failed with an error (also with 0-10 V); 0 % / `turn_off` now select away mode.
 
 ### Changed
-- Level percentages in the options dialog start at 17 % (levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %). `fan.novus300` raises targets of 1–16 % to 17 %, also with 0-10 V (the Home Assistant slider itself cannot be limited). Standby (mode 0) is not accepted by the unit over the bus, so 0 % keeps level 1 at 17 % without 0-10 V; with 0-10 V, 0 % writes 0 V.
+- Level percentages in the options dialog start at 17 % (levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %). `fan.novus300` raises targets of 1–16 % to 17 %, also with 0-10 V (the Home Assistant slider itself cannot be limited). 0 % (and turn off) selects away mode; the fan then shows 0 % / off.
 
 ## 2026.11.17
 
