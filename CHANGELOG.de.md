@@ -4,6 +4,13 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
 ## 2026.11.18
 
+### Highlights
+- **Stufenlose Lüftersteuerung über den Bus:** `fan.novus300` arbeitet jetzt mit Regler und Prozentwert direkt über RS-485, ohne 0-10-V-Hardware (Tinkerforge). Im Automatikmodus wird der tatsächliche Steuerwert in Prozent angezeigt.
+- **Anlage ein-/ausschalten** (`switch.novus300_power`) sowie Bypass- und Betriebsstatus.
+- **Fertiges Dashboard** nur aus Standard-Karten: Luftstrom-Grafik, hervorgehobene Modus-Tasten, farbige Kacheln für Stoßlüftung / Meldung / Filter, Verlauf der Statuswechsel. Screenshots in der README.
+- **Klare Modusanzeige:** Die Auswahl bleibt auf „Automatik“, solange ein Prozentwert gesetzt ist; Stufen behalten ihre ursprünglichen Prozentwerte (optional echte Stufen anzeigen).
+- **Meldungen und Statuswechsel** der Anlage mit Verlauf, dazu erweiterte Dokumentation, Automatisierungsbeispiele und vollständige Entitätenliste.
+
 ### Neu
 - **`switch.novus300_power` („Betriebsstatus“)** schaltet die Anlage über den Bus ein und aus (Panel-Frames für Register 0x07) und zeigt den Betriebsstatus mit Icon und Attribut `run_state`. Das Einschalten nimmt die Anlage erst etwa 30 Sekunden nach dem Ausschalten an.
 - **`switch.novus300_bypass` („Bypass geöffnet“)**: Bypass-Zustand, nur lesbar (Öffnen/Schließen ist noch nicht bekannt), Attribute `air_path` und `raw_value`.

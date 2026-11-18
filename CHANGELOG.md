@@ -4,6 +4,13 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 
 ## 2026.11.18
 
+### Highlights
+- **Continuously variable fan control over the bus:** `fan.novus300` now works with a slider and percentage directly over RS-485, no 0-10 V hardware (Tinkerforge) needed. Automatic mode shows the real control percentage.
+- **Switch the unit on and off** (`switch.novus300_power`) and see bypass and run state.
+- **Ready-made dashboard** from standard cards only: airflow graphic, highlighted mode buttons, colour-coded boost / message / filter tiles, status-change history. Screenshots in the README.
+- **Clear mode display:** the select stays on "Automatic" while a percentage is set; levels keep their original percentages (optionally show real levels).
+- **Messages and status changes** of the unit with history, plus extended documentation, automation examples and a full entity list.
+
 ### Added
 - **`switch.novus300_power` ("Betriebsstatus")** switches the unit on and off over the bus (panel frames for register 0x07) and shows the run state with its icon and the attribute `run_state`. Switching on is only accepted by the unit about 30 seconds after switching off.
 - **`switch.novus300_bypass` ("Bypass geöffnet")**: read-only bypass state (opening/closing is not known yet), attributes `air_path` and `raw_value`.
