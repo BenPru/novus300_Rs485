@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from time import monotonic
 from typing import Any
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
@@ -20,6 +21,8 @@ from tinkerforge.ip_connection import Error, IPConnection
 from .const import (
     CONF_FAN_AUTOMATIC_ENTITY,
     CONF_FAN_ENABLED,
+    CONF_FAN_LEVEL_1_PERCENTAGE,
+    CONF_FAN_LEVEL_3_PERCENTAGE,
     CONF_TINKERFORGE_HOST,
     CONF_TINKERFORGE_PORT,
     CONF_TINKERFORGE_UID,
@@ -29,13 +32,134 @@ from .coordinator import NovusCoordinator
 
 LOGGER = logging.getLogger(__name__)
 
+MIN_LEVEL_PERCENTAGE = 17
+LEVEL_KEYS = {
+    "level_1": CONF_FAN_LEVEL_1_PERCENTAGE,
+    "level_3": CONF_FAN_LEVEL_3_PERCENTAGE,
+}
+
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up the optional Tinkerforge fan."""
     config = {**entry.data, **entry.options}
     if not config.get(CONF_FAN_ENABLED, False):
+        async_add_entities([NovusBusFanEntity(entry.runtime_data)])
         return
     async_add_entities([NovusFanEntity(entry.runtime_data, config)])
+
+
+class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
+    """Fan control through the bus levels, without 0-10 V hardware.
+
+    A target below level 2 temporarily sets level 1 to the target, above level 2
+    it sets level 3. The original percentage is restored when the level is left.
+    """
+
+    _attr_name = "Lüftung"
+    _attr_unique_id = "novus300bus_fan"
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
+    _attr_speed_count = 100
+
+    def __init__(self, coordinator: NovusCoordinator) -> None:
+        """Initialize the bus fan."""
+        super().__init__(coordinator)
+        self.entity_id = "fan.novus300"
+        self._busy = False
+        self._retry_at = 0.0
+        self._attr_device_info = {
+            "identifiers": {("novus300bus", "novus300")},
+            "name": "Paul Novus 300",
+            "manufacturer": "Paul",
+            "model": "Novus 300 (FOCUS250)",
+            "sw_version": "BUS 1.7.1",
+        }
+
+    @property
+    def percentage(self) -> int | None:
+        """Return the percentage of the active level."""
+        mode = self.coordinator.data.get("ventilation_mode")
+        if self.coordinator.is_stopped or mode == "standby":
+            return 0
+        return self.coordinator.fan_level_percentage(mode)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return whether the unit is ventilating."""
+        mode = self.coordinator.data.get("ventilation_mode")
+        if mode is None:
+            return None
+        return mode != "standby" and not self.coordinator.is_stopped
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Expose the active mode and temporarily changed levels."""
+        return {
+            "ventilation_mode": self.coordinator.data.get("ventilation_mode"),
+            "original_levels": self.coordinator.temporary_settings(),
+        }
+
+    async def async_turn_on(self, percentage: int | None = None, **kwargs: Any) -> None:
+        """Start ventilating at the given percentage or at level 2."""
+        await self.async_set_percentage(
+            percentage
+            if percentage is not None
+            else self.coordinator.fan_level_percentage("level_2")
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Switch the unit to standby."""
+        await self.async_set_percentage(0)
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Select level 1 or 3 and set its percentage to the target."""
+        coordinator = self.coordinator
+        target = max(0, min(100, round(percentage)))
+        level_2 = coordinator.fan_level_percentage("level_2") or 0
+        self._busy = True
+        try:
+            keep = None
+            if target == 0:
+                mode = "standby"
+            elif target == level_2:
+                mode = "level_2"
+            elif target < level_2:
+                mode, keep = "level_1", CONF_FAN_LEVEL_1_PERCENTAGE
+                target = max(MIN_LEVEL_PERCENTAGE, min(target, level_2 - 1))
+            else:
+                mode, keep = "level_3", CONF_FAN_LEVEL_3_PERCENTAGE
+                target = min(100, max(target, level_2 + 1))
+            if keep is not None and coordinator.setting_value(keep) != target:
+                await coordinator.async_set_temporary_setting(keep, target)
+            await coordinator.async_set_ventilation_mode(mode)
+            await coordinator.async_restore_settings(keep=keep)
+        finally:
+            self._busy = False
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Restore original levels once their level is no longer active."""
+        super()._handle_coordinator_update()
+        mode = self.coordinator.data.get("ventilation_mode")
+        if self._busy or mode is None or monotonic() < self._retry_at:
+            return
+        keep = LEVEL_KEYS.get(mode)
+        if any(key != keep for key in self.coordinator.temporary_settings()):
+            self._busy = True
+            self.hass.async_create_task(self._async_restore(keep))
+
+    async def _async_restore(self, keep: str | None) -> None:
+        try:
+            await self.coordinator.async_restore_settings(keep=keep)
+        except HomeAssistantError as err:
+            LOGGER.warning("Unable to restore Novus fan levels: %s", err)
+            self._retry_at = monotonic() + 60
+        finally:
+            self._busy = False
 
 
 class NovusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):

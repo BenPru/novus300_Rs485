@@ -92,6 +92,9 @@ SETTING_DEFAULTS = {
 }
 
 
+ORIGINAL_PREFIX = "orig_"
+
+
 class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     """Read bus frames continuously in a dedicated serial thread."""
 
@@ -175,7 +178,8 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         return {
             key: value
             for key, value in self._values.items()
-            if key in PERSISTED_KEYS and isinstance(value, float | int | str)
+            if (key in PERSISTED_KEYS or key.startswith(ORIGINAL_PREFIX))
+            and isinstance(value, float | int | str)
         }
 
     async def async_stop(self) -> None:
@@ -299,7 +303,36 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             for key in SETTING_DEFAULTS
             if isinstance(value := self._values.get(key), int)
             and not isinstance(value, bool)
+            and f"{ORIGINAL_PREFIX}{key}" not in self._values
         }
+
+    def temporary_settings(self) -> dict[str, int]:
+        """Return settings temporarily overridden, with their original value."""
+        return {
+            key[len(ORIGINAL_PREFIX) :]: int(value)
+            for key, value in self._values.items()
+            if key.startswith(ORIGINAL_PREFIX) and isinstance(value, int)
+        }
+
+    async def async_set_temporary_setting(self, key: str, value: int) -> None:
+        """Write a setting, remembering its original value for later restore."""
+        marker = f"{ORIGINAL_PREFIX}{key}"
+        if marker not in self._values:
+            self._values[marker] = self.setting_value(key)
+        try:
+            await self.async_write_settings({key: value})
+        except HomeAssistantError:
+            self._values.pop(marker, None)
+            raise
+
+    async def async_restore_settings(self, keep: str | None = None) -> None:
+        """Write back the original values of all temporary settings but `keep`."""
+        for key, original in self.temporary_settings().items():
+            if key == keep:
+                continue
+            await self.async_write_settings({key: original})
+            self._values.pop(f"{ORIGINAL_PREFIX}{key}", None)
+        self._counter_store.async_delay_save(self._persisted_values, 5)
 
     def message_log(self) -> list[dict[str, str | int]]:
         """Return the last messages stored in the unit (newest first)."""

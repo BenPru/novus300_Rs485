@@ -5,6 +5,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 ## 2026.11.17
 
 ### Added
+- **Fan without 0-10 V:** when 0-10 V control is disabled, `fan.novus300` controls the unit over the bus. A target below level 2 selects level 1 and temporarily sets its percentage to the target, above level 2 it selects level 3 likewise; the original level 1/3 percentage is stored (persistently) and written back when the level is left.
 - **Device info:** model Novus 300 (FOCUS250), bus version 1.7.1; panel, fan slave and defroster appear as "Paul Novus 300 …" sub-devices whose software versions (ETA0036E29A, SWZ0025B26A, ST00064E24A) are read from the unit's start-up announcement; known values are used as defaults.
 - **`sensor.novus300_message`:** current unit message (e.g. "Filter wechseln", code 0x41 in register 0x09) with icon; attributes `previous_message`, `previous_message_2`, `previous_message_3` hold the unit's own last three messages as readable text (time, code, message, translated detail), `occurred_at` gives when the latest message occurred (Home Assistant's own "last updated" cannot be set); message icon (registers 0x0A–0x0C, 0x88–0x8D, broadcast by the unit when it starts up and stored by the integration); `observed` lists changes seen by Home Assistant.
 - **Diagnostic raw sensors** (disabled by default) for the still unidentified registers 0x44 and 0x62.

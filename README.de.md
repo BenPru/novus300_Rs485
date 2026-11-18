@@ -90,6 +90,10 @@ Der eingesetzte TCP-Reader muss nur einen Client zulassen oder Zugriffe
 serialisieren. Eine zweite parallele Verbindung kann die bestehende
 Home-Assistant-Verbindung trennen.
 
+## Lüfter ohne 0-10 V
+
+Ist die 0-10-V-Steuerung deaktiviert, steuert `fan.novus300` die Anlage über den Bus: Ein Soll unter Stufe 2 wählt Stufe 1 und setzt deren Prozentwert auf das Soll (mind. 17 %), über Stufe 2 entsprechend Stufe 3; Soll gleich Stufe 2 wählt Stufe 2. Die ursprünglichen Prozentwerte von Stufe 1/3 werden gemerkt und beim Verlassen der Stufe (auch nach Neustart) zurückgeschrieben.
+
 ## Optional: Tinkerforge 0-10-V-Lüftersteuerung
 
 Die RS-485-Auslesung funktioniert ohne Tinkerforge. Dieser Abschnitt ist nur

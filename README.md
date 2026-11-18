@@ -79,6 +79,10 @@ of the Home Assistant host.
 The TCP reader must either accept only one client or serialize access. A
 second concurrent connection can replace the Home Assistant connection.
 
+## Fan without 0-10 V
+
+If 0-10 V control is disabled, `fan.novus300` controls the unit over the bus: a target below level 2 selects level 1 and sets its percentage to the target (min. 17 %), above level 2 it selects level 3 likewise; the target equal to level 2 selects level 2. The original level 1/3 percentages are stored and restored when the level is left (also after a restart).
+
 ## Optional Tinkerforge 0-10 V fan control
 
 RS-485 monitoring works without Tinkerforge. This section is only required
