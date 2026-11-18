@@ -2,14 +2,6 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
-## 2026.11.18.1
-
-### Changed
-- **Entity names are now translatable:** English is the default (e.g. "Boost ventilation", "Operating state", "Supply air temperature"), German remains available for German installations. Entity IDs are unchanged. [docs/ENTITIES.md](docs/ENTITIES.md) lists the English names.
-
-### Documentation
-- New table of contents, updated introduction (the integration no longer only reads) and a detailed description of every field in the options dialog.
-
 ## 2026.11.18
 
 ### Highlights
@@ -38,9 +30,13 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - `fan.turn_on` failed with an error (also with 0-10 V); 0 % / `turn_off` now select away mode.
 
 ### Changed
+- **Entity names are now translatable:** English is the default (e.g. "Boost ventilation", "Operating state", "Supply air temperature"), German remains available for German installations. Entity IDs are unchanged. [docs/ENTITIES.md](docs/ENTITIES.md) lists the English names.
 - `sensor.novus300_message` is now a diagnostic entity.
 - `fan.novus300`, `select.novus300_ventilation_mode` and `button.novus300_boost` and `button.novus300_filter_reset` are unavailable while the unit is off.
 - Level percentages in the options dialog start at 17 % (levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %). `fan.novus300` raises targets of 1–16 % to 17 %, also with 0-10 V (the Home Assistant slider itself cannot be limited). 0 % (and turn off) selects away mode; the fan then shows 0 % / off.
+
+### Documentation
+- Table of contents, updated introduction (the integration no longer only reads), screenshots, automation examples and a detailed description of every field in the options dialog.
 
 ## 2026.11.17
 

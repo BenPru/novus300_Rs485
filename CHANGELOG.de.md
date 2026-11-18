@@ -2,14 +2,6 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
-## 2026.11.18.1
-
-### Geändert
-- **Entitätsnamen sind jetzt übersetzbar:** Englisch ist die Standardsprache (z. B. „Boost ventilation“, „Operating state“, „Supply air temperature“), Deutsch bleibt für deutsche Installationen erhalten. Die Entity-IDs ändern sich nicht. [docs/ENTITIES.md](docs/ENTITIES.md) nennt die englischen Namen, [docs/ENTITIES.de.md](docs/ENTITIES.de.md) die deutschen.
-
-### Dokumentation
-- Neues Inhaltsverzeichnis, überarbeitete Einleitung (die Integration liest nicht mehr nur) und ausführliche Beschreibung jedes Feldes im Optionsdialog.
-
 ## 2026.11.18
 
 ### Highlights
@@ -38,9 +30,13 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - `fan.turn_on` schlug mit Fehler fehl (auch mit 0-10 V); 0 % / `turn_off` wählen jetzt den Modus Abwesend.
 
 ### Geändert
+- **Entitätsnamen sind jetzt übersetzbar:** Englisch ist die Standardsprache (z. B. „Boost ventilation“, „Operating state“, „Supply air temperature“), Deutsch bleibt für deutsche Installationen erhalten. Die Entity-IDs ändern sich nicht. [docs/ENTITIES.md](docs/ENTITIES.md) nennt die englischen Namen, [docs/ENTITIES.de.md](docs/ENTITIES.de.md) die deutschen.
 - `sensor.novus300_message` ist jetzt eine Diagnose-Entität.
 - `fan.novus300`, `select.novus300_ventilation_mode` und `button.novus300_boost` und `button.novus300_filter_reset` sind nicht verfügbar, solange die Anlage aus ist.
 - Stufen-Prozentwerte im Optionsdialog beginnen bei 17 % (es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %). `fan.novus300` hebt Soll-Werte von 1–16 % auf 17 % an, auch mit 0-10 V (der HA-Schieberegler selbst lässt sich nicht einschränken). 0 % (und Ausschalten) wählt den Modus Abwesend; der Fan zeigt dann 0 % / aus.
+
+### Dokumentation
+- Inhaltsverzeichnis, überarbeitete Einleitung (die Integration liest nicht mehr nur), Screenshots, Automatisierungsbeispiele und ausführliche Beschreibung jedes Feldes im Optionsdialog.
 
 ## 2026.11.17
 
