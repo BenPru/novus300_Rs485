@@ -75,7 +75,8 @@ Note: the bypass actuator of the author's unit is defective, so the states
 ### `fan.novus300` – Lüftung
 
 Always present. It shows the percentage of the active level (e.g. 60 % in
-level 2) and controls the ventilation with a target percentage.
+level 2) and controls the ventilation with a target percentage. Its state is the
+percentage (e.g. `60`) or `off`, with and without 0-10 V.
 
 * Without 0-10 V: a target below level 2 selects level 1 and temporarily sets
   its percentage to the target, above level 2 level 3 likewise; the original

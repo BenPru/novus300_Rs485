@@ -101,6 +101,12 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         return mode not in ("standby", "away") and not self.coordinator.is_stopped
 
     @property
+    def state(self) -> str:
+        """Return the percentage as state (as for 0-10 V), or off."""
+        percentage = self.percentage
+        return str(percentage) if self.is_on and percentage is not None else STATE_OFF
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose the active mode and temporarily changed levels."""
         data = self.coordinator.data
@@ -246,11 +252,6 @@ class NovusFanEntity(NovusBusFanEntity):
             and self._percentage > 0
             and not self.coordinator.is_stopped
         )
-
-    @property
-    def state(self) -> str:
-        """Return the legacy numeric state used by existing automations."""
-        return str(self.percentage) if self.is_on else STATE_OFF
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
