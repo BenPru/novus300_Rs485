@@ -92,7 +92,7 @@ def _setting_selector(key: str, current: int) -> selector.SelectSelector:
 def _percentage_selector() -> selector.NumberSelector:
     return selector.NumberSelector(
         selector.NumberSelectorConfig(
-            min=0,
+            min=17,
             max=100,
             step=1,
             unit_of_measurement="%",

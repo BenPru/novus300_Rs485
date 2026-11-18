@@ -2,6 +2,14 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.18 (unreleased)
+
+### Fixed
+- `fan.turn_on` failed with an error (also with 0-10 V); 0 % / `turn_off` without 0-10 V now runs the minimum level 1 (17 %) because standby cannot be requested over the bus.
+
+### Changed
+- Level percentages in the options dialog start at 17 % (levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %). `fan.novus300` clamps targets below 17 % to 17 % (the Home Assistant slider itself cannot be limited).
+
 ## 2026.11.17
 
 ### Added

@@ -7,7 +7,7 @@ import threading
 from time import monotonic
 from typing import Any
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -102,7 +102,12 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
             "original_levels": self.coordinator.temporary_settings(),
         }
 
-    async def async_turn_on(self, percentage: int | None = None, **kwargs: Any) -> None:
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Start ventilating at the given percentage or at level 2."""
         await self.async_set_percentage(
             percentage
@@ -111,7 +116,7 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Switch the unit to standby."""
+        """Run at the minimum level (standby cannot be requested over the bus)."""
         await self.async_set_percentage(0)
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -122,9 +127,8 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         self._busy = True
         try:
             keep = None
-            if target == 0:
-                mode = "standby"
-            elif target == level_2:
+            # The unit cannot be put into standby over the bus: 0 means minimum.
+            if target == level_2:
                 mode = "level_2"
             elif target < level_2:
                 mode, keep = "level_1", CONF_FAN_LEVEL_1_PERCENTAGE
@@ -296,10 +300,16 @@ class NovusFanEntity(NovusBusFanEntity):
         else:
             self._available = True
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Enable the output at the requested or configured default percentage."""
-        percentage = kwargs.get(ATTR_PERCENTAGE, self._default_percentage)
-        await self.async_set_percentage(percentage)
+        await self.async_set_percentage(
+            self._default_percentage if percentage is None else percentage
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set the analog output to zero."""
