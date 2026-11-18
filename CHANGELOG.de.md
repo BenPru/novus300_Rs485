@@ -11,7 +11,6 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - `fan.novus300` hat die Attribute `bus_setpoint` und im Modus Abwesend `away_minutes_per_hour`.
 - `switch.novus300_power` zeigt zusätzlich die Seriennummern von Bedienteil, Lüfter-Slave und Defroster sowie die aktuellen Einstellungen (`config_*`) als Attribute.
 - **Dashboard:** fertiges `dashboards/novus300.yaml` mit Attribut-Details und Liste der Statuswechsel.
-- **Binärsensoren:** `message_active`, `filter_due` (Problem) und `boost_active` (läuft); HA färbt sie im Dashboard nativ ein.
 - **Dokumentation:** vollständige Liste aller Entitäten und Attribute in [docs/ENTITIES.de.md](docs/ENTITIES.de.md).
 - **Serielle Bridge (`tools/`):** die Power-Frames (Aus/Ein) sind jetzt freigegeben.
 

@@ -42,9 +42,9 @@
       "ventilation_mode": {
         "state": {
           "automatic": "Automatik",
-          "level_1": "Stufe 1",
-          "level_2": "Stufe 2",
-          "level_3": "Stufe 3",
+          "level_1": "1",
+          "level_2": "2",
+          "level_3": "3",
           "boost": "Stoßlüftung",
           "away": "Abwesend"
         }

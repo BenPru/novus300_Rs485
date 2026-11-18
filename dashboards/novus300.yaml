@@ -122,14 +122,22 @@ views:
         - type: horizontal-stack
           cards:
             - type: tile
-              entity: binary_sensor.novus300_boost_active
+              entity: button.novus300_boost
               name: Stoßlüftung
               color: blue
-              icon_tap_action:
-                action: perform-action
-                perform_action: button.press
-                target:
-                  entity_id: button.novus300_boost
+              visibility:
+                - condition: state
+                  entity: fan.novus300
+                  attribute: ventilation_mode
+                  state: boost
+            - type: tile
+              entity: button.novus300_boost
+              name: Stoßlüftung
+              visibility:
+                - condition: state
+                  entity: fan.novus300
+                  attribute: ventilation_mode
+                  state_not: boost
             - type: tile
               entity: switch.novus300_bypass
               name: Bypass geöffnet
@@ -154,13 +162,35 @@ views:
           - type: horizontal-stack
             cards:
               - type: tile
-                entity: binary_sensor.novus300_message_active
+                entity: sensor.novus300_message
                 name: Meldung
                 color: red
+                visibility:
+                  - condition: state
+                    entity: sensor.novus300_message
+                    state_not: Keine Meldung
               - type: tile
-                entity: binary_sensor.novus300_filter_due
-                name: Filterwechsel
+                entity: sensor.novus300_message
+                name: Meldung
+                visibility:
+                  - condition: state
+                    entity: sensor.novus300_message
+                    state: Keine Meldung
+              - type: tile
+                entity: sensor.novus300_filter_time_remaining
+                name: Filter-Restlaufzeit
                 color: red
+                visibility:
+                  - condition: numeric_state
+                    entity: sensor.novus300_filter_time_remaining
+                    below: 0.01
+              - type: tile
+                entity: sensor.novus300_filter_time_remaining
+                name: Filter-Restlaufzeit
+                visibility:
+                  - condition: numeric_state
+                    entity: sensor.novus300_filter_time_remaining
+                    above: 0.01
           - type: entities
             title: Wartung
             show_header_toggle: false

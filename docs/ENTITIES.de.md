@@ -12,9 +12,6 @@ gefolgt vom unten genannten Schlüssel.
 | --- | --- | --- | --- | --- |
 | `switch.novus300_power` | switch | Betriebsstatus | – | ja |
 | `switch.novus300_bypass` | switch | Bypass geöffnet | – | nein |
-| `binary_sensor.novus300_message_active` | binary_sensor | Meldung aktiv | – | nein |
-| `binary_sensor.novus300_filter_due` | binary_sensor | Filterwechsel fällig | – | nein |
-| `binary_sensor.novus300_boost_active` | binary_sensor | Stoßlüftung aktiv | – | nein |
 | `fan.novus300` | fan | Lüftung | – | nein |
 | `select.novus300_ventilation_mode` | select | Lüftungsmodus | – | nein |
 | `button.novus300_boost` | button | Stoßlüftung | – | nein |

@@ -11,7 +11,6 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - `fan.novus300` has the attributes `bus_setpoint` and, in away mode, `away_minutes_per_hour`.
 - `switch.novus300_power` also exposes the serial numbers of the panel, fan slave and defroster and the current settings (`config_*`) as attributes.
 - **Dashboard:** ready-made `dashboards/novus300.yaml` with attribute details and status-change list.
-- **Binary sensors:** `message_active`, `filter_due` (problem) and `boost_active` (running); HA colors them natively on dashboards.
 - **Documentation:** complete list of all entities and attributes in [docs/ENTITIES.md](docs/ENTITIES.md).
 - **Serial bridge (`tools/`):** the power frames (off/on) are now allowed.
 
