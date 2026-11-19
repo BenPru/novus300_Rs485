@@ -305,10 +305,11 @@ views:
           [Einstellungen ändern](/config/integrations/integration/novus300bus)
   - title: Sensoren
     path: novus300-sensoren
+    panel: true
     icon: mdi:thermometer
     cards:
       - type: picture-elements
-        image: /novus300bus/novus300-schema.svg?v=1
+        image: /novus300bus/novus300-schema.svg?v=2
         elements:
           - type: state-label
             entity: sensor.novus300_extract_air_temperature
@@ -317,9 +318,9 @@ views:
               top: 54.5%
               color: "#ffffff"
               background-color: "#0b6fa8"
-              padding: 2px 8px
+              padding: 3px 12px
               border-radius: 8px
-              font-size: 17px
+              font-size: 26px
               font-weight: bold
           - type: state-label
             entity: sensor.novus300_supply_air_temperature
@@ -328,9 +329,9 @@ views:
               top: 55%
               color: "#ffffff"
               background-color: "#b3302d"
-              padding: 2px 8px
+              padding: 3px 12px
               border-radius: 8px
-              font-size: 17px
+              font-size: 26px
               font-weight: bold
           - type: state-label
             entity: sensor.novus300_outdoor_air_temperature
@@ -339,9 +340,9 @@ views:
               top: 73%
               color: "#ffffff"
               background-color: "#2e7d32"
-              padding: 2px 8px
+              padding: 3px 12px
               border-radius: 8px
-              font-size: 17px
+              font-size: 26px
               font-weight: bold
           - type: state-label
             entity: sensor.novus300_exhaust_air_temperature
@@ -350,9 +351,9 @@ views:
               top: 71.3%
               color: "#000000"
               background-color: "#ffd54f"
-              padding: 2px 8px
+              padding: 3px 12px
               border-radius: 8px
-              font-size: 17px
+              font-size: 26px
               font-weight: bold
           - type: state-label
             entity: switch.novus300_bypass
@@ -361,7 +362,7 @@ views:
               top: 90.5%
               color: "#ffffff"
               background-color: "#334e68"
-              padding: 2px 8px
+              padding: 3px 12px
               border-radius: 8px
-              font-size: 17px
+              font-size: 26px
               font-weight: bold
