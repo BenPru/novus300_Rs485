@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import threading
+from collections import deque
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -38,7 +39,9 @@ from .const import (
     DEFAULT_FAN_LEVEL_1_PERCENTAGE,
     DEFAULT_FAN_LEVEL_2_PERCENTAGE,
     DEFAULT_FAN_LEVEL_3_PERCENTAGE,
+    DEFAULT_FAN_STAGES,
     DOMAIN,
+    FAN_STAGE_KEYS,
 )
 from .protocol import (
     MODE_REQUEST_VALUES,
@@ -52,6 +55,9 @@ from .protocol import (
     build_filter_reset_frame,
     build_mode_request,
     build_power_frame,
+    PARAMETER_LIMITS,
+    build_parameter_frame,
+    build_select_frame,
     build_setting_frame,
     build_time_frame,
 )
@@ -93,6 +99,7 @@ SETTING_DEFAULTS = {
     CONF_FAN_LEVEL_3_PERCENTAGE: DEFAULT_FAN_LEVEL_3_PERCENTAGE,
     CONF_BOOST_DURATION_MINUTES: DEFAULT_BOOST_DURATION_MINUTES,
     CONF_AWAY_DURATION_MINUTES: DEFAULT_AWAY_DURATION_MINUTES,
+    **dict(zip(FAN_STAGE_KEYS, DEFAULT_FAN_STAGES)),
 }
 
 
@@ -118,6 +125,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         )
         self._cancel_time_sync = None
         self._last_clock_at = 0.0
+        self.raw_log: deque[tuple[str, str]] = deque(maxlen=3000)
         self.data = {}
 
     async def async_start(self) -> None:
@@ -182,7 +190,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         return {
             key: value
             for key, value in self._values.items()
-            if (key in PERSISTED_KEYS or key.startswith(ORIGINAL_PREFIX))
+            if (key in PERSISTED_KEYS or key.startswith((ORIGINAL_PREFIX, "param_")))
             and isinstance(value, float | int | str)
         }
 
@@ -237,6 +245,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                         data = serial_port.read(serial_port.in_waiting or 1)
                         if not data:
                             continue
+                        self.raw_log.append((dt_util.utcnow().isoformat(), data.hex()))
                         for readings in self._parser.feed(data):
                             self.hass.loop.call_soon_threadsafe(
                                 self._async_publish, dict(readings)
@@ -486,6 +495,24 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))
 
+    def unit_values(self) -> dict[str, NovusValue]:
+        """Return all known values, including restored ones."""
+        return dict(self._values)
+
+    async def async_write_parameters(self, parameters: dict[int, int]) -> None:
+        """Store changed unit parameters and selections (register -> raw value)."""
+        for register, value in parameters.items():
+            frame = (
+                build_parameter_frame(register, int(value))
+                if register in PARAMETER_LIMITS
+                else build_select_frame(register, int(value))
+            )
+            await self._async_send(frame)
+            self._values[f"param_{register:02x}"] = int(value)
+            await asyncio.sleep(1)
+        self._counter_store.async_delay_save(self._persisted_values, 5)
+        self.async_set_updated_data(dict(self._values))
+
     def filter_interval_days(self) -> int:
         """Return the filter interval last seen on the bus, in days."""
         seconds = self._values.get("filter_interval")
@@ -546,7 +573,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             self._record_message(str(readings["message"]))
         self._record_status_events(readings)
         self._values.update(readings)
-        if any(key in PERSISTED_KEYS for key in readings) or (
+        if any(key in PERSISTED_KEYS or key.startswith("param_") for key in readings) or (
             "status_events" in self._values and ("run_state" in readings or "air_path" in readings)
         ):
             self._counter_store.async_delay_save(self._persisted_values, 5)

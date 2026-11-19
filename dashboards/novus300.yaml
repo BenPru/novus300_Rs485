@@ -5,7 +5,7 @@ views:
     icon: mdi:fan
     cards:
       - type: picture-elements
-        image: /local/novus300-airflow.svg?v=8
+        image: /novus300bus/novus300-airflow.svg?v=8
         elements:
           - type: state-label
             entity: sensor.novus300_outdoor_air_temperature

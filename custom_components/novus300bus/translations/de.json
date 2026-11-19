@@ -7,16 +7,53 @@
           "baudrate": "Baudrate",
           "parity": "Parität"
         }
+      },
+      "reconfigure": {
+        "title": "Paul Novus 300 neu konfigurieren",
+        "menu_options": {
+          "bus": "Schnittstelle: RS-485-Bus",
+          "fan_control": "Schnittstelle: 0-10V Lüftersteuerung"
+        }
+      },
+      "bus": {
+        "title": "Schnittstelle: RS-485-Bus",
+        "description": "Wie Home Assistant den RS-485-Bus der Novus erreicht.\n\n**Serielles Gerät / Bridge-URL:** ein lokales Gerät wie `/dev/ttyUSB0` oder `/dev/ttyNovus300`, oder eine Netzwerk-Bridge wie `socket://10.0.17.45:9700`, die den seriellen Bus über TCP weiterreicht. Eine Bridge bedient immer nur einen Client.\n\n**Baudrate:** Der Novus-Bus läuft mit 9600.\n\n**Parität:** `none` bei einer Bridge oder einem Adapter, der das Adressbit selbst behandelt, `mark` bei einem einfachen RS-485-Adapter direkt am Bus.\n\nDie Integration wird danach automatisch neu geladen.",
+        "data": {
+          "serial_port": "Serielles Gerät / Bridge-URL",
+          "baudrate": "Baudrate",
+          "parity": "Parität"
+        }
+      },
+      "fan_control": {
+        "title": "Schnittstelle: 0-10V Lüftersteuerung",
+        "description": "Optional: steuert das Lüftersignal der Anlage über ein Tinkerforge Industrial Analog Out (0-10 V) statt über die Stufen des Bedienteils.\n\nDie **Helfer-Entität** (ein `input_boolean`) wird eingeschaltet, solange die Anlage im Automatikmodus läuft. Ohne Tinkerforge-Modul die Lüftersteuerung deaktiviert lassen.",
+        "data": {
+          "fan_enabled": "Lüftersteuerung aktivieren",
+          "tinkerforge_host": "Tinkerforge-Host",
+          "tinkerforge_port": "Tinkerforge-Port",
+          "tinkerforge_uid": "UID des Industrial Analog Out",
+          "fan_automatic_entity": "Helfer-Entität für Automatikmodus"
+        }
       }
+    },
+    "abort": {
+      "reconfigure_successful": "Gespeichert, die Integration wird neu geladen."
     }
   },
   "options": {
     "step": {
       "init": {
+        "title": "Paul Novus 300",
+        "menu_options": {
+          "general": "Allgemein und Anlageneinstellungen",
+          "plant": "Anlagenparameter",
+          "bypass": "Bypass und Sommerlüftung",
+          "advanced": "Erweitert: Parameterblock (nur lesen)"
+        }
+      },
+      "general": {
+        "title": "Allgemein und Anlageneinstellungen",
         "data": {
-          "serial_port": "Serielles Gerät / Bridge-URL",
-          "baudrate": "Baudrate",
-          "parity": "Parität",
           "daily_time_sync": "Uhrzeit täglich synchronisieren",
           "fan_level_1_percentage": "Lüftungsstufe 1 (%)",
           "fan_level_2_percentage": "Lüftungsstufe 2 (%)",
@@ -24,18 +61,76 @@
           "boost_duration_minutes": "Dauer Stoßlüftung",
           "away_duration_minutes": "Abwesend: Lüftungszeit (min/h)",
           "show_fan_levels": "Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird",
-          "fan_enabled": "0-10 V: Lüftersteuerung aktivieren",
-          "tinkerforge_host": "0-10 V: Tinkerforge-Host",
-          "tinkerforge_port": "0-10 V: Tinkerforge-Port",
-          "tinkerforge_uid": "0-10 V: UID des Industrial Analog Out",
-          "fan_automatic_entity": "0-10 V: Helfer-Entität für Automatikmodus",
           "filter_interval_days": "Filterintervall"
         },
         "description": "{source}"
+      },
+      "advanced": {
+        "title": "Erweitert: Parameterblock (nur lesen)",
+        "description": "Parameterblock, den die Anlage beim Einschalten sendet. Die Bezeichnungen mit (?) sind **Vermutungen** aus den Werten, nicht bestätigt. Werte mit Komma sind Temperaturen (Rohwert ÷10). Aufgelöste Parameter stehen unter „Anlagenparameter“. Alle Rohdaten gibt es unter Geräte → Diagnosedaten herunterladen.\n\n{values}"
+      },
+      "plant_form": {
+        "title": "Anlagenparameter",
+        "description": "Automatik, Frostschutz, Nachheizung und Einbau-Typen werden in die Anlage geschrieben (wie im Bedienteil-Menü). Leere Felder bleiben unverändert. **Achtung:** Defroster-Typ und Nachheizung betreffen die Hardware - nur einstellen, was tatsächlich verbaut ist. Die Wirkung des Frostschutzmodus ist unbestätigt.",
+        "data": {
+          "automatic": "Automatik-Modus",
+          "frost": "Frostschutzmodus",
+          "p4a": "Frostschutz Außenluft: Sicher",
+          "p4b": "Frostschutz Außenluft: Eco",
+          "p4c": "Frostschutz Außenluft: Feuchte WT",
+          "p47": "Minimale Zulufttemperatur",
+          "reheater": "Nachheizung: Typ",
+          "p5a": "Nachheizung: Kanaltemperatur",
+          "defroster": "Defroster-Typ",
+          "ewt": "EWT-Klappe"
+        }
+      },
+      "bypass_form": {
+        "title": "Bypass und Sommerlüftung",
+        "description": "{state}Die Temperaturen gelten auch für die Sommerlüftung ohne Bypass (obere Schwelle = Temperatur, „geschlossen unterhalb“ = inaktiv unter). Ist kein Bypass vorhanden, hat die untere Schwelle keine Wirkung.",
+        "data": {
+          "bypass": "Bypass vorhanden",
+          "summer": "Sommerlüftung aktiv",
+          "p41": "Obere Schwelle / Sommerlüftung Temperatur",
+          "p42": "Untere Schwelle",
+          "p43": "Hysterese",
+          "p49": "Bypass geschlossen unterhalb / Sommerlüftung inaktiv unter"
+        }
+      },
+      "bypass_settings": {
+        "title": "Bypass-Temperaturen",
+        "description": "Obere Schwelle, Hysterese und „Bypass geschlossen unterhalb“ gelten auch für die Sommerlüftung ohne Bypass.",
+        "data": {
+          "p41": "Obere Schwelle",
+          "p42": "Untere Schwelle",
+          "p43": "Hysterese",
+          "p49": "Bypass geschlossen unterhalb"
+        }
+      },
+      "summer_settings": {
+        "title": "Sommerlüftung ohne Bypass",
+        "description": "Diese Werte teilt sich die Sommerlüftung mit den Bypass-Temperaturen.",
+        "data": {
+          "p41": "Temperatur",
+          "p43": "Hysterese",
+          "p49": "Inaktiv unter"
+        }
+      },
+      "missing": {
+        "title": "Anlagenwerte fehlen",
+        "description": "Folgende Anlagenwerte sind noch nicht bekannt:\n\n{missing}\n\n**Anlage neu starten** schaltet die Lüftung aus und wieder an (einige Sekunden ohne Lüftung) und wartet bis zu einer Minute auf die Startwerte. Werte der Bedienteil-Menüs kommen nur, wenn du die Seite am Bedienteil öffnest - danach **Erneut prüfen**.",
+        "menu_options": {
+          "missing_restart": "Anlage neu starten (aus/an, auf Werte warten)",
+          "missing_recheck": "Erneut prüfen",
+          "missing_open": "Trotzdem öffnen"
+        }
       }
     },
     "error": {
-      "levels_order": "Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %."
+      "levels_order": "Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %.",
+      "not_loaded": "Nicht mit dem Bus verbunden.",
+      "write_failed": "Schreiben in die Anlage fehlgeschlagen.",
+      "invalid_number": "Wert mit einer Nachkommastelle im zulässigen Bereich eingeben (Hysterese in 0,5-Schritten)."
     }
   },
   "entity": {
@@ -49,24 +144,24 @@
           "boost": "Stoßlüftung",
           "away": "Abwesend"
         },
-        "name": "Lüftungsmodus"
+        "name": "Betriebsmodus"
       }
     },
     "sensor": {
       "supply_air_temperature": {
-        "name": "Zuluft Temperatur Räume"
+        "name": "2 Zuluft Temperatur Räume"
       },
       "outdoor_air_temperature": {
-        "name": "Außenluft Temperatur"
+        "name": "1 Außenluft Temperatur"
       },
       "extract_air_temperature": {
-        "name": "Abluft Temperatur Räume"
+        "name": "3 Abluft Temperatur Räume"
       },
       "exhaust_air_temperature": {
-        "name": "Fortluft Temperatur"
+        "name": "4 Fortluft Temperatur"
       },
       "message": {
-        "name": "Meldung"
+        "name": "Aktuelle Meldung"
       },
       "register_44": {
         "name": "Register 0x44 (Rohwert, unbekannt)"

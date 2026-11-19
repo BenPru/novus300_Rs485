@@ -17,7 +17,29 @@ SETTING_REGISTERS = {
     0x3C: "away_duration_minutes",
 }
 
+# Seven additional fan stages (%), announced in the unit's start-up dump.
+FAN_STAGE_REGISTERS = {
+    0x34 + index: f"fan_stage_{index + 1}_percentage" for index in range(7)
+}
+SETTING_REGISTERS.update(FAN_STAGE_REGISTERS)
+
+# Start-up parameter block (read only, meaning not verified): register -> width.
+PARAMETER_REGISTER_WIDTHS = {
+    **dict.fromkeys(range(0x41, 0x64), 1),
+    **dict.fromkeys((0x41, 0x42, 0x47, 0x49, 0x4A, 0x4B, 0x4C, 0x55, 0x56, 0x5A, 0x5B, 0x5F, 0x60, 0x63), 2),
+}
+for _register in (0x44, 0x55, 0x62):
+    PARAMETER_REGISTER_WIDTHS.pop(_register)
+
+# Installation selections, stored as param_XX (0x1E/0x21: last byte only).
+SELECT_REGISTER_WIDTHS = {0x1B: 2, 0x1E: 4, 0x21: 4, 0x24: 1, 0x7B: 1}
+
 REGISTER_WIDTHS = {
+    **PARAMETER_REGISTER_WIDTHS,
+    **SELECT_REGISTER_WIDTHS,
+    0x3F: 5,
+    0x40: 1,
+    **dict.fromkeys(FAN_STAGE_REGISTERS, 1),
     0x2E: 1,
     0x2F: 1,
     0x30: 1,
@@ -192,6 +214,31 @@ def build_setting_frame(key: str, value: int) -> bytes:
     return _build_register_write(bytes((register, 0x00, value)))
 
 
+# Writable unit parameters, raw limits in 0.1 degC (verified against the panel menus).
+PARAMETER_LIMITS = {
+    0x41: (150, 350),
+    0x42: (100, 300),
+    0x43: (1, 50),
+    0x47: (0, 150),
+    0x49: (100, 300),
+    0x4A: (-100, 100),
+    0x4B: (-150, 50),
+    0x4C: (-200, 0),
+    0x5A: (200, 700),
+}
+
+
+def build_parameter_frame(register: int, value: int) -> bytes:
+    """Return the panel frame that stores one unit parameter (raw 0.1 degC)."""
+    low, high = PARAMETER_LIMITS[register]
+    if not low <= value <= high:
+        raise ValueError(f"Parameter 0x{register:02X} out of range: {value}")
+    width = PARAMETER_REGISTER_WIDTHS[register]
+    return _build_register_write(
+        bytes((register, 0x00)) + value.to_bytes(width, "little", signed=width == 2)
+    )
+
+
 def _decode_clock(frame: bytes) -> dict[str, NovusValue] | None:
     """Decode the unit's clock broadcast (command 0x00)."""
     payload = frame[6:]
@@ -266,6 +313,14 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
             )
         elif register in UNKNOWN_REGISTERS:
             readings[UNKNOWN_REGISTERS[register]] = raw[0]
+        elif register in SELECT_REGISTER_WIDTHS:
+            readings[f"param_{register:02x}"] = (
+                raw[3] if len(raw) == 4 else int.from_bytes(raw, "little")
+            )
+        elif register in PARAMETER_REGISTER_WIDTHS:
+            readings[f"param_{register:02x}"] = int.from_bytes(
+                raw, "little", signed=len(raw) == 2
+            )
         elif register in SETTING_REGISTERS:
             readings[SETTING_REGISTERS[register]] = raw[0]
         elif register in COUNTER_REGISTERS:
@@ -362,3 +417,32 @@ class NovusFrameParser:
                     readings.append(decoded)
 
         return readings
+
+
+SELECT_VALUES = {
+    0x1E: (1, 2, 3),
+    0x21: (0, 1, 3),
+    0x24: (0, 4),
+    0x7B: (0, 1, 2),
+}
+
+
+def build_select_frame(register: int, value: int) -> bytes:
+    """Return the panel frame that stores an installation selection."""
+    head = bytes((register, 0x00))
+    if register == 0x1B:
+        if value & ~0xFF != 0 or value & 0x7B != 0x7B:
+            raise ValueError(f"Invalid value for 0x1B: {value}")
+        return _build_register_write(head + value.to_bytes(2, "little"))
+    if register == 0x63:
+        if value not in (0x1F0, 0x1F8):
+            raise ValueError(f"Invalid value for 0x63: {value}")
+        return _build_register_write(head + value.to_bytes(2, "little"))
+    if value not in SELECT_VALUES.get(register, ()):
+        raise ValueError(f"Invalid value for 0x{register:02X}: {value}")
+    if register == 0x1E:
+        return _build_register_write(head + bytes((0x0C, 0x7F, 0x00, value)))
+    if register == 0x21:
+        extra = bytes((0x0C, 0x80, 0x00, value)) if value else bytes((0x00, 0x80, 0x00, 0x00))
+        return _build_register_write(head + extra)
+    return _build_register_write(head + bytes((value,)))

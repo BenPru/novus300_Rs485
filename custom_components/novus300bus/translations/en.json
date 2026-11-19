@@ -7,16 +7,53 @@
           "baudrate": "Baud rate",
           "parity": "Parity"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Paul Novus 300",
+        "menu_options": {
+          "bus": "Interface: RS-485 bus",
+          "fan_control": "Interface: 0-10 V fan control"
+        }
+      },
+      "bus": {
+        "title": "Interface: RS-485 bus",
+        "description": "How Home Assistant reaches the Novus RS-485 bus.\n\n**Serial device / bridge URL:** a local device such as `/dev/ttyUSB0` or `/dev/ttyNovus300`, or a network bridge such as `socket://10.0.17.45:9700` that forwards the serial bus over TCP. Only one client can use a bridge at a time.\n\n**Baud rate:** the Novus bus runs at 9600.\n\n**Parity:** `none` for a bridge or an adapter that already handles the address bit, `mark` for a plain RS-485 adapter on the bus.\n\nThe integration reloads automatically afterwards.",
+        "data": {
+          "serial_port": "Serial device / bridge URL",
+          "baudrate": "Baud rate",
+          "parity": "Parity"
+        }
+      },
+      "fan_control": {
+        "title": "Interface: 0-10 V fan control",
+        "description": "Optional: drives the unit's fan signal with a Tinkerforge Industrial Analog Out (0-10 V) instead of the panel's own levels.\n\nThe **helper entity** (an `input_boolean`) is switched on while the unit runs in automatic mode. Leave fan control disabled if you do not use a Tinkerforge module.",
+        "data": {
+          "fan_enabled": "Enable fan control",
+          "tinkerforge_host": "Tinkerforge host",
+          "tinkerforge_port": "Tinkerforge port",
+          "tinkerforge_uid": "Industrial Analog Out UID",
+          "fan_automatic_entity": "Automatic mode helper entity"
+        }
       }
+    },
+    "abort": {
+      "reconfigure_successful": "Saved, the integration is reloading."
     }
   },
   "options": {
     "step": {
       "init": {
+        "title": "Paul Novus 300",
+        "menu_options": {
+          "general": "General and unit settings",
+          "plant": "Plant parameters",
+          "bypass": "Bypass and summer ventilation",
+          "advanced": "Advanced: unit parameters"
+        }
+      },
+      "general": {
+        "title": "General and unit settings",
         "data": {
-          "serial_port": "Serial device / bridge URL",
-          "baudrate": "Baud rate",
-          "parity": "Parity",
           "daily_time_sync": "Synchronize time daily",
           "fan_level_1_percentage": "Ventilation level 1 (%)",
           "fan_level_2_percentage": "Ventilation level 2 (%)",
@@ -24,18 +61,76 @@
           "boost_duration_minutes": "Boost duration",
           "away_duration_minutes": "Away: ventilation time (min/h)",
           "show_fan_levels": "Show levels instead of automatic when the fan is set by percentage",
-          "fan_enabled": "0-10 V: Enable fan control",
-          "tinkerforge_host": "0-10 V: Tinkerforge host",
-          "tinkerforge_port": "0-10 V: Tinkerforge port",
-          "tinkerforge_uid": "0-10 V: Industrial Analog Out UID",
-          "fan_automatic_entity": "0-10 V: Automatic mode helper entity",
           "filter_interval_days": "Filter interval"
         },
         "description": "{source}"
+      },
+      "advanced": {
+        "title": "Advanced: unit parameters (read only)",
+        "description": "Parameter block the unit sends at power-on. Labels marked (?) are **guesses** derived from the values, not confirmed. Values with a decimal are temperatures (raw ÷10). Resolved parameters are in 'Plant parameters'. All raw data is available via Device → Download diagnostics.\n\n{values}"
+      },
+      "plant_form": {
+        "title": "Plant parameters",
+        "description": "Automatic mode, frost protection, reheating and installation types are written to the unit (like the panel menu). Empty fields stay unchanged. **Caution:** defroster type and reheating affect hardware - only set what is installed. The effect of the frost protection mode is unconfirmed.",
+        "data": {
+          "automatic": "Automatic mode",
+          "frost": "Frost protection mode",
+          "p4a": "Frost protection outdoor air: Safe",
+          "p4b": "Frost protection outdoor air: Eco",
+          "p4c": "Frost protection outdoor air: Humidity HX",
+          "p47": "Minimum supply air temperature",
+          "reheater": "Reheating: type",
+          "p5a": "Reheating: duct temperature",
+          "defroster": "Defroster type",
+          "ewt": "Earth heat exchanger damper"
+        }
+      },
+      "bypass_form": {
+        "title": "Bypass and summer ventilation",
+        "description": "{state}The temperatures also apply to summer ventilation without a bypass (upper threshold = temperature, 'closed below' = inactive below). Without a bypass the lower threshold has no effect.",
+        "data": {
+          "bypass": "Bypass installed",
+          "summer": "Summer ventilation active",
+          "p41": "Upper threshold / summer ventilation temperature",
+          "p42": "Lower threshold",
+          "p43": "Hysteresis",
+          "p49": "Bypass closed below / summer ventilation inactive below"
+        }
+      },
+      "bypass_settings": {
+        "title": "Bypass temperatures",
+        "description": "Upper threshold, hysteresis and 'bypass closed below' are shared with the summer ventilation without bypass.",
+        "data": {
+          "p41": "Upper threshold",
+          "p42": "Lower threshold",
+          "p43": "Hysteresis",
+          "p49": "Bypass closed below"
+        }
+      },
+      "summer_settings": {
+        "title": "Summer ventilation without bypass",
+        "description": "The summer ventilation shares these values with the bypass temperatures.",
+        "data": {
+          "p41": "Temperature",
+          "p43": "Hysteresis",
+          "p49": "Inactive below"
+        }
+      },
+      "missing": {
+        "title": "Unit values missing",
+        "description": "These unit values are not known yet:\n\n{missing}\n\n**Restart unit** switches the ventilation off and on (a few seconds without ventilation) and waits up to a minute for the start-up values. Values of the panel menus only arrive when you open that page on the panel - then **Check again**.",
+        "menu_options": {
+          "missing_restart": "Restart unit (off and on, wait for values)",
+          "missing_recheck": "Check again",
+          "missing_open": "Open anyway"
+        }
       }
     },
     "error": {
-      "levels_order": "Levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %."
+      "levels_order": "Levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %.",
+      "not_loaded": "Not connected to the bus.",
+      "write_failed": "Writing to the unit failed.",
+      "invalid_number": "Enter a value with one decimal within the allowed range (hysteresis in steps of 0.5)."
     }
   },
   "entity": {
@@ -49,24 +144,24 @@
           "boost": "Boost ventilation",
           "away": "Away"
         },
-        "name": "Ventilation mode"
+        "name": "Operating mode"
       }
     },
     "sensor": {
       "supply_air_temperature": {
-        "name": "Supply air temperature"
+        "name": "2 Supply air temperature"
       },
       "outdoor_air_temperature": {
-        "name": "Outdoor air temperature"
+        "name": "1 Outdoor air temperature"
       },
       "extract_air_temperature": {
-        "name": "Extract air temperature"
+        "name": "3 Extract air temperature"
       },
       "exhaust_air_temperature": {
-        "name": "Exhaust air temperature"
+        "name": "4 Exhaust air temperature"
       },
       "message": {
-        "name": "Message"
+        "name": "Active message"
       },
       "register_44": {
         "name": "Register 0x44 (raw value, unknown)"

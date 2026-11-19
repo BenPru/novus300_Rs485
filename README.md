@@ -190,7 +190,7 @@ A complete list with all attributes: [docs/ENTITIES.md](docs/ENTITIES.md).
 
 ### Dashboard
 
-[`dashboards/novus300.yaml`](dashboards/novus300.yaml) is a ready-made dashboard (standard cards only, including a "Details (Attribute)" card and the status-change list). Copy the file into your YAML dashboard (or paste it into the raw configuration editor) and copy `dashboards/novus300-airflow.svg` to `config/www/` (used as `/local/novus300-airflow.svg`).
+[`dashboards/novus300.yaml`](dashboards/novus300.yaml) is a ready-made dashboard (standard cards only, including a "Details (Attribute)" card and the status-change list). The graphic is served by the integration itself (at `/novus300bus/novus300-airflow.svg`); nothing has to be copied to `config/www/`. In short: create a new dashboard → raw configuration editor → paste the file's content. **Detailed step-by-step guide (variants, checks, troubleshooting): [docs/DASHBOARD.md](docs/DASHBOARD.md).**
 
 ![Dashboard overview](docs/images/dashboard.png)
 

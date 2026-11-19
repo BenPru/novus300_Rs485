@@ -1,0 +1,105 @@
+{
+  "config": {
+    "step": {
+      "reconfigure": {
+        "title": "Reconfigurar Paul Novus 300",
+        "menu_options": {
+          "bus": "Interfaz: bus RS-485",
+          "fan_control": "Interfaz: control del ventilador 0-10 V"
+        }
+      },
+      "bus": {
+        "title": "Interfaz de bus",
+        "description": "Cómo accede Home Assistant al bus RS-485 del Novus.\n\n**Dispositivo serie / URL del puente:** un dispositivo local como `/dev/ttyUSB0`, o un puente de red como `socket://10.0.17.45:9700` que reenvía el bus serie por TCP. Un puente solo atiende a un cliente a la vez.\n\n**Velocidad:** el bus Novus funciona a 9600 baudios.\n\n**Paridad:** `none` con un puente o adaptador que gestiona el bit de dirección, `mark` con un adaptador RS-485 simple en el bus.\n\nLos cambios se aplican al recargar la integración.",
+        "data": {
+          "serial_port": "Dispositivo serie / URL del puente",
+          "baudrate": "Velocidad (baudios)",
+          "parity": "Paridad"
+        }
+      },
+      "fan_control": {
+        "title": "Control del ventilador 0-10 V",
+        "description": "Opcional: controla la señal del ventilador con un Tinkerforge Industrial Analog Out (0-10 V) en lugar de las etapas del panel.\n\nLa **entidad auxiliar** (un `input_boolean`) se activa mientras el equipo funciona en modo automático.",
+        "data": {
+          "fan_enabled": "Activar el control del ventilador",
+          "tinkerforge_host": "Host de Tinkerforge",
+          "tinkerforge_port": "Puerto de Tinkerforge",
+          "tinkerforge_uid": "UID del Industrial Analog Out",
+          "fan_automatic_entity": "Entidad auxiliar del modo automático"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Guardado, la integración se está recargando."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Paul Novus 300",
+        "menu_options": {
+          "general": "General y ajustes del equipo",
+          "plant": "Plant parameters",
+          "bypass": "Bypass and summer ventilation",
+          "advanced": "Avanzado: parámetros del equipo"
+        }
+      },
+      "plant_form": {
+        "title": "Plant parameters",
+        "description": "Automatic mode, frost protection, reheating and installation types are written to the unit (like the panel menu). Empty fields stay unchanged. **Caution:** defroster type and reheating affect hardware - only set what is installed. The effect of the frost protection mode is unconfirmed.",
+        "data": {
+          "automatic": "Automatic mode",
+          "frost": "Frost protection mode",
+          "p4a": "Frost protection outdoor air: Safe",
+          "p4b": "Frost protection outdoor air: Eco",
+          "p4c": "Frost protection outdoor air: Humidity HX",
+          "p47": "Minimum supply air temperature",
+          "reheater": "Reheating: type",
+          "p5a": "Reheating: duct temperature",
+          "defroster": "Defroster type",
+          "ewt": "Earth heat exchanger damper"
+        }
+      },
+      "bypass_form": {
+        "title": "Bypass and summer ventilation",
+        "description": "{state}The temperatures also apply to summer ventilation without a bypass (upper threshold = temperature, 'closed below' = inactive below). Without a bypass the lower threshold has no effect.",
+        "data": {
+          "bypass": "Bypass installed",
+          "summer": "Summer ventilation active",
+          "p41": "Upper threshold / summer ventilation temperature",
+          "p42": "Lower threshold",
+          "p43": "Hysteresis",
+          "p49": "Bypass closed below / summer ventilation inactive below"
+        }
+      },
+      "bypass_settings": {
+        "title": "Bypass temperatures",
+        "description": "Upper threshold, hysteresis and 'bypass closed below' are shared with the summer ventilation without bypass.",
+        "data": {
+          "p41": "Upper threshold",
+          "p42": "Lower threshold",
+          "p43": "Hysteresis",
+          "p49": "Bypass closed below"
+        }
+      },
+      "summer_settings": {
+        "title": "Summer ventilation without bypass",
+        "description": "The summer ventilation shares these values with the bypass temperatures.",
+        "data": {
+          "p41": "Temperature",
+          "p43": "Hysteresis",
+          "p49": "Inactive below"
+        }
+      },
+      "missing": {
+        "title": "Unit values missing",
+        "description": "These unit values are not known yet:\n\n{missing}\n\n**Restart unit** switches the ventilation off and on (a few seconds without ventilation) and waits up to a minute for the start-up values. Values of the panel menus only arrive when you open that page on the panel - then **Check again**.",
+        "menu_options": {
+          "missing_restart": "Restart unit (off and on, wait for values)",
+          "missing_recheck": "Check again",
+          "missing_open": "Open anyway"
+        }
+      }
+    }
+  }
+}

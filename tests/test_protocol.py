@@ -8,6 +8,8 @@ from custom_components.novus300bus.protocol import (
     build_date_frame,
     build_filter_interval_frame,
     build_filter_reset_frame,
+    build_parameter_frame,
+    build_select_frame,
     build_power_frame,
     build_setting_frame,
     build_time_frame,
@@ -148,6 +150,32 @@ class NovusFrameParserTest(unittest.TestCase):
             "01008503201c30005a",
         )
 
+    def test_fan_stage_frame_and_decode(self):
+        frame = build_setting_frame("fan_stage_3_percentage", 47)
+        self.assertEqual(frame.hex(), "01008503b28036002f")
+        readings = NovusFrameParser().feed(frame)
+        self.assertEqual(readings, [{"fan_stage_3_percentage": 47}])
+
+    def test_decodes_startup_parameter_block(self):
+        from custom_components.novus300bus.protocol import _decode_registers
+
+        readings = _decode_registers(
+            bytes.fromhex(
+                "3f0000000b0000400002"
+                "4100e6004200a50043000544008c450096460069470032004800054900b4004a0000"
+                "004b00ecff4c00b0ff4d00114e00114f005a50005a5100285200115300c854006455"
+                "008f015600dc005700005800145900055a00f4015b0032005c00055d00285e00005f"
+                "0032006000dc006100056200006300f801"
+            )
+        )
+        self.assertEqual(readings["param_41"], 230)
+        self.assertEqual(readings["param_4b"], -20)
+        self.assertEqual(readings["param_4c"], -80)
+        self.assertEqual(readings["param_56"], 220)
+        self.assertEqual(readings["param_63"], 504)
+        self.assertEqual(readings["register_44"], 140)
+        self.assertEqual(readings["fan_setpoint"], 39.9)
+
     def test_filter_frames_match_panel(self):
         self.assertEqual(build_filter_interval_frame(110).hex(), "01008507c2e43d0000006e0000")
         self.assertEqual(build_filter_interval_frame(90).hex(), "01008507a7fd3d0000005a0000")
@@ -173,6 +201,24 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(
             readings["message_log_0"], "2026-06-13T10:44:41|131|TempFromBuSDEFR"
         )
+
+    def test_parameter_frames(self) -> None:
+        frame = build_parameter_frame(0x41, 235)
+        self.assertEqual(frame[3], 4)
+        self.assertEqual(frame[6:], bytes.fromhex("4100eb00"))
+        self.assertEqual(build_parameter_frame(0x43, 5)[6:], bytes.fromhex("430005"))
+        self.assertEqual(build_parameter_frame(0x4B, -20)[6:], bytes.fromhex("4b00ecff"))
+        with self.assertRaises(ValueError):
+            build_parameter_frame(0x41, 900)
+
+    def test_select_frames(self) -> None:
+        self.assertEqual(build_select_frame(0x1E, 3)[6:], bytes.fromhex("1e000c7f0003"))
+        self.assertEqual(build_select_frame(0x21, 0)[6:], bytes.fromhex("210000800000"))
+        self.assertEqual(build_select_frame(0x1B, 0xFB)[6:], bytes.fromhex("1b00fb00"))
+        self.assertEqual(build_select_frame(0x63, 0x1F8)[6:], bytes.fromhex("6300f801"))
+        self.assertEqual(build_select_frame(0x24, 4)[6:], bytes.fromhex("240004"))
+        with self.assertRaises(ValueError):
+            build_select_frame(0x1E, 9)
 
 
 if __name__ == "__main__":

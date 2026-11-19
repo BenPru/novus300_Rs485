@@ -204,7 +204,7 @@ Vollständige Liste mit allen Attributen: [docs/ENTITIES.de.md](docs/ENTITIES.de
 
 ### Dashboard
 
-[`dashboards/novus300.yaml`](dashboards/novus300.yaml) ist ein fertiges Dashboard (nur Standard-Karten, mit Karte „Details (Attribute)“ und Liste der Statuswechsel). Die Datei in das YAML-Dashboard kopieren (oder in den Rohkonfigurationseditor einfügen) und `dashboards/novus300-airflow.svg` nach `config/www/` kopieren (wird als `/local/novus300-airflow.svg` verwendet).
+[`dashboards/novus300.yaml`](dashboards/novus300.yaml) ist ein fertiges Dashboard (nur Standard-Karten, mit Karte „Details (Attribute)“ und Liste der Statuswechsel). Die Grafik liefert die Integration selbst aus (unter `/novus300bus/novus300-airflow.svg`), es muss nichts nach `config/www/` kopiert werden. Kurz: neues Dashboard anlegen → Rohkonfigurationseditor → Inhalt der Datei einfügen. **Ausführliche Schritt-für-Schritt-Anleitung (mit Varianten, Prüfung und Fehlerbehebung): [docs/DASHBOARD.de.md](docs/DASHBOARD.de.md).**
 
 ![Dashboard-Übersicht](docs/images/dashboard.png)
 

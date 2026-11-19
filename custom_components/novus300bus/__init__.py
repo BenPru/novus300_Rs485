@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -72,6 +75,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for entry in entries:
             await entry.runtime_data.async_reset_filter()
 
+    # Serve the dashboard graphic so no file has to be copied to config/www.
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                "/novus300bus",
+                str(Path(__file__).parent / "www"),
+                cache_headers=False,
+            )
+        ]
+    )
     hass.services.async_register(DOMAIN, "sync_clock", _sync_clock)
     hass.services.async_register(DOMAIN, "reset_filter", _reset_filter)
     return True

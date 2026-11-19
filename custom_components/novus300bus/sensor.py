@@ -93,38 +93,45 @@ class NovusSensorDescription:
     enabled_default: bool = True
 
 
+TEMPERATURE_ICONS = {
+    "outdoor_air_temperature": "mdi:sun-thermometer-outline",
+    "supply_air_temperature": "mdi:thermometer-chevron-up",
+    "exhaust_air_temperature": "mdi:thermometer-chevron-down",
+    "extract_air_temperature": "mdi:home-thermometer-outline",
+}
+
 SENSORS = (
     NovusSensorDescription(
         "supply_air_temperature",
-        "Zuluft Temperatur Räume",
+        "2 Zuluft Temperatur Räume",
         SensorDeviceClass.TEMPERATURE,
         UnitOfTemperature.CELSIUS,
         SensorStateClass.MEASUREMENT,
     ),
     NovusSensorDescription(
         "outdoor_air_temperature",
-        "Außenluft Temperatur",
+        "1 Außenluft Temperatur",
         SensorDeviceClass.TEMPERATURE,
         UnitOfTemperature.CELSIUS,
         SensorStateClass.MEASUREMENT,
     ),
     NovusSensorDescription(
         "extract_air_temperature",
-        "Abluft Temperatur Räume",
+        "3 Abluft Temperatur Räume",
         SensorDeviceClass.TEMPERATURE,
         UnitOfTemperature.CELSIUS,
         SensorStateClass.MEASUREMENT,
     ),
     NovusSensorDescription(
         "exhaust_air_temperature",
-        "Fortluft Temperatur",
+        "4 Fortluft Temperatur",
         SensorDeviceClass.TEMPERATURE,
         UnitOfTemperature.CELSIUS,
         SensorStateClass.MEASUREMENT,
     ),
     NovusSensorDescription(
         "message",
-        "Meldung",
+        "Aktuelle Meldung",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NovusSensorDescription(
@@ -283,6 +290,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def icon(self) -> str | None:
         """Return an icon matching the current operating state."""
+        if self._description.key in TEMPERATURE_ICONS:
+            return TEMPERATURE_ICONS[self._description.key]
         if self._description.key == "message":
             if self.coordinator.transient_event() is not None:
                 return "mdi:message-processing-outline"

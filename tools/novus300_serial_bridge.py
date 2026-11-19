@@ -65,6 +65,36 @@ def _crc(data: bytes) -> bytes:
     return bytes((lsb, msb))
 
 
+# Raw limits (0.1 degC) of the unit parameters that may be written.
+PARAMETER_LIMITS = {
+    0x41: (150, 350),
+    0x42: (100, 300),
+    0x43: (1, 50),
+    0x47: (0, 150),
+    0x49: (100, 300),
+    0x4A: (-100, 100),
+    0x4B: (-150, 50),
+    0x4C: (-200, 0),
+    0x5A: (200, 700),
+}
+
+
+def select_payload_allowed(payload: bytes) -> bool:
+    """Installation selections the panel menu can store (exact formats only)."""
+    if payload[:1] == b"\x7b" and payload[1:2] == b"\x00":
+        return len(payload) == 3 and payload[2] in (0, 1, 2)
+    if payload[:1] == b"\x24" and payload[1:2] == b"\x00":
+        return len(payload) == 3 and payload[2] in (0, 4)
+    if payload[:2] == b"\x63\x00":
+        return payload[2:] in (b"\xf0\x01", b"\xf8\x01")
+    if payload[:2] == b"\x1b\x00":
+        return len(payload) == 4 and payload[3] == 0 and payload[2] & 0x7B == 0x7B
+    if payload[:2] == b"\x1e\x00":
+        return len(payload) == 6 and payload[2:5] == b"\x0c\x7f\x00" and payload[5] in (1, 2, 3)
+    if payload[:2] == b"\x21\x00":
+        return payload[2:] in (b"\x0c\x80\x00\x01", b"\x0c\x80\x00\x03", b"\x00\x80\x00\x00")
+    return False
+
 def clock_frame_kind(frame: bytes):
     """Classify a valid panel clock or menu-setting frame, else None."""
     if len(frame) < 6 or frame[:3] != bytes((0x01, 0x00, 0x85)):
@@ -100,9 +130,18 @@ def clock_frame_kind(frame: bytes):
         return None
     if frame[3] == 3 and len(frame) == 9 and frame[7] == 0:
         limits = {0x2E: (0, 100), 0x2F: (0, 100), 0x30: (0, 100), 0x3B: (1, 240), 0x3C: (1, 240)}
+        limits.update({reg: (1, 100) for reg in range(0x34, 0x3B)})
         low, high = limits.get(frame[6], (1, 0))
         if low <= frame[8] <= high:
             return "setting"
+    if frame[3] in (3, 4) and len(frame) == 6 + frame[3] and frame[7] == 0:
+        limits = PARAMETER_LIMITS.get(frame[6])
+        if limits is not None and frame[3] == (3 if frame[6] == 0x43 else 4):
+            value = int.from_bytes(frame[8:], "little", signed=frame[3] == 4)
+            if limits[0] <= value <= limits[1]:
+                return "parameter"
+    if select_payload_allowed(frame[6:]) and frame[3] == len(frame) - 6:
+        return "select"
     return None
 
 
