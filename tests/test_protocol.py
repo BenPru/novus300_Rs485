@@ -251,6 +251,11 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(MESSAGES[0xC7], "defroster_comm_error")
         self.assertEqual(MESSAGES[0x85], "supply_air_too_low")
 
+    def test_memory_dump_request_frame(self) -> None:
+        from custom_components.novus300bus.protocol import build_memory_dump_request
+
+        self.assertEqual(build_memory_dump_request().hex(), "010183004f0f")
+
 
 if __name__ == "__main__":
     unittest.main()

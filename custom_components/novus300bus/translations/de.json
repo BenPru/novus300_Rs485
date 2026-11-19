@@ -211,6 +211,9 @@
       },
       "filter_reset": {
         "name": "Filterlaufzeit zurücksetzen"
+      },
+      "request_dump": {
+        "name": "Alle Werte neu anfordern"
       }
     }
   },

@@ -211,6 +211,9 @@
       },
       "filter_reset": {
         "name": "Reset filter run time"
+      },
+      "request_dump": {
+        "name": "Request all values"
       }
     }
   },

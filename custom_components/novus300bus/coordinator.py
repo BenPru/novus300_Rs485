@@ -53,6 +53,7 @@ from .protocol import (
     build_date_frame,
     build_filter_interval_frame,
     build_filter_reset_frame,
+    build_memory_dump_request,
     build_mode_request,
     build_power_frame,
     PARAMETER_LIMITS,
@@ -536,6 +537,10 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         await self._async_send(build_filter_reset_frame(days))
         self._values["filter_time_remaining"] = days * 86400
         self.async_set_updated_data(dict(self._values))
+
+    async def async_request_dump(self) -> None:
+        """Ask the unit to resend all registers (briefly disturbs the panel)."""
+        await self._async_send(build_memory_dump_request())
 
     async def async_sync_clock(self) -> None:
         """Set the unit's date and time to Home Assistant's local time."""

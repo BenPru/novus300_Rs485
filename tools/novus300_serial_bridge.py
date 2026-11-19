@@ -65,6 +65,10 @@ def _crc(data: bytes) -> bytes:
     return bytes((lsb, msb))
 
 
+# Memory dump request (cmd 0x83): the unit resends all registers.
+DUMP_REQUEST_FRAME = bytes.fromhex("01018300") + _crc(bytes.fromhex("01018300"))
+
+
 # Raw limits (0.1 degC) of the unit parameters that may be written.
 PARAMETER_LIMITS = {
     0x41: (150, 350),
@@ -107,6 +111,8 @@ def select_payload_allowed(payload: bytes) -> bool:
 
 def clock_frame_kind(frame: bytes):
     """Classify a valid panel clock or menu-setting frame, else None."""
+    if frame == DUMP_REQUEST_FRAME:
+        return "dump"
     if len(frame) < 6 or frame[:3] != bytes((0x01, 0x00, 0x85)):
         return None
     if frame[4:6] != _crc(frame[:4] + frame[6:]):

@@ -16,6 +16,8 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - **Fehlercodes:** alle Codes aus dem Handbuch (Sensoren, Lüfter, Bypass, Bus/Kommunikation) werden benannt; der Meldungssensor hat ein Attribut `hint` mit Ursache und Maßnahme.
 - **Neuer Dialog „Schwellen“:** Hysteresen (Frostschutz Zuluft, Nachheizung, EWT-Klappe), Kühlschwelle Sole-Defroster und EWT-Klappen-Schwellen sind schreibbar; die Sensor-Kennlinie wird nur gelesen. „Erweitert“ zeigt Namen und Einheiten aus der Registerliste von novus2mqtt.
 - Fix: Der Startwerte-Dump wird vollständig ausgewertet (Bypass/Sommerlüftung, Nachheizung, Klappe, Frostschutzmodus nach einem Anlagenneustart).
+- **Neuer Button „Alle Werte neu anfordern“** (Diagnose): sendet die Dump-Anforderung (0x83), die Anlage sendet alle Register erneut, z. B. um fehlende Werte ohne Neustart zu füllen. Das Bedienteil wird kurz gestört. Die Bridge muss dafür aktualisiert werden.
+- **Dashboard-Ansicht „Sensoren“:** eigenes Anlagenschema (`novus300-schema.svg`) mit den Temperaturen und dem Bypass-Zustand an den Sensorstellen.
 - **Serielle Bridge (`tools/`):** Whitelist für die Parameter- und Auswahlregister erweitert (auf dem Bridge-Rechner aktualisieren).
 
 ### Geändert

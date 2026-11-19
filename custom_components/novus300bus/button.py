@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 
@@ -22,6 +23,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
         [
             NovusBoostButton(hass, entry.runtime_data, config),
             NovusFilterResetButton(entry.runtime_data),
+            NovusRequestDumpButton(entry.runtime_data),
         ]
     )
 
@@ -129,3 +131,29 @@ class NovusFilterResetButton(ButtonEntity):
     async def async_press(self) -> None:
         """Reset the filter run time."""
         await self._coordinator.async_reset_filter()
+
+
+class NovusRequestDumpButton(ButtonEntity):
+    """Ask the unit to resend all registers."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "request_dump"
+    _attr_unique_id = "novus300bus_request_dump"
+    _attr_icon = "mdi:database-refresh"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: NovusCoordinator) -> None:
+        """Initialize the dump request button."""
+        self.entity_id = "button.novus300_request_dump"
+        self._coordinator = coordinator
+        self._attr_device_info = {
+            "identifiers": {("novus300bus", "novus300")},
+            "name": "Paul Novus 300",
+            "manufacturer": "Paul",
+            "model": "Novus 300 (FOCUS250)",
+            "sw_version": "BUS 1.7.1",
+        }
+
+    async def async_press(self) -> None:
+        """Request all registers from the unit."""
+        await self._coordinator.async_request_dump()

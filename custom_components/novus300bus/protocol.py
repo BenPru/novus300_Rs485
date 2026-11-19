@@ -190,6 +190,13 @@ def _build_register_write(payload: bytes) -> bytes:
     return header + bytes((crc & 0xFF, crc >> 8)) + payload
 
 
+def build_memory_dump_request() -> bytes:
+    """Return the frame that asks the unit to resend all registers (command 0x83)."""
+    header = bytes((0x01, 0x01, 0x83, 0x00))
+    crc = crc16_ccitt(header)
+    return header + bytes((crc & 0xFF, crc >> 8))
+
+
 def build_time_frame(moment: datetime) -> bytes:
     """Return the panel frame that sets the unit's time of day."""
     return _build_register_write(
