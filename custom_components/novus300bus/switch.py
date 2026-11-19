@@ -114,6 +114,8 @@ class NovusBypassSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "bypass"
     _attr_unique_id = "novus300bus_bypass"
+    # Most units have no bypass; users with one enable the entity.
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: NovusCoordinator) -> None:
         """Initialize the bypass switch."""
@@ -138,7 +140,10 @@ class NovusBypassSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose the air path and its status word."""
         data = self.coordinator.data
-        attributes: dict[str, Any] = {"air_path": data.get("air_path")}
+        attributes: dict[str, Any] = {
+            "air_path": data.get("air_path"),
+            "bypass_present": self.coordinator.bypass_present,
+        }
         if isinstance(raw := data.get("status_word"), int):
             attributes["raw_value"] = raw
         return attributes
@@ -154,8 +159,13 @@ class NovusBypassSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Reject writes: the bypass cannot be set over the bus yet."""
-        raise HomeAssistantError("The bypass is read-only")
+        raise HomeAssistantError(self._read_only_reason())
+
+    def _read_only_reason(self) -> str:
+        if self.coordinator.bypass_present is False:
+            return "The unit is configured without a bypass"
+        return "The bypass is read-only"
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Reject writes: the bypass cannot be set over the bus yet."""
-        raise HomeAssistantError("The bypass is read-only")
+        raise HomeAssistantError(self._read_only_reason())

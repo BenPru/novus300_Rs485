@@ -538,6 +538,12 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         self._values["filter_time_remaining"] = days * 86400
         self.async_set_updated_data(dict(self._values))
 
+    @property
+    def bypass_present(self) -> bool | None:
+        """Return whether a bypass is installed (plant flag 0x1B bit 2 is set when absent)."""
+        word = self._values.get("param_1b")
+        return None if not isinstance(word, int) else not word & 0x04
+
     async def async_request_dump(self) -> None:
         """Ask the unit to resend all registers (briefly disturbs the panel)."""
         await self._async_send(build_memory_dump_request())
