@@ -107,11 +107,11 @@ DIALOG_REGISTERS = {
     "bypass": ((0x41, 0x42, 0x43, 0x49, 0x1B), ()),
 }
 PANEL_PAGES = {
-    0x1B: ("Setup > Bypass", "Setup > Bypass"),
+    0x1B: ("Setup > Bypass (installiert)", "Setup > By-pass (installed)"),
     0x1E: ("Setup > Frostschutz > Defroster-Typ", "Setup > Frost protection > Defroster type"),
     0x21: ("Setup > Nachheizung > Typ", "Setup > Reheating > Type"),
-    0x24: ("Setup > EWT-Klappe", "Setup > Earth heat exchanger damper"),
-    0x7B: ("Setup > Frostschutz > Modus", "Setup > Frost protection > Mode"),
+    0x24: ("Setup > Erdwärmetauscher-Klappe (vorhanden)", "Setup > Ground pipe diverter valve (available)"),
+    0x7B: ("Einstellungen > Frostschutz (Eco/Safe/Feuchte-WT)", "Settings > Frost protection (Eco/Safe/Moisture HX)"),
 }
 
 # register -> (de, en, unit, divisor). "?" marks names that are not confirmed on the unit;
