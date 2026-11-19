@@ -49,10 +49,20 @@ REGISTER_WIDTHS = {
     0x3B: 1,
     0x3C: 1,
     0x62: 1,
+    **dict.fromkeys(range(0x64, 0x79), 8),
+    0x79: 1,
+    0x7A: 1,
+    0x7C: 1,
     0x08: 1,
     0x09: 16,
     0x0E: 1,
+    0x0F: 1,
+    0x12: 1,
+    0x15: 1,
+    0x18: 1,
+    0x19: 11,
     0x1A: 1,
+    0x1C: 11,
     0x1D: 1,
     0x25: 1,
     0x26: 5,
@@ -225,6 +235,12 @@ PARAMETER_LIMITS = {
     0x4B: (-150, 50),
     0x4C: (-200, 0),
     0x5A: (200, 700),
+    0x48: (5, 50),
+    0x56: (150, 300),
+    0x5C: (5, 50),
+    0x5F: (-100, 145),
+    0x60: (150, 300),
+    0x61: (5, 50),
 }
 
 
@@ -270,10 +286,21 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
     while offset + 2 <= len(payload):
         register = int.from_bytes(payload[offset : offset + 2], "little")
         width = REGISTER_WIDTHS.get(register)
+        boot_form = False
+        if register in (0x1E, 0x21):
+            # Panel writes carry 4 bytes (0c 7f/80 00 xx); the start-up dump only the first.
+            tail = payload[offset + 3 : offset + 4]
+            boot_form = not (tail and tail[0] in (0x7F, 0x80))
+            width = 1 if boot_form else 4
         if width is None or offset + 2 + width > len(payload):
             break
         raw = payload[offset + 2 : offset + 2 + width]
         offset += 2 + width
+        if boot_form:
+            # Start-up dump: only "no reheater" (0) is conclusive, the type is not in it.
+            if register == 0x21 and raw[0] == 0:
+                readings["param_21"] = 0
+            continue
 
         if register in MESSAGE_LOG_REGISTERS:
             slot, part = MESSAGE_LOG_REGISTERS[register]

@@ -81,37 +81,65 @@ PLANT_SELECTS = {
     "automatic": (0x63, 0x08, {"time": (0, "Zeitautomatik", "Time automatic"), "sensor": (0x08, "Sensorautomatik", "Sensor automatic")}),
     "frost": (0x7B, None, {"0": (0, "Eco", "Eco"), "1": (1, "Sicher", "Safe"), "2": (2, "Feuchte WT", "Humidity HX")}),
 }
-RESOLVED_REGISTERS = {0x41, 0x42, 0x43, 0x47, 0x49, 0x4A, 0x4B, 0x4C, 0x5A, 0x63, 0x1B, 0x1E, 0x21, 0x24, 0x7B}
+RESOLVED_REGISTERS = {0x48, 0x56, 0x5C, 0x5F, 0x60, 0x61, 0x41, 0x42, 0x43, 0x47, 0x49, 0x4A, 0x4B, 0x4C, 0x5A, 0x63, 0x1B, 0x1E, 0x21, 0x24, 0x7B}
 # checkbox -> (register, bit mask, set bit means unchecked)
 PLANT_FLAGS = {"bypass": (0x1B, 0x04, True), "summer": (0x1B, 0x80, False)}
 SELECT_DEFAULT_BASE = {0x63: 0x1F0}
 
 BYPASS_NUMBERS = (0x41, 0x42, 0x43, 0x49)
+HYSTERESIS_REGISTERS = (0x43, 0x48, 0x5C, 0x61)
+EXTRA_NUMBERS = (0x48, 0x5C, 0x56, 0x5F, 0x60, 0x61)
+# Sensor characteristic (read only): (register, de, en, unit, divisor)
+SENSOR_CURVE = (
+    (0x4D, "Spannung U_min", "Voltage U_min", "V", 10),
+    (0x4E, "Drehzahl bei U_min", "Speed at U_min", "%", 1),
+    (0x4F, "Spannung U_max", "Voltage U_max", "V", 10),
+    (0x50, "Drehzahl bei U_max", "Speed at U_max", "%", 1),
+    (0x51, "Strom I_min", "Current I_min", "mA", 10),
+    (0x52, "Drehzahl bei I_min", "Speed at I_min", "%", 1),
+    (0x53, "Strom I_max", "Current I_max", "mA", 10),
+    (0x54, "Drehzahl bei I_max", "Speed at I_max", "%", 1),
+)
 PLANT_NUMBERS = (0x4A, 0x4B, 0x4C, 0x47, 0x5A)
 PLANT_FORM_ORDER = ("automatic", "frost", 0x4A, 0x4B, 0x4C, 0x47, "reheater", 0x5A, "defroster", "ewt")
 DIALOG_REGISTERS = {
-    "plant": ((0x47, 0x4A, 0x4B, 0x4C, 0x5A, 0x63), (0x1E, 0x21, 0x24, 0x7B)),
-    "bypass": ((0x41, 0x42, 0x43, 0x49), (0x1B,)),
+    "plant": ((0x47, 0x4A, 0x4B, 0x4C, 0x5A, 0x63, 0x24, 0x7B), (0x1E, 0x21)),
+    "bypass": ((0x41, 0x42, 0x43, 0x49, 0x1B), ()),
 }
 PANEL_PAGES = {
-    0x1B: ("Bypass/Sommerlüftung", "bypass/summer ventilation"),
-    0x1E: ("Defroster", "defroster"),
-    0x21: ("Nachheizung", "reheating"),
-    0x24: ("EWT-Klappe", "EWT damper"),
-    0x7B: ("Frostschutzmodus", "frost protection mode"),
+    0x1B: ("Setup > Bypass", "Setup > Bypass"),
+    0x1E: ("Setup > Frostschutz > Defroster-Typ", "Setup > Frost protection > Defroster type"),
+    0x21: ("Setup > Nachheizung > Typ", "Setup > Reheating > Type"),
+    0x24: ("Setup > EWT-Klappe", "Setup > Earth heat exchanger damper"),
+    0x7B: ("Setup > Frostschutz > Modus", "Setup > Frost protection > Mode"),
 }
 
-# Unverified guesses (de, en) derived from the values seen in the power-on dump.
-PARAMETER_GUESSES: dict[int, tuple[str, str]] = {
-    0x44: ("Referenztemperatur (?)", "Reference temperature (?)"),
-    0x45: ("Bypass: Hysterese/Grenze (?)", "Bypass: hysteresis/limit (?)"),
-    0x46: ("Zulufttemperatur-Grenze (?)", "Supply temperature limit (?)"),
-    0x53: ("Temperatur-Referenz (?)", "Temperature reference (?)"),
-    0x54: ("Temperatur-Referenz/Hysterese (?)", "Temperature reference/hysteresis (?)"),
-    0x56: ("Zuluft-Solltemperatur (?)", "Supply target temperature (?)"),
-    0x5B: ("Kennlinien-Offset (?)", "Curve offset (?)"),
-    0x5F: ("Kennlinien-Offset 2 (?)", "Curve offset 2 (?)"),
-    0x60: ("Sollwert 2 (?)", "Setpoint 2 (?)"),
+# register -> (de, en, unit, divisor). "?" marks names that are not confirmed on the unit;
+# the others follow the register list of github.com/larda3141/novus2mqtt and the manual.
+PARAMETER_INFO: dict[int, tuple[str, str, str, int]] = {
+    0x44: ("Statusbits (?)", "Status bits (?)", "", 1),
+    0x45: ("Grenztemperatur (?)", "Limit temperature (?)", "°C", 10),
+    0x46: ("Referenzwert (?)", "Reference value (?)", "", 10),
+    0x48: ("Frostschutz Zuluft Hysterese", "Frost protection supply air hysteresis", "K", 10),
+    0x4D: ("Sensorautomatik Spannung U_min", "Sensor automatic voltage U_min", "V", 10),
+    0x4E: ("Sensorautomatik Drehzahl n_min (Spannung)", "Sensor automatic speed n_min (voltage)", "%", 1),
+    0x4F: ("Sensorautomatik Spannung U_max", "Sensor automatic voltage U_max", "V", 10),
+    0x50: ("Sensorautomatik Drehzahl n_max (Spannung)", "Sensor automatic speed n_max (voltage)", "%", 1),
+    0x51: ("Sensorautomatik Strom I_min", "Sensor automatic current I_min", "mA", 10),
+    0x52: ("Sensorautomatik Drehzahl n_min (Strom)", "Sensor automatic speed n_min (current)", "%", 1),
+    0x53: ("Sensorautomatik Strom I_max", "Sensor automatic current I_max", "mA", 10),
+    0x54: ("Sensorautomatik Drehzahl n_max (Strom)", "Sensor automatic speed n_max (current)", "%", 1),
+    0x56: ("Sole-Defroster Kühlschwelle", "Brine defroster cooling threshold", "°C", 10),
+    0x57: ("Sensorautomatik (?)", "Sensor automatic (?)", "", 1),
+    0x58: ("Sensorautomatik (?)", "Sensor automatic (?)", "", 1),
+    0x59: ("Sensorautomatik Plausibilität (?)", "Sensor automatic plausibility (?)", "", 1),
+    0x5B: ("Lüfter Nenndrehzahl (Spiegel)", "Fan nominal speed (mirror)", "%", 1),
+    0x5C: ("Nachheizung Hysterese", "Reheating hysteresis", "K", 10),
+    0x5D: ("Nachheizung Kanal-Sollwert (?)", "Reheating duct setpoint (?)", "°C", 1),
+    0x5E: ("EWT-Klappe vorhanden (Spiegel)", "EWT damper present (mirror)", "", 1),
+    0x5F: ("EWT-Klappe untere Schwelle", "EWT damper lower threshold", "°C", 10),
+    0x60: ("EWT-Klappe obere Schwelle", "EWT damper upper threshold", "°C", 10),
+    0x61: ("EWT-Klappe Hysterese", "EWT damper hysteresis", "K", 10),
 }
 
 
@@ -320,7 +348,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         """Offer the settings groups as a menu."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["general", "plant", "bypass", "advanced"],
+            menu_options=["general", "plant", "bypass", "extra", "advanced"],
         )
 
     def _save(self, user_input: dict[str, str | int | bool]) -> FlowResult:
@@ -418,10 +446,6 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         boot, panel = self._missing()
         if not boot and not panel:
             return await self._open_dialog()
-        if boot and not getattr(self, "_auto_restarted", False):
-            # Start-up values only come after a power cycle, so do it before opening.
-            self._auto_restarted = True
-            return await self.async_step_missing_restart()
         german = self._german()
         parts = []
         if boot:
@@ -431,12 +455,15 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                 + ", ".join(f"0x{reg:02X}" for reg in boot)
             )
         if panel:
-            names = ", ".join(
-                f"0x{reg:02X} ({PANEL_PAGES[reg][0 if german else 1]})" for reg in panel
+            names = "\n".join(
+                f"- {PANEL_PAGES[reg][0 if german else 1]} (0x{reg:02X})" for reg in panel
             )
             parts.append(
-                ("Wird nur gemeldet, wenn am Bedienteil die Menüseite geöffnet wird: " if german
-                 else "Reported only when the panel menu page is opened: ")
+                (
+                    "**Am Bedienteil nötig:** Diese Werte sendet nur das Bedienteil. Öffne dort die Seite und bestätige den bereits eingestellten Wert nochmal (gleichen Eintrag auswählen/speichern, nichts ändern). Danach hier **Erneut prüfen**:\n"
+                    if german
+                    else "**Needed on the panel:** only the panel sends these values. Open the page there and confirm the already selected value again (select/save the same entry, change nothing). Then **Check again** here:\n"
+                )
                 + names
             )
         if getattr(self, "_rechecked", False):
@@ -461,13 +488,11 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
     async def async_step_plant(self, user_input=None) -> FlowResult:
         """Open the plant parameters, explaining missing unit values first."""
         self._dialog = "plant"
-        self._auto_restarted = False
         return await self._gate()
 
     async def async_step_bypass(self, user_input=None) -> FlowResult:
         """Open the bypass and summer ventilation settings."""
         self._dialog = "bypass"
-        self._auto_restarted = False
         return await self._gate()
 
     async def async_step_missing(self, user_input=None) -> FlowResult:
@@ -525,7 +550,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             )
             fields[marker] = selector.TextSelector(
                 selector.TextSelectorConfig(
-                    suffix="K" if reg == 0x43 else "°C",
+                    suffix="K" if reg in HYSTERESIS_REGISTERS else "°C",
                 )
             )
         return fields
@@ -543,7 +568,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             except ValueError:
                 raw = None
             if raw is None or not low <= raw <= high or (
-                reg == 0x43 and raw % 5
+                reg in HYSTERESIS_REGISTERS and raw % 5
             ):
                 if errors is not None:
                     errors[key] = "invalid_number"
@@ -692,6 +717,34 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             return self._save({})
         return await self._threshold_form("summer_settings", (0x41, 0x43, 0x49), user_input)
 
+    async def async_step_extra(self, user_input=None) -> FlowResult:
+        """Thresholds of frost protection, reheating, brine defroster and earth heat exchanger."""
+        data = self._unit()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            changes: dict[int, int] = {}
+            self._number_changes(EXTRA_NUMBERS, user_input, data, changes, errors)
+            if not errors:
+                error = await self._write(changes)
+                if not error:
+                    return self._save({})
+                errors["base"] = error
+        german = self._german()
+        lines = []
+        for reg, de, en, unit, divisor in SENSOR_CURVE:
+            value = data.get(f"param_{reg:02x}")
+            if value is None:
+                continue
+            shown = f"{value / divisor:.1f}" if divisor > 1 else str(value)
+            lines.append(f"- {de if german else en}: **{shown} {unit}**")
+        curve = "\n".join(lines) or ("Noch nicht gelesen." if german else "Not read yet.")
+        return self.async_show_form(
+            step_id="extra",
+            data_schema=vol.Schema(self._number_fields(EXTRA_NUMBERS, data, user_input)),
+            errors=errors,
+            description_placeholders={"curve": curve},
+        )
+
     async def async_step_advanced(
         self, user_input: dict[str, str | int | bool] | None = None
     ) -> FlowResult:
@@ -711,11 +764,16 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             lines = []
             for key, value in params:
                 reg = int(key[6:], 16)
-                guess = PARAMETER_GUESSES.get(reg)
-                label = (guess[0] if german else guess[1]) if guess else (
+                info = PARAMETER_INFO.get(reg)
+                label = (info[0] if german else info[1]) if info else (
                     "unbekannt" if german else "unknown"
                 )
-                shown = f"{value / 10:g} °C" if abs(value) > 9 else str(value)
+                if info:
+                    unit, divisor = info[2], info[3]
+                    shown = f"{value / divisor:.1f}" if divisor > 1 else str(value)
+                    shown = f"{shown} {unit}".strip()
+                else:
+                    shown = str(value)
                 lines.append(f"- 0x{reg:02X} {label}: **{shown}** (raw {value})")
             values = "\n".join(lines)
         else:

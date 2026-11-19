@@ -6,13 +6,15 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 
 ### Highlights
 - **Writable unit parameters in the options dialog:** new dialogs "Plant parameters" (automatic mode, frost protection, minimum supply air, reheater, defroster, ground-heat-exchanger damper) and "Bypass and summer ventilation" (bypass installed, summer ventilation, thresholds, hysteresis). Temperatures with one decimal.
-- **Gate dialog for missing unit values:** if start-up values are missing, the unit is restarted automatically and the integration waits for them; "Restart unit", "Check again" and "Open anyway" are offered. Values only the panel sends are named together with the menu page to open.
+- **Gate dialog for missing unit values:** if values are missing, a menu names them and offers "Restart unit" (only on request), "Check again" and "Open anyway". Values only the panel sends are listed with the panel menu path and what to do there.
 - **Easier dashboard installation:** the integration serves the graphic itself (no more copying to `config/www/`), plus a detailed guide: [docs/DASHBOARD.md](docs/DASHBOARD.md).
 
 ### New
 - The "Advanced" dialog now lists only registers that are still unassigned; resolved ones live in the new dialogs.
 - Diagnostics (`diagnostics.py`) and fr/es/it/nl translations (new dialogs in English for now).
 - Temperature sensors with dedicated icons and a fixed order.
+- **New dialog "Thresholds":** hysteresis (frost protection supply air, reheating, earth heat exchanger damper), brine defroster cooling threshold and damper thresholds are writable; the sensor characteristic is shown read-only. "Advanced" shows names and units from the register list of novus2mqtt.
+- Fix: the start-up dump is now fully decoded (bypass/summer ventilation, reheating, damper, frost protection mode are read after a unit restart).
 - **Serial bridge (`tools/`):** whitelist extended for the parameter and selection registers (update it on the bridge host).
 
 ### Changed

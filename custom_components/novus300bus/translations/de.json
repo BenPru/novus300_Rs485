@@ -48,7 +48,20 @@
           "general": "Allgemein und Anlageneinstellungen",
           "plant": "Anlagenparameter",
           "bypass": "Bypass und Sommerlüftung",
+          "extra": "Schwellen: Frostschutz, Nachheizung, Defroster, Klappe",
           "advanced": "Erweitert: Parameterblock (nur lesen)"
+        }
+      },
+      "extra": {
+        "title": "Schwellen: Frostschutz, Nachheizung, Defroster, Klappe",
+        "description": "Wird in die Anlage geschrieben. Leere Felder bleiben unverändert. Hysterese in 0,5-K-Schritten.\n\nSensor-Kennlinie (nur lesen):\n{curve}",
+        "data": {
+          "p48": "Frostschutz Zuluft: Hysterese",
+          "p5c": "Nachheizung: Hysterese",
+          "p56": "Sole-Defroster: Kühlschwelle",
+          "p5f": "EWT-Klappe: untere Schwelle",
+          "p60": "EWT-Klappe: obere Schwelle",
+          "p61": "EWT-Klappe: Hysterese"
         }
       },
       "general": {
@@ -118,7 +131,7 @@
       },
       "missing": {
         "title": "Anlagenwerte fehlen",
-        "description": "Folgende Anlagenwerte sind noch nicht bekannt:\n\n{missing}\n\n**Anlage neu starten** schaltet die Lüftung aus und wieder an (einige Sekunden ohne Lüftung) und wartet bis zu einer Minute auf die Startwerte. Werte der Bedienteil-Menüs kommen nur, wenn du die Seite am Bedienteil öffnest - danach **Erneut prüfen**.",
+        "description": "Folgende Anlagenwerte sind noch nicht bekannt:\n\n{missing}\n\n**Anlage neu starten** schaltet die Lüftung aus und wieder an (einige Sekunden ohne Lüftung) und wartet bis zu einer Minute auf die Startwerte. So kommen fast alle Werte. Nur Defroster-Typ (0x1E) und Nachheizung-Typ (0x21) liefert ausschließlich das Bedienteil: siehe Liste oben, was dort zu tun ist, danach **Erneut prüfen**.",
         "menu_options": {
           "missing_restart": "Anlage neu starten (aus/an, auf Werte warten)",
           "missing_recheck": "Erneut prüfen",

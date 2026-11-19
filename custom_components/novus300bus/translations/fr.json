@@ -41,7 +41,20 @@
           "general": "Général et réglages de l'appareil",
           "plant": "Plant parameters",
           "bypass": "Bypass and summer ventilation",
+          "extra": "Thresholds: frost protection, reheating, defroster, damper",
           "advanced": "Avancé : paramètres de l'appareil"
+        }
+      },
+      "extra": {
+        "title": "Thresholds: frost protection, reheating, defroster, damper",
+        "description": "Written to the unit. Empty fields stay unchanged. Hysteresis in steps of 0.5 K.\n\nSensor characteristic (read only):\n{curve}",
+        "data": {
+          "p48": "Frost protection supply air: hysteresis",
+          "p5c": "Reheating: hysteresis",
+          "p56": "Brine defroster: cooling threshold",
+          "p5f": "Earth heat exchanger damper: lower threshold",
+          "p60": "Earth heat exchanger damper: upper threshold",
+          "p61": "Earth heat exchanger damper: hysteresis"
         }
       },
       "plant_form": {

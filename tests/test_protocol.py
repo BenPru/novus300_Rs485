@@ -220,6 +220,30 @@ class NovusFrameParserTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_select_frame(0x1E, 9)
 
+    def test_decodes_install_registers_from_startup_dump(self) -> None:
+        from custom_components.novus300bus.protocol import _decode_registers
+
+        stream = bytes.fromhex(
+            "0f0000" "120000" "150000" "180000"
+            "1900" + "53575a30303235423236 41".replace(" ", "") +
+            "1a0000" "1b007b00"
+        )
+        readings = _decode_registers(stream)
+        self.assertEqual(readings["param_1b"], 0x7B)
+        block = bytes.fromhex("1c00" + "5354303030363445323441" + "1d0000" "1e000c" "210000" "240000" "250036")
+        readings = _decode_registers(block)
+        self.assertEqual(readings["param_21"], 0)
+        self.assertEqual(readings["param_24"], 0)
+        self.assertNotIn("param_1e", readings)
+        self.assertEqual(_decode_registers(bytes.fromhex("7b000000"))["param_7b"], 0)
+        tail = bytes.fromhex(
+            "76005555555 5aaaaaaaa7700aaaf02000000000078000000000000000000".replace(" ", "")
+            + "79004b" "7a0001" "7b0000" "7c0005"
+        )
+        self.assertEqual(_decode_registers(tail)["param_7b"], 0)
+        # panel format keeps its four bytes
+        self.assertEqual(_decode_registers(bytes.fromhex("21000c800003"))["param_21"], 3)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -76,7 +76,17 @@ PARAMETER_LIMITS = {
     0x4B: (-150, 50),
     0x4C: (-200, 0),
     0x5A: (200, 700),
+    0x48: (5, 50),
+    0x56: (150, 300),
+    0x5C: (5, 50),
+    0x5F: (-100, 145),
+    0x60: (150, 300),
+    0x61: (5, 50),
 }
+
+
+# One-byte parameters (0.1 K, 0.5 K steps).
+HYSTERESIS_REGISTERS = (0x43, 0x48, 0x5C, 0x61)
 
 
 def select_payload_allowed(payload: bytes) -> bool:
@@ -136,7 +146,7 @@ def clock_frame_kind(frame: bytes):
             return "setting"
     if frame[3] in (3, 4) and len(frame) == 6 + frame[3] and frame[7] == 0:
         limits = PARAMETER_LIMITS.get(frame[6])
-        if limits is not None and frame[3] == (3 if frame[6] == 0x43 else 4):
+        if limits is not None and frame[3] == (3 if frame[6] in HYSTERESIS_REGISTERS else 4):
             value = int.from_bytes(frame[8:], "little", signed=frame[3] == 4)
             if limits[0] <= value <= limits[1]:
                 return "parameter"
