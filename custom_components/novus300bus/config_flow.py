@@ -91,9 +91,9 @@ HYSTERESIS_REGISTERS = (0x43, 0x48, 0x5C, 0x61)
 EXTRA_NUMBERS = (0x48, 0x5C, 0x56, 0x5F, 0x60, 0x61)
 # Sensor characteristic (read only): (register, de, en, unit, divisor)
 SENSOR_CURVE = (
-    (0x4D, "Spannung U_min", "Voltage U_min", "V", 10),
+    (0x4D, "Spannung U_min (?)", "Voltage U_min (?)", "V", 10),
     (0x4E, "Drehzahl bei U_min", "Speed at U_min", "%", 1),
-    (0x4F, "Spannung U_max", "Voltage U_max", "V", 10),
+    (0x4F, "Spannung U_max (?)", "Voltage U_max (?)", "V", 10),
     (0x50, "Drehzahl bei U_max", "Speed at U_max", "%", 1),
     (0x51, "Strom I_min", "Current I_min", "mA", 10),
     (0x52, "Drehzahl bei I_min", "Speed at I_min", "%", 1),
@@ -121,9 +121,9 @@ PARAMETER_INFO: dict[int, tuple[str, str, str, int]] = {
     0x45: ("Grenztemperatur (?)", "Limit temperature (?)", "°C", 10),
     0x46: ("Referenzwert (?)", "Reference value (?)", "", 10),
     0x48: ("Frostschutz Zuluft Hysterese", "Frost protection supply air hysteresis", "K", 10),
-    0x4D: ("Sensorautomatik Spannung U_min", "Sensor automatic voltage U_min", "V", 10),
+    0x4D: ("Sensorautomatik Spannung U_min (?)", "Sensor automatic voltage U_min", "V", 10),
     0x4E: ("Sensorautomatik Drehzahl n_min (Spannung)", "Sensor automatic speed n_min (voltage)", "%", 1),
-    0x4F: ("Sensorautomatik Spannung U_max", "Sensor automatic voltage U_max", "V", 10),
+    0x4F: ("Sensorautomatik Spannung U_max (?)", "Sensor automatic voltage U_max", "V", 10),
     0x50: ("Sensorautomatik Drehzahl n_max (Spannung)", "Sensor automatic speed n_max (voltage)", "%", 1),
     0x51: ("Sensorautomatik Strom I_min", "Sensor automatic current I_min", "mA", 10),
     0x52: ("Sensorautomatik Drehzahl n_min (Strom)", "Sensor automatic speed n_min (current)", "%", 1),

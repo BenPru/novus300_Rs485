@@ -241,6 +241,7 @@ class NovusFrameParserTest(unittest.TestCase):
             + "79004b" "7a0001" "7b0000" "7c0005"
         )
         self.assertEqual(_decode_registers(tail)["param_7b"], 0)
+        self.assertEqual(_decode_registers(tail)["param_79"], 0x4B)
         # panel format keeps its four bytes
         self.assertEqual(_decode_registers(bytes.fromhex("21000c800003"))["param_21"], 3)
 

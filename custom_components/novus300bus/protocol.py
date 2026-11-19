@@ -344,7 +344,7 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
             readings[f"param_{register:02x}"] = (
                 raw[3] if len(raw) == 4 else int.from_bytes(raw, "little")
             )
-        elif register in PARAMETER_REGISTER_WIDTHS:
+        elif register in PARAMETER_REGISTER_WIDTHS or register in (0x79, 0x7A, 0x7C):
             readings[f"param_{register:02x}"] = int.from_bytes(
                 raw, "little", signed=len(raw) == 2
             )
