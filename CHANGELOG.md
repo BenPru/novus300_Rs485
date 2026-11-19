@@ -13,6 +13,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - The "Advanced" dialog now lists only registers that are still unassigned; resolved ones live in the new dialogs.
 - Diagnostics (`diagnostics.py`) and fr/es/it/nl translations (new dialogs in English for now).
 - Temperature sensors with dedicated icons and a fixed order.
+- **Error codes:** all codes from the manual (sensors, fans, bypass, bus/communication) are named; the message sensor gets a `hint` attribute with cause and action.
 - **New dialog "Thresholds":** hysteresis (frost protection supply air, reheating, earth heat exchanger damper), brine defroster cooling threshold and damper thresholds are writable; the sensor characteristic is shown read-only. "Advanced" shows names and units from the register list of novus2mqtt.
 - Fix: the start-up dump is now fully decoded (bypass/summer ventilation, reheating, damper, frost protection mode are read after a unit restart).
 - **Serial bridge (`tools/`):** whitelist extended for the parameter and selection registers (update it on the bridge host).

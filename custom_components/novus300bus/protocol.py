@@ -110,8 +110,25 @@ TEMPERATURE_REGISTERS = {
 MESSAGES = {
     0x00: "none",
     0x41: "filter_change",
+    0x81: "sensor_1_error",
+    0x82: "sensor_2_error",
     0x83: "input_error",
+    0x84: "sensor_4_error",
+    0x85: "supply_air_too_low",
+    0x86: "intake_air_too_low",
+    0x87: "fan_1_hall_error",
+    0x88: "fan_2_hall_error",
     0x89: "bypass_error",
+    0xC0: "bus_version_incompatible",
+    0xC1: "too_many_devices",
+    0xC2: "fan_slave_missing",
+    0xC3: "fan_slave_comm_error",
+    0xC4: "comm_error_general",
+    0xC5: "heater_comm_error",
+    0xC6: "ghe_flap_comm_error",
+    0xC7: "defroster_comm_error",
+    0xC8: "heating_not_switching_off",
+    0xC9: "control_unit_error",
 }
 
 UNKNOWN_REGISTERS = {

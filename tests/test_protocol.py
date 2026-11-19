@@ -245,6 +245,12 @@ class NovusFrameParserTest(unittest.TestCase):
         # panel format keeps its four bytes
         self.assertEqual(_decode_registers(bytes.fromhex("21000c800003"))["param_21"], 3)
 
+    def test_maps_manual_error_codes(self) -> None:
+        from custom_components.novus300bus.protocol import MESSAGES
+
+        self.assertEqual(MESSAGES[0xC7], "defroster_comm_error")
+        self.assertEqual(MESSAGES[0x85], "supply_air_too_low")
+
 
 if __name__ == "__main__":
     unittest.main()

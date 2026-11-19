@@ -13,6 +13,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - Der Dialog „Erweitert“ zeigt nur noch die noch nicht zugeordneten Register; aufgelöste stehen in den neuen Dialogen.
 - Diagnosedaten (`diagnostics.py`) und Übersetzungen für fr/es/it/nl (neue Dialoge vorerst englisch).
 - Temperatursensoren mit eigenen Icons und fester Reihenfolge.
+- **Fehlercodes:** alle Codes aus dem Handbuch (Sensoren, Lüfter, Bypass, Bus/Kommunikation) werden benannt; der Meldungssensor hat ein Attribut `hint` mit Ursache und Maßnahme.
 - **Neuer Dialog „Schwellen“:** Hysteresen (Frostschutz Zuluft, Nachheizung, EWT-Klappe), Kühlschwelle Sole-Defroster und EWT-Klappen-Schwellen sind schreibbar; die Sensor-Kennlinie wird nur gelesen. „Erweitert“ zeigt Namen und Einheiten aus der Registerliste von novus2mqtt.
 - Fix: Der Startwerte-Dump wird vollständig ausgewertet (Bypass/Sommerlüftung, Nachheizung, Klappe, Frostschutzmodus nach einem Anlagenneustart).
 - **Serielle Bridge (`tools/`):** Whitelist für die Parameter- und Auswahlregister erweitert (auf dem Bridge-Rechner aktualisieren).

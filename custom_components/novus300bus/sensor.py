@@ -19,12 +19,31 @@ from .coordinator import NovusCoordinator
 from .protocol import MESSAGES
 
 
-MESSAGE_TEXTS = {
-    "none": "Keine Meldung",
-    "filter_change": "Filter wechseln",
-    "input_error": "Fehler am Eingang",
-    "bypass_error": "Fehler Bypass",
+# message key -> (text, possible cause / action), after the Paul Novus 300 manual
+MESSAGE_INFO = {
+    "none": ("Keine Meldung", ""),
+    "filter_change": ("Filter wechseln", "Filterlaufzeit abgelaufen"),
+    "sensor_1_error": ("Fehler Sensor 1", "Sensor T1 defekt oder Kurzschluss: prüfen/ersetzen"),
+    "sensor_2_error": ("Fehler Sensor 2", "Sensor T2 defekt oder Kurzschluss: prüfen/ersetzen"),
+    "input_error": ("Fehler Sensor 3", "Sensor T3 defekt oder Kurzschluss: prüfen/ersetzen"),
+    "sensor_4_error": ("Fehler Sensor 4", "Sensor T4 defekt oder Kurzschluss: prüfen/ersetzen"),
+    "supply_air_too_low": ("Zulufttemperatur zu niedrig", "Geht weg, wenn die Temperatur über Sollwert + 1 K steigt"),
+    "intake_air_too_low": ("Außenlufttemperatur zu niedrig", "Länger als 30 min unter Sollwert; nach 1 h erneut geprüft"),
+    "fan_1_hall_error": ("Fehler Lüfter 1 (Hall)", "Lüfterdrehzahl wird nicht gemeldet: Lüfter prüfen"),
+    "fan_2_hall_error": ("Fehler Lüfter 2 (Hall)", "Lüfterdrehzahl wird nicht gemeldet: Lüfter prüfen"),
+    "bypass_error": ("Fehler Bypass", "Keine Endlage erreicht: Bypass testen (öffnen/schließen)"),
+    "bus_version_incompatible": ("BUS-Version inkompatibel", "Software der Komponenten passt nicht zusammen"),
+    "too_many_devices": ("Zu viele Geräte am BUS", "Überzählige Komponenten entfernen"),
+    "fan_slave_missing": ("Lüfter-Slave nicht verbunden", "Lüfter-Slave anschließen"),
+    "fan_slave_comm_error": ("Kommunikationsfehler Lüfter-Slave", "BUS-Verbindung prüfen"),
+    "comm_error_general": ("Kommunikationsfehler allgemein", "Anlage vom Netz trennen und neu starten"),
+    "heater_comm_error": ("Kommunikationsfehler Nachheizung", "BUS-Verbindung prüfen"),
+    "ghe_flap_comm_error": ("Kommunikationsfehler EWT-Klappe", "BUS-Verbindung prüfen"),
+    "defroster_comm_error": ("Kommunikationsfehler Defroster", "BUS-Verbindung prüfen"),
+    "heating_not_switching_off": ("Heizung schaltet nicht ab", "BUS-Thermostat prüfen/ersetzen"),
+    "control_unit_error": ("Allgemeiner Fehler Bedienteil", "BUS-Verbindung zum Bedienteil prüfen"),
 }
+MESSAGE_TEXTS = {key: text for key, (text, _) in MESSAGE_INFO.items()}
 
 DETAIL_TEXTS = {
     "Out of range": "Wert außerhalb des Bereichs",
@@ -318,6 +337,9 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             transient = self.coordinator.transient_event()
             if transient:
                 time = datetime.fromisoformat(transient["time"])
+            hint = MESSAGE_INFO.get(str(self.coordinator.data.get("message")), ("", ""))[1]
+            if hint:
+                attributes["hint"] = hint
             if time is not None:
                 attributes["occurred_at"] = time.isoformat(timespec="seconds")
             names = ("previous_message", "previous_message_2", "previous_message_3")
