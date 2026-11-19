@@ -308,69 +308,60 @@ views:
     icon: mdi:thermometer
     cards:
       - type: picture-elements
-        # Schema aus dem Paul-Handbuch (Quelle: github.com/larda3141/novus2mqtt, docs/sensors.png).
-        # Die Datei wird nicht mitgeliefert: als /config/www/novus300-sensors.png ablegen (siehe docs/DASHBOARD.de.md).
-        image: /local/novus300-sensors.png
+        image: /novus300bus/novus300-schema.svg?v=1
         elements:
           - type: state-label
-            entity: sensor.novus300_outdoor_air_temperature
-            prefix: "Außenluft "
+            entity: sensor.novus300_extract_air_temperature
             style:
-              top: 70%
-              left: 90%
+              left: 85.7%
+              top: 54.5%
               color: "#ffffff"
-              background-color: "#009a3d"
-              padding: 4px 8px
+              background-color: "#0b6fa8"
+              padding: 2px 8px
               border-radius: 8px
-              font-size: 18px
+              font-size: 17px
               font-weight: bold
           - type: state-label
             entity: sensor.novus300_supply_air_temperature
-            prefix: "Zuluft "
             style:
-              top: 36%
-              left: 62%
+              left: 62.7%
+              top: 55%
               color: "#ffffff"
-              background-color: "#d42a1e"
-              padding: 4px 8px
+              background-color: "#b3302d"
+              padding: 2px 8px
               border-radius: 8px
-              font-size: 18px
+              font-size: 17px
               font-weight: bold
           - type: state-label
-            entity: sensor.novus300_extract_air_temperature
-            prefix: "Abluft "
+            entity: sensor.novus300_outdoor_air_temperature
             style:
-              top: 36%
-              left: 90%
+              left: 85.7%
+              top: 73%
               color: "#ffffff"
-              background-color: "#0a8ee0"
-              padding: 4px 8px
+              background-color: "#2e7d32"
+              padding: 2px 8px
               border-radius: 8px
-              font-size: 18px
+              font-size: 17px
               font-weight: bold
           - type: state-label
             entity: sensor.novus300_exhaust_air_temperature
-            prefix: "Fortluft "
             style:
-              top: 62%
-              left: 62%
+              left: 62.7%
+              top: 71.3%
               color: "#000000"
-              background-color: "#ffee00"
-              padding: 4px 8px
+              background-color: "#ffd54f"
+              padding: 2px 8px
               border-radius: 8px
-              font-size: 18px
+              font-size: 17px
               font-weight: bold
           - type: state-label
             entity: switch.novus300_bypass
-            prefix: "Bypass "
-            tap_action:
-              action: more-info
             style:
-              top: 88%
-              left: 71%
+              left: 69.8%
+              top: 90.5%
               color: "#ffffff"
-              background-color: "#334155"
-              padding: 4px 8px
+              background-color: "#334e68"
+              padding: 2px 8px
               border-radius: 8px
-              font-size: 16px
+              font-size: 17px
               font-weight: bold

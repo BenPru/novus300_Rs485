@@ -42,17 +42,6 @@ The bundled dashboard shows the unit diagram with all four temperatures, the con
 
 In the raw configuration editor of the existing dashboard (steps 4–5 above), append only the block below `views:` from `novus300.yaml` (starting at `- title: Übersicht`) to the existing `views:` list. The indentation must match the existing list.
 
-## "Sensors" view (manual diagram)
-
-The second view places the temperatures on the unit diagram from the Paul manual. The graphic is copyrighted and therefore not part of the repository. Download it once and save it as `/config/www/novus300-sensors.png`:
-
-```bash
-curl -L -o /config/www/novus300-sensors.png \
-  https://raw.githubusercontent.com/larda3141/novus2mqtt/main/docs/sensors.png
-```
-
-Without the file this view stays empty; the overview works independently.
-
 ## Checking
 
 - The diagram with the graphic and temperatures appears. If the graphic is empty, open `http://<ha-address>:8123/novus300bus/novus300-airflow.svg` in the browser. An image must appear; otherwise Home Assistant was not restarted after the update.

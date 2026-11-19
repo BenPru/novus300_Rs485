@@ -42,17 +42,6 @@ Das mitgelieferte Dashboard zeigt das Anlagenschema mit allen vier Temperaturen,
 
 Im Rohkonfigurationseditor des bestehenden Dashboards (Schritte 4–5 oben) nur den Block unter `views:` aus `novus300.yaml` (ab `- title: Übersicht`) an die vorhandene `views:`-Liste anhängen. Die Einrückung muss dabei zur bestehenden Liste passen.
 
-## Ansicht „Sensoren“ (Handbuch-Schema)
-
-Die zweite Ansicht legt die Temperaturen über das Anlagenschema aus dem Paul-Handbuch. Die Grafik ist urheberrechtlich geschützt und liegt deshalb nicht im Repository. Einmalig herunterladen und als `/config/www/novus300-sensors.png` ablegen:
-
-```bash
-curl -L -o /config/www/novus300-sensors.png \
-  https://raw.githubusercontent.com/larda3141/novus2mqtt/main/docs/sensors.png
-```
-
-Ohne die Datei bleibt diese Ansicht leer; die Übersicht funktioniert unabhängig davon.
-
 ## Prüfen
 
 - Das Schema mit der Grafik und den Temperaturen erscheint. Ist die Grafik leer, im Browser `http://<ha-adresse>:8123/novus300bus/novus300-airflow.svg` öffnen. Es muss ein Bild erscheinen. Andernfalls wurde Home Assistant nach dem Update nicht neu gestartet.
