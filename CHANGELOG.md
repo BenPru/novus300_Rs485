@@ -16,7 +16,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - **Error codes:** all codes from the manual (sensors, fans, bypass, bus/communication) are named; the message sensor gets a `hint` attribute with cause and action.
 - **New dialog "Thresholds":** hysteresis (frost protection supply air, reheating, earth heat exchanger damper), brine defroster cooling threshold and damper thresholds are writable; the sensor characteristic is shown read-only. "Advanced" shows names and units from the register list of novus2mqtt.
 - Fix: the start-up dump is now fully decoded (bypass/summer ventilation, reheating, damper, frost protection mode are read after a unit restart).
-- **Bypass switch** is disabled by default (enable it if your unit has a bypass); new attribute  from the plant flag, writes are rejected with a matching message.
+- **Bypass switch** is disabled by default (enable it if your unit has a bypass); new attribute bypass_present from the plant flag, writes are rejected with a matching message.
 - **New button "Request all values"** (diagnostic): sends the memory dump request (0x83) so the unit resends all registers, e.g. to fill missing values without a restart. It briefly disturbs the panel. The bridge must be updated for it.
 - **Dashboard view "Sensors":** own unit diagram (`novus300-schema.svg`) with the temperatures and bypass state in the place of the sensors.
 - **Serial bridge (`tools/`):** whitelist extended for the parameter and selection registers (update it on the bridge host).
