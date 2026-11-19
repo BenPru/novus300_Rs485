@@ -2,6 +2,25 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.19
+
+### Highlights
+- **Schreibbare Anlagenparameter im Einstellungsdialog:** neue Dialoge „Anlagenparameter“ (Automatik-Modus, Frostschutz, min. Zuluft, Nachheizung, Defroster, EWT-Klappe) und „Bypass und Sommerlüftung“ (Bypass vorhanden, Sommerlüftung, Schwellen, Hysterese). Temperaturen mit einer Nachkommastelle.
+- **Vorschaltdialog bei fehlenden Anlagenwerten:** fehlen Startwerte, wird die Anlage automatisch neu gestartet und auf die Werte gewartet; es gibt „Anlage neu starten“, „Erneut prüfen“ und „Trotzdem öffnen“. Werte, die nur das Bedienteil sendet, werden mit der zugehörigen Menüseite benannt.
+- **Dashboard einfacher installieren:** Die Grafik liefert die Integration selbst aus (kein Kopieren nach `config/www/` mehr), dazu eine ausführliche Anleitung: [docs/DASHBOARD.de.md](docs/DASHBOARD.de.md).
+
+### Neu
+- Der Dialog „Erweitert“ zeigt nur noch die noch nicht zugeordneten Register; aufgelöste stehen in den neuen Dialogen.
+- Diagnosedaten (`diagnostics.py`) und Übersetzungen für fr/es/it/nl (neue Dialoge vorerst englisch).
+- Temperatursensoren mit eigenen Icons und fester Reihenfolge.
+- **Serielle Bridge (`tools/`):** Whitelist für die Parameter- und Auswahlregister erweitert (auf dem Bridge-Rechner aktualisieren).
+
+### Geändert
+- `dashboards/novus300.yaml` verwendet `/novus300bus/novus300-airflow.svg`. Die SVG liegt jetzt in `custom_components/novus300bus/www/`. Die Integration hängt nun von `http` ab.
+
+### Hinweise
+- Das Schreiben der Parameter in die Anlage ist noch wenig getestet. Nach einem Update Home Assistant neu starten und die Bridge aktualisieren.
+
 ## 2026.11.18
 
 ### Highlights

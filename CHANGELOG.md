@@ -2,6 +2,25 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.19
+
+### Highlights
+- **Writable unit parameters in the options dialog:** new dialogs "Plant parameters" (automatic mode, frost protection, minimum supply air, reheater, defroster, ground-heat-exchanger damper) and "Bypass and summer ventilation" (bypass installed, summer ventilation, thresholds, hysteresis). Temperatures with one decimal.
+- **Gate dialog for missing unit values:** if start-up values are missing, the unit is restarted automatically and the integration waits for them; "Restart unit", "Check again" and "Open anyway" are offered. Values only the panel sends are named together with the menu page to open.
+- **Easier dashboard installation:** the integration serves the graphic itself (no more copying to `config/www/`), plus a detailed guide: [docs/DASHBOARD.md](docs/DASHBOARD.md).
+
+### New
+- The "Advanced" dialog now lists only registers that are still unassigned; resolved ones live in the new dialogs.
+- Diagnostics (`diagnostics.py`) and fr/es/it/nl translations (new dialogs in English for now).
+- Temperature sensors with dedicated icons and a fixed order.
+- **Serial bridge (`tools/`):** whitelist extended for the parameter and selection registers (update it on the bridge host).
+
+### Changed
+- `dashboards/novus300.yaml` uses `/novus300bus/novus300-airflow.svg`. The SVG now lives in `custom_components/novus300bus/www/`. The integration now depends on `http`.
+
+### Notes
+- Writing parameters to the unit is still lightly tested. After updating, restart Home Assistant and update the bridge.
+
 ## 2026.11.18
 
 ### Highlights
