@@ -22,6 +22,7 @@ CONF_AWAY_DURATION_MINUTES: Final = "away_duration_minutes"
 CONF_FAN_LEVEL_1_PERCENTAGE: Final = "fan_level_1_percentage"
 CONF_FAN_LEVEL_2_PERCENTAGE: Final = "fan_level_2_percentage"
 CONF_FAN_LEVEL_3_PERCENTAGE: Final = "fan_level_3_percentage"
+FAN_IMBALANCE_KEYS: Final = tuple(f"fan_level_{n}_imbalance" for n in range(1, 4))
 
 FAN_STAGE_KEYS: Final = tuple(f"fan_stage_{n}_percentage" for n in range(1, 8))
 DEFAULT_FAN_STAGES: Final = (20, 33, 46, 60, 73, 87, 100)

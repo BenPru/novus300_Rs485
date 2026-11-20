@@ -12,6 +12,7 @@ key shown below.
 | --- | --- | --- | --- | --- |
 | `switch.novus300_power` | switch | Operating state | – | yes |
 | `switch.novus300_bypass` | switch | Bypass open | – | no |
+| `switch.novus300_summer_ventilation` | switch | Summer ventilation active | – | yes, with known bypass configuration |
 | `fan.novus300` | fan | Ventilation | – | no |
 | `select.novus300_ventilation_mode` | select | Ventilation mode | – | no |
 | `button.novus300_boost` | button | Boost ventilation | – | no |
@@ -67,8 +68,16 @@ the bypass is known. `on` means the bypass is open or moving.
 | `air_path` | `heat_recovery`, `bypass`, `transition` (both flags set) or `unknown` |
 | `raw_value` | status word of the unit (flags 0x08 heat recovery, 0x20 bypass) |
 
+Both bypass-related switches are enabled automatically only when the plant configuration confirms a bypass. With no bypass they are disabled; a user's manual disabling is kept.
+
 Note: the bypass actuator of the author's unit is defective, so the states
 `bypass` and `transition` could never be observed or recorded.
+
+### `switch.novus300_summer_ventilation` – Summer ventilation active
+
+Automation-capable activation of the unit's summer ventilation. Replaces the options checkbox. State comes from bit `0x80` of register `0x1B`. Writes preserve the other plant flags and wait up to 15 seconds for matching bus feedback; failure raises an error without an optimistic state change. Bus feedback is not proof of physical flap movement.
+
+Available only with a confirmed bypass and a healthy coordinator. Installation and temperature thresholds stay in the options. This is **not** a manual bypass open/close command; that remains unverified.
 
 ## Fan
 
@@ -93,6 +102,8 @@ value if it is 0).
 | --- | --- |
 | `ventilation_mode` | `automatic`, `level_1`, `level_2`, `level_3`, `boost`, `away`, `standby` or `unknown` |
 | `original_levels` | levels temporarily overridden with their original percentage (`fan_level_1_percentage`, `fan_level_3_percentage`) |
+| `bypass_present`, `reheater_present`, `ewt_present`, `defroster_present`, `brine_defroster_present` | installed-part flags (`true`/`false`; `null` when unknown), used by the sensors dashboard instead of separate binary sensors |
+| `automatic_type` | in automatic mode, when register `0x63` is known: `sensor_automatic` or `time_automatic` |
 | `bus_setpoint` | raw fan control value sent by the unit (register 0x55) in % |
 | `away_minutes_per_hour` | only in away mode: ventilation minutes per hour |
 | `run_state` | only with 0-10 V: run state of the unit |
@@ -146,6 +157,7 @@ Diagnostic. The state is either a status change or the unit's own message.
 | `previous_message`, `previous_message_2`, `previous_message_3` | the unit's own last three messages as text: time, code, message, translated detail |
 | `observed` | message changes seen by Home Assistant (time, message), newest first, up to 10 |
 | `status_events` | the last 10 changes of run state or air path as text with time, newest first |
+| `message_table` | structured current/previous message rows with time, code, message and hint for dashboard display |
 
 The unit stores its last three messages and broadcasts them only when it
 starts up; the integration keeps them.
@@ -178,6 +190,6 @@ and 0x62 as raw numbers.
 Serial device / bridge URL, baud rate, parity, **Synchronize time daily**
 (03:00), ventilation levels 1–3 in % (17 % ≤ level 1 < level 2 < level 3 ≤
 100 %), boost duration, away ventilation time (minutes per hour), filter
-interval (30–180 d), and the 0-10 V options (enable, Tinkerforge host, port
+interval (30–180 d), fan imbalance per level (−50 to +50 %, step 1), and the 0-10 V options (enable, Tinkerforge host, port
 and UID, automatic mode helper entity). Levels, durations and the filter
 interval are written to the unit when the options are saved.

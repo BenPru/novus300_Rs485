@@ -153,7 +153,7 @@ diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
 
 ## Optionen (Einstellungsdialog)
 
-Öffnen über **Einstellungen → Geräte & Dienste → Paul Novus 300 RS-485 Bus → Zahnrad**. Alle Felder stehen in einem Dialog; ein Hinweis oben nennt die Werte, die die Anlage noch nicht gesendet hat (sie zeigen dann Standardwerte). Beim Speichern werden die Anlageneinstellungen in die Anlage geschrieben (Bridge mit Befehls-Whitelist erforderlich).
+Öffnen über **Einstellungen → Geräte & Dienste → Paul Novus 300 RS-485 Bus → Zahnrad**, dann die Einstellungsgruppe wählen. Die allgemeinen Einstellungen nennen noch nicht empfangene Werte. Beim Speichern werden Anlagenwerte über die Bridge geschrieben (Befehls-Whitelist erforderlich).
 
 | Feld | Bedeutung | Werte / Standard |
 |---|---|---|
@@ -162,6 +162,7 @@ diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
 | **Parität** | Parität des Busses. | none (der Bus nutzt MARK-Parität; das übernimmt die Bridge) |
 | **Uhrzeit täglich synchronisieren** | Setzt Datum und Uhrzeit der Anlage täglich um 03:00 auf die Zeit von Home Assistant und prüft die Abweichung. | an |
 | **Lüftungsstufe 1 / 2 / 3 (%)** | Lüfter-Prozentwert der drei Stufen, wird in die Anlage geschrieben. Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %, sonst zeigt der Dialog einen Fehler. Zeigt den ursprünglichen Wert, auch wenn gerade ein Prozentwert Stufe 1 oder 3 vorübergehend überschreibt. | 35 / 60 / 90 % |
+| **Stufe 1 / 2 / 3: Disbalance (%)** | Separate Feineinstellung direkt bei jeder Stufe. Ganze Prozentwerte mit Vorzeichen; empfangene Werte werden gemerkt. Unbekannte Werte bleiben leer und werden ohne Eingabe nicht geschrieben. | −50 bis +50 %, Schritt 1 |
 | **Dauer Stoßlüftung** | Wie lange die Stoßlüftung nach `button.novus300_boost` läuft. Auswahl in 5-Minuten-Schritten (5–120). | 15 min |
 | **Abwesend: Lüftungszeit (min/h)** | Lüftungsminuten pro Stunde auf Stufe 1 im Modus Abwesend. | 15 / 30 / 45, Standard 30 |
 | **Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird** | Aus: Die Modus-Auswahl bleibt auf *Automatik*, solange `fan.novus300` einen Prozentwert setzt. An: Sie zeigt Stufe 1 oder 3. | aus |
@@ -178,18 +179,20 @@ Hinweise:
 ## Anlageneinstellungen
 
 Diese Werte liegen in der Anlage. Die Lüftungsstufen sind normale Zahlenfelder
-(0–100 %, jede ganze Zahl); die Zeiten sind Auswahllisten:
+(17–100 %, aufsteigende ganze Zahlen); die Zeiten sind Auswahllisten:
 
 | Einstellung | Schrittweite der Anlage | Standardwert |
 |---|---|---:|
-| Lüftungsstufe 1 / 2 / 3 | beliebiger Wert 0–100 % | 35 / 60 / 90 % |
+| Lüftungsstufe 1 / 2 / 3 | ganze Prozentwerte, 17–100 % | 35 / 60 / 90 % |
+| Disbalance Stufe 1 / 2 / 3 | −50 bis +50 %, Schritt 1 | Anlagenwert; leer, solange unbekannt |
 | Dauer Stoßlüftung | 5 min | 15 min (Werk) |
 | Abwesend: Lüftungszeit | 15 / 30 / 45 min/h | 30 min/h |
 
 Das Filterintervall (30–180 Tage, 10-Tage-Schritte) ist eine Auswahlliste in den Optionen und wird beim Speichern in die Anlage geschrieben. `button.novus300_filter_reset` und der Dienst `novus300bus.reset_filter` setzen die Filterlaufzeit zurück (beide Register auf das eingestellte Intervall).
 
-Beim Speichern der Optionen werden alle fünf Werte über die RS-485-Bridge in die
-Anlage geschrieben. Die Anlage sendet sie nur selten (ein Register alle paar Minuten im langsamen Wechsel, nicht direkt beim Start); sie werden automatisch in die Optionen übernommen, sobald sie gesehen wurden; die Integration
+Beim Speichern der allgemeinen Einstellungen werden Stufen-/Zeitwerte und ausgefüllte Disbalance-Werte über die RS-485-Bridge geschrieben. Für Disbalance-Schreiben `tools/novus300_serial_bridge.py` auf dem Bridge-Rechner aktualisieren; fremde Register und ungültige Bereiche bleiben gesperrt.
+
+Die Anlage sendet die Einstellungen nur selten (ein Register alle paar Minuten im langsamen Wechsel, nicht direkt beim Start); sie werden automatisch in die Optionen übernommen, sobald sie gesehen wurden; die Integration
 merkt sich die zuletzt auf dem Bus gesehenen Werte (Speichern am Bedienteil) und
 bietet sie als Vorgabe an. Stoßlüftung und Abwesend haben am Bedienteil keinen
 Prozentwert. Stoßlüftung hat eine Dauer; Abwesend ist die Lüftungszeit pro
@@ -198,6 +201,12 @@ Stunde (min/h) auf Stufe 1 als Feuchteschutz. `fan.novus300` verwendet beim Eins
 Anlage für die eingestellte **Dauer Stoßlüftung**. Bei Standby, Stoßlüftung und
 Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.
 
+### Sommerlüftung und Bypass
+
+Die Aktivierung der Sommerlüftung erfolgt jetzt über `switch.novus300_summer_ventilation`, nicht mehr über eine Checkbox in den Optionen. Der Schalter wird nur bei bestätigt vorhandenem Bypass angeboten; manuelles Deaktivieren der Entität wird respektiert. `switch.turn_on` / `switch.turn_off` sind in Automationen nutzbar. Es wird nur Bit `0x80` der bekannten Anlagenkonfiguration geändert; unbekannte Konfiguration oder fehlende Busbestätigung führen zu einem Fehler statt zu einem vermeintlichen Erfolg.
+
+Das aktiviert die Sommerlüftungsfunktion der Anlage, **erzwingt aber kein Öffnen oder Schließen der Bypass-Klappe**. `switch.novus300_bypass` bleibt eine reine Rückmeldung. Ein belegter direkter Stellbefehl fehlt weiterhin; die physische Klappenbewegung ist nicht getestet. Bypass-Installation und Temperaturschwellen bleiben in den Optionen.
+
 ## Angelegte Entitäten
 
 Vollständige Liste mit allen Attributen: [docs/ENTITIES.de.md](docs/ENTITIES.de.md).
@@ -205,6 +214,8 @@ Vollständige Liste mit allen Attributen: [docs/ENTITIES.de.md](docs/ENTITIES.de
 ### Dashboard
 
 [`dashboards/novus300.yaml`](dashboards/novus300.yaml) ist ein fertiges Dashboard (nur Standard-Karten, mit Karte „Details (Attribute)“ und Liste der Statuswechsel). Die Grafik liefert die Integration selbst aus (unter `/novus300bus/novus300-airflow.svg`), es muss nichts nach `config/www/` kopiert werden. Kurz: neues Dashboard anlegen → Rohkonfigurationseditor → Inhalt der Datei einfügen. **Ausführliche Schritt-für-Schritt-Anleitung (mit Varianten, Prüfung und Fehlerbehebung): [docs/DASHBOARD.de.md](docs/DASHBOARD.de.md).**
+
+Enthalten sind **Übersicht** (Bedienung und Luftstrom) und **Sensoren** (zweites Anlagenschema mit Sensorpositionen und ausstattungsabhängigen Ebenen). Die Anleitung beschreibt außerdem das zweite **editierbare UI-Dashboard** neben dem YAML-Dashboard und die voneinander unabhängige Aktualisierung beider Kopien.
 
 ![Dashboard-Übersicht](docs/images/dashboard.png)
 
@@ -217,8 +228,22 @@ Verwendete Entitäten (alle von dieser Integration): `select.novus300_ventilatio
 #### Automatisierungsbeispiele
 
 ```yaml
-# Stoßlüftung bei hoher Luftfeuchtigkeit im Bad
+# Sommerlüftung nach Zeitplan, nur mit bestätigt vorhandenem Bypass
 automation:
+  - alias: "Novus: abends Sommerlüftung"
+    triggers:
+      - trigger: time
+        at: "21:00:00"
+    conditions:
+      - condition: state
+        entity_id: switch.novus300_summer_ventilation
+        state: "off"
+    actions:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.novus300_summer_ventilation
+
+# Stoßlüftung bei hoher Luftfeuchtigkeit im Bad
   - alias: "Novus: Stoßlüftung bei Feuchte"
     triggers:
       - trigger: numeric_state

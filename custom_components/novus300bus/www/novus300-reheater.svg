@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 900" font-family="sans-serif">
+  <rect x="432" y="387" width="78" height="79" fill="none" stroke="#9fb3c8" stroke-width="2" stroke-dasharray="8 6"/>
+  <g fill="#d9f9f4" font-size="18"><text x="440" y="436">Nachheiz-</text><text x="440" y="456">register</text></g>
+  <circle cx="380" cy="330" r="26" fill="#102a43" stroke="#d9f9f4" stroke-width="2"/>
+  <text x="380" y="337" fill="#d9f9f4" font-size="20" font-weight="bold" text-anchor="middle">T7</text>
+  <text x="380" y="372" fill="#9fb3c8" font-size="15" text-anchor="middle">t_nhz</text>
+</svg>

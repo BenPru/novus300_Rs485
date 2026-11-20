@@ -35,7 +35,13 @@ RUN_STATE_ICONS = {
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up the Novus switches."""
     coordinator: NovusCoordinator = entry.runtime_data
-    async_add_entities([NovusPowerSwitch(coordinator), NovusBypassSwitch(coordinator)])
+    async_add_entities(
+        [
+            NovusPowerSwitch(coordinator),
+            NovusBypassSwitch(coordinator),
+            NovusSummerVentilationSwitch(coordinator),
+        ]
+    )
 
 
 class NovusPowerSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
@@ -128,6 +134,7 @@ class NovusBypassSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
         """Return whether the status word has been received."""
         return (
             "bypass_open" in self.coordinator.data
+            and self.coordinator.bypass_present is True
             and not self.coordinator.is_stopped
         )
 
@@ -169,3 +176,33 @@ class NovusBypassSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Reject writes: the bypass cannot be set over the bus yet."""
         raise HomeAssistantError(self._read_only_reason())
+
+
+class NovusSummerVentilationSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
+    """Activate summer ventilation without forcing the bypass flap."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "summer_ventilation"
+    _attr_unique_id = "novus300bus_summer_ventilation"
+    _attr_icon = "mdi:weather-sunny"
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: NovusCoordinator) -> None:
+        super().__init__(coordinator)
+        self.entity_id = "switch.novus300_summer_ventilation"
+        self._attr_device_info = DEVICE_INFO
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.coordinator.bypass_present is True
+
+    @property
+    def is_on(self) -> bool | None:
+        word = self.coordinator.data.get("param_1b")
+        return bool(word & 0x80) if isinstance(word, int) else None
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_summer_ventilation(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_summer_ventilation(False)

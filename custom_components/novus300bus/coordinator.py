@@ -42,6 +42,7 @@ from .const import (
     DEFAULT_FAN_STAGES,
     DOMAIN,
     FAN_STAGE_KEYS,
+    FAN_IMBALANCE_KEYS,
 )
 from .protocol import (
     MODE_REQUEST_VALUES,
@@ -101,6 +102,7 @@ SETTING_DEFAULTS = {
     CONF_BOOST_DURATION_MINUTES: DEFAULT_BOOST_DURATION_MINUTES,
     CONF_AWAY_DURATION_MINUTES: DEFAULT_AWAY_DURATION_MINUTES,
     **dict(zip(FAN_STAGE_KEYS, DEFAULT_FAN_STAGES)),
+    **dict.fromkeys(FAN_IMBALANCE_KEYS, 0),
 }
 
 
@@ -126,6 +128,8 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         )
         self._cancel_time_sync = None
         self._last_clock_at = 0.0
+        self._parameter_write_lock = asyncio.Lock()
+        self._plant_word_received = asyncio.Event()
         self.raw_log: deque[tuple[str, str]] = deque(maxlen=3000)
         self.data = {}
 
@@ -487,6 +491,13 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_write_settings(self, settings: dict[str, int]) -> None:
         """Store menu settings in the unit, as the panel does when saving."""
+        for key in FAN_IMBALANCE_KEYS:
+            if key in settings and (
+                isinstance(settings[key], bool)
+                or not isinstance(settings[key], int)
+                or not -50 <= settings[key] <= 50
+            ):
+                raise HomeAssistantError("Fan imbalance must be an integer from -50 to 50")
         for key, value in settings.items():
             if key not in SETTING_DEFAULTS:
                 continue
@@ -502,7 +513,18 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_write_parameters(self, parameters: dict[int, int]) -> None:
         """Store changed unit parameters and selections (register -> raw value)."""
+        async with self._parameter_write_lock:
+            await self._async_write_parameters(parameters)
+
+    async def _async_write_parameters(self, parameters: dict[int, int]) -> None:
+        """Serialize parameter writes with summer ventilation changes."""
         for register, value in parameters.items():
+            if register == 0x1B:
+                word = self._values.get("param_1b")
+                if not isinstance(word, int):
+                    raise HomeAssistantError("The unit configuration has not been received")
+                # This options field changes installation only, not summer mode.
+                value = (word & ~0x04) | (value & 0x04)
             frame = (
                 build_parameter_frame(register, int(value))
                 if register in PARAMETER_LIMITS
@@ -513,6 +535,31 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             await asyncio.sleep(1)
         self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))
+
+    async def async_set_summer_ventilation(self, on: bool) -> None:
+        """Change only the summer flag and wait for its bus feedback."""
+        async with self._parameter_write_lock:
+            if self.bypass_present is not True:
+                raise HomeAssistantError("Summer ventilation requires a confirmed bypass")
+            word = self._values["param_1b"]
+            if bool(word & 0x80) == on:
+                return
+            value = (word | 0x80) if on else (word & ~0x80)
+            self._plant_word_received.clear()
+            await self._async_send(build_select_frame(0x1B, value))
+            try:
+                async with asyncio.timeout(15):
+                    while True:
+                        await self._plant_word_received.wait()
+                        self._plant_word_received.clear()
+                        if self.bypass_present is not True:
+                            raise HomeAssistantError("The unit no longer reports a bypass")
+                        if bool(self._values["param_1b"] & 0x80) == on:
+                            return
+            except TimeoutError as err:
+                raise HomeAssistantError(
+                    "Novus did not confirm the summer ventilation setting"
+                ) from err
 
     def filter_interval_days(self) -> int:
         """Return the filter interval last seen on the bus, in days."""
@@ -543,6 +590,22 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         """Return whether a bypass is installed (plant flag 0x1B bit 2 is set when absent)."""
         word = self._values.get("param_1b")
         return None if not isinstance(word, int) else not word & 0x04
+
+    def _plant_value(self, register: int) -> int | None:
+        value = self._values.get(f"param_{register:02x}")
+        return value if isinstance(value, int) else None
+
+    @property
+    def installed_parts(self) -> dict[str, bool | None]:
+        """Return which optional parts the plant has (None while unknown)."""
+        reheater, ewt, defroster = (self._plant_value(r) for r in (0x21, 0x24, 0x1E))
+        return {
+            "bypass_present": self.bypass_present,
+            "reheater_present": None if reheater is None else reheater != 0,
+            "ewt_present": None if ewt is None else ewt != 0,
+            "defroster_present": None if defroster is None else defroster in (1, 2),
+            "brine_defroster_present": None if defroster is None else defroster == 3,
+        }
 
     async def async_request_dump(self) -> None:
         """Ask the unit to resend all registers (briefly disturbs the panel)."""
@@ -584,6 +647,8 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             self._record_message(str(readings["message"]))
         self._record_status_events(readings)
         self._values.update(readings)
+        if "param_1b" in readings:
+            self._plant_word_received.set()
         if any(key in PERSISTED_KEYS or key.startswith("param_") for key in readings) or (
             "status_events" in self._values and ("run_state" in readings or "air_path" in readings)
         ):

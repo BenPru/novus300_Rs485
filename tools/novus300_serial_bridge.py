@@ -145,6 +145,9 @@ def clock_frame_kind(frame: bytes):
             return "filter_interval" if frame[3] == 7 else "filter_reset"
         return None
     if frame[3] == 3 and len(frame) == 9 and frame[7] == 0:
+        if frame[6] in (0x31, 0x32, 0x33):
+            value = int.from_bytes(frame[8:], "little", signed=True)
+            return "setting" if -50 <= value <= 50 else None
         limits = {0x2E: (0, 100), 0x2F: (0, 100), 0x30: (0, 100), 0x3B: (1, 240), 0x3C: (1, 240)}
         limits.update({reg: (1, 100) for reg in range(0x34, 0x3B)})
         low, high = limits.get(frame[6], (1, 0))

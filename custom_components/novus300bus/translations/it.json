@@ -75,10 +75,9 @@
       },
       "bypass_form": {
         "title": "Bypass and summer ventilation",
-        "description": "{state}The temperatures also apply to summer ventilation without a bypass (upper threshold = temperature, 'closed below' = inactive below). Without a bypass the lower threshold has no effect.",
+        "description": "{state}Activate summer ventilation using the entity switch (only with a confirmed bypass). Installation and temperature thresholds stay here; neither setting forces the flap open or closed.",
         "data": {
           "bypass": "Bypass installed",
-          "summer": "Summer ventilation active",
           "p41": "Upper threshold / summer ventilation temperature",
           "p42": "Lower threshold",
           "p43": "Hysteresis",

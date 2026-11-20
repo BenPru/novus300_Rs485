@@ -71,6 +71,9 @@
           "fan_level_1_percentage": "Lüftungsstufe 1 (%)",
           "fan_level_2_percentage": "Lüftungsstufe 2 (%)",
           "fan_level_3_percentage": "Lüftungsstufe 3 (%)",
+          "fan_level_1_imbalance": "Stufe 1: Disbalance (%)",
+          "fan_level_2_imbalance": "Stufe 2: Disbalance (%)",
+          "fan_level_3_imbalance": "Stufe 3: Disbalance (%)",
           "boost_duration_minutes": "Dauer Stoßlüftung",
           "away_duration_minutes": "Abwesend: Lüftungszeit (min/h)",
           "show_fan_levels": "Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird",
@@ -100,10 +103,9 @@
       },
       "bypass_form": {
         "title": "Bypass und Sommerlüftung",
-        "description": "{state}Die Temperaturen gelten auch für die Sommerlüftung ohne Bypass (obere Schwelle = Temperatur, „geschlossen unterhalb“ = inaktiv unter). Ist kein Bypass vorhanden, hat die untere Schwelle keine Wirkung.",
+        "description": "{state}Sommerlüftung über den Entitätsschalter aktivieren (nur bei bestätigt vorhandenem Bypass). Installation und Temperaturschwellen bleiben hier; keine dieser Einstellungen erzwingt die Klappenstellung.",
         "data": {
           "bypass": "Bypass vorhanden",
-          "summer": "Sommerlüftung aktiv",
           "p41": "Obere Schwelle / Sommerlüftung Temperatur",
           "p42": "Untere Schwelle",
           "p43": "Hysterese",
@@ -143,7 +145,9 @@
       "levels_order": "Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %.",
       "not_loaded": "Nicht mit dem Bus verbunden.",
       "write_failed": "Schreiben in die Anlage fehlgeschlagen.",
-      "invalid_number": "Wert mit einer Nachkommastelle im zulässigen Bereich eingeben (Hysterese in 0,5-Schritten)."
+      "invalid_number": "Wert mit einer Nachkommastelle im zulässigen Bereich eingeben (Hysterese in 0,5-Schritten).",
+      "invalid_imbalance": "Ganzen Prozentwert von -50 bis 50 eingeben.",
+      "configuration_unknown": "Die Anlagenkonfiguration wurde noch nicht empfangen. Zuerst am Bedienteil die Bypass-Seite öffnen."
     }
   },
   "entity": {
@@ -190,6 +194,12 @@
       },
       "filter_time_remaining": {
         "name": "Filter Restlaufzeit"
+      },
+      "param_25": {
+        "name": "Hardware-Konfigurations-ID"
+      },
+      "param_44": {
+        "name": "Systemstatus-Bits"
       }
     },
     "switch": {
@@ -198,6 +208,9 @@
       },
       "bypass": {
         "name": "Bypass geöffnet"
+      },
+      "summer_ventilation": {
+        "name": "Sommerlüftung aktiv"
       }
     },
     "fan": {

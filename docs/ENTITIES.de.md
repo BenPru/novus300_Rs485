@@ -12,6 +12,7 @@ gefolgt vom unten genannten Schlüssel.
 | --- | --- | --- | --- | --- |
 | `switch.novus300_power` | switch | Betriebsstatus | – | ja |
 | `switch.novus300_bypass` | switch | Bypass geöffnet | – | nein |
+| `switch.novus300_summer_ventilation` | switch | Sommerlüftung aktiv | – | ja, bei bekannter Bypass-Konfiguration |
 | `fan.novus300` | fan | Lüftung | – | nein |
 | `select.novus300_ventilation_mode` | select | Lüftungsmodus | – | nein |
 | `button.novus300_boost` | button | Stoßlüftung | – | nein |
@@ -69,9 +70,17 @@ Bewegung.
 | `air_path` | `heat_recovery`, `bypass`, `transition` (beide Flags gesetzt) oder `unknown` |
 | `raw_value` | Statuswort der Anlage (Flags 0x08 Wärmerückgewinnung, 0x20 Bypass) |
 
+Beide Bypass-bezogenen Schalter werden automatisch nur bei bestätigt vorhandenem Bypass aktiviert. Ohne Bypass werden sie deaktiviert; manuelles Deaktivieren durch den Nutzer bleibt erhalten.
+
 Hinweis: Der Bypass-Stellmotor der Anlage des Autors ist defekt, daher konnten
 die Zustände `bypass` und `transition` nie beobachtet oder mitgeschnitten
 werden.
+
+### `switch.novus300_summer_ventilation` – Sommerlüftung aktiv
+
+Automatisierbare Aktivierung der Sommerlüftung der Anlage; ersetzt die Options-Checkbox. Der Zustand folgt Bit `0x80` in Register `0x1B`. Schreiben erhält die anderen Anlagenflags und wartet bis zu 15 Sekunden auf passende Bus-Rückmeldung. Bei Fehler bleibt eine optimistische Zustandsänderung aus und ein Fehler wird gemeldet. Die Bus-Rückmeldung ist kein Nachweis einer physischen Klappenbewegung.
+
+Nur bei bestätigt vorhandenem Bypass und funktionierendem Coordinator verfügbar. Installation und Temperaturschwellen bleiben in den Optionen. Dies ist **kein** manueller Bypass-Auf/Zu-Befehl; dieser ist weiterhin nicht belegt.
 
 ## Lüfter
 
@@ -97,6 +106,8 @@ bei 0 der letzte bekannte Wert).
 | --- | --- |
 | `ventilation_mode` | `automatic`, `level_1`, `level_2`, `level_3`, `boost`, `away`, `standby` oder `unknown` |
 | `original_levels` | vorübergehend überschriebene Stufen mit ihrem ursprünglichen Prozentwert (`fan_level_1_percentage`, `fan_level_3_percentage`) |
+| `bypass_present`, `reheater_present`, `ewt_present`, `defroster_present`, `brine_defroster_present` | Ausstattungsflags (`true`/`false`; bei unbekanntem Wert `null`), von der Sensoransicht statt separater Binärsensoren genutzt |
+| `automatic_type` | im Automatikmodus bei bekanntem Register `0x63`: `sensor_automatic` oder `time_automatic` |
 | `bus_setpoint` | Rohwert der Lüfteransteuerung der Anlage (Register 0x55) in % |
 | `away_minutes_per_hour` | nur im Modus Abwesend: Lüftungsminuten pro Stunde |
 | `run_state` | nur mit 0-10 V: Betriebsstatus der Anlage |
@@ -150,6 +161,7 @@ der Anlage.
 | `previous_message`, `previous_message_2`, `previous_message_3` | die letzten drei eigenen Meldungen der Anlage als Text: Zeit, Code, Meldung, übersetztes Detail |
 | `observed` | von Home Assistant gesehene Meldungswechsel (Zeit, Meldung), neueste zuerst, bis zu 10 |
 | `status_events` | die letzten 10 Wechsel von Betriebsstatus oder Luftweg als Text mit Zeit, neueste zuerst |
+| `message_table` | strukturierte aktuelle/vorherige Meldungszeilen mit Zeit, Code, Meldung und Hinweis für das Dashboard |
 
 Die Anlage speichert ihre letzten drei Meldungen und sendet sie nur beim Start;
 die Integration behält sie.
@@ -182,7 +194,7 @@ bekannte Wert wird nach einem Neustart wiederhergestellt, bis ein neuer kommt.
 Serielles Gerät / Bridge-URL, Baudrate, Parität, **Uhrzeit täglich
 synchronisieren** (03:00), Lüftungsstufen 1–3 in % (17 % ≤ Stufe 1 < Stufe 2 <
 Stufe 3 ≤ 100 %), Stoßlüftungsdauer, Abwesend-Lüftungszeit (Minuten pro
-Stunde), Filterintervall (30–180 d) und die 0-10-V-Optionen (aktivieren,
+Stunde), Filterintervall (30–180 d), Disbalance je Stufe (−50 bis +50 %, Schritt 1) und die 0-10-V-Optionen (aktivieren,
 Tinkerforge-Host, Port und UID, Hilfsentität für den Automatikmodus). Stufen,
 Dauern und Filterintervall werden beim Speichern der Optionen in die Anlage
 geschrieben.

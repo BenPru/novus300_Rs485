@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 900" font-family="sans-serif">
+  <rect width="1000" height="900" rx="24" fill="#102a43"/>
+  <g fill="none" stroke="#486581" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M205 198L539 29L967 245M931 230V809M130 809H963M177 341V419M177 631V809"/>
+  </g>
+  <g fill="none" stroke="#9fb3c8" stroke-width="2" stroke-dasharray="8 6">
+    <rect x="484" y="145" width="236" height="170"/>
+    <rect x="600" y="357" width="319" height="445"/>
+  </g>
+  <g fill="none" stroke-width="19" stroke-linejoin="round">
+    <path d="M710 185H815Q840 185 840 210V405L795 472" stroke="#29b6f6"/>
+    <path d="M765 468L745 435Q735 424 715 424H260Q235 424 235 400V300Q235 290 250 290H495" stroke="#ef5350"/>
+    <path d="M762 585L735 640Q725 645 710 645H118" stroke="#ffd54f"/>
+    <path d="M300 759H760M840 767H865Q885 767 875 745L797 585" stroke="#43a047"/>
+  </g>
+  <polygon points="765,465 828,488 828,570 783,593 734,570 734,488" fill="#102a43" stroke="#d9f9f4" stroke-width="3"/>
+  <g fill="#d9f9f4">
+    <polygon points="840,350 826,328 854,328"/>
+    <polygon points="545,424 568,411 568,437"/>
+    <polygon points="545,645 568,632 568,658"/>
+    <polygon points="580,759 557,746 557,772"/>
+  </g>
+  <g fill="#d9f9f4" font-size="22">
+    <text x="500" y="178" font-size="24">Raum</text>
+    <text x="850" y="322">Abluft</text>
+    <text x="526" y="410">Zuluft</text>
+    <text x="530" y="631" text-anchor="end">Fortluft</text>
+    <text x="560" y="738">Außenluft</text>
+    <text x="620" y="385">Lüftungsgerät</text>
+  </g>
+  <g stroke="#d9f9f4" stroke-width="2" fill="#102a43">
+    <circle cx="857" cy="445" r="26"/><circle cx="627" cy="450" r="26"/>
+    <circle cx="857" cy="612" r="26"/><circle cx="627" cy="595" r="26"/>
+  </g>
+  <g fill="#d9f9f4" font-size="20" font-weight="bold" text-anchor="middle">
+    <text x="857" y="452">T3</text><text x="627" y="457">T2</text>
+    <text x="857" y="619">T1</text><text x="627" y="602">T4</text>
+  </g>
+</svg>

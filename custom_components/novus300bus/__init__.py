@@ -10,6 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -99,13 +100,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _register_sub_devices(hass, entry)
+    _sync_bypass_entity(hass, entry)
+    _remove_obsolete_entities(hass)
     entry.async_on_unload(
         coordinator.async_add_listener(lambda: _register_sub_devices(hass, entry))
+    )
+    entry.async_on_unload(
+        coordinator.async_add_listener(lambda: _sync_bypass_entity(hass, entry))
     )
     entry.async_on_unload(
         coordinator.async_add_listener(lambda: _sync_settings_to_options(hass, entry))
     )
     return True
+
+
+def _remove_obsolete_entities(hass: HomeAssistant) -> None:
+    """Drop the installed-part binary sensors; they are fan attributes now."""
+    registry = er.async_get(hass)
+    for key in (
+        "bypass_present",
+        "reheater_present",
+        "ewt_present",
+        "defroster_present",
+        "brine_defroster_present",
+    ):
+        if entity_id := registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"novus300bus_{key}"
+        ):
+            registry.async_remove(entity_id)
+
+
+def _sync_bypass_entity(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Enable the bypass switch if the unit has a bypass, disable it if not.
+
+    Only a state set by the integration is changed; a user's choice is kept.
+    """
+    present = entry.runtime_data.bypass_present
+    if present is None:
+        return
+    registry = er.async_get(hass)
+    for key in ("bypass", "summer_ventilation"):
+        entity_id = registry.async_get_entity_id("switch", DOMAIN, f"novus300bus_{key}")
+        if entity_id is None or (reg := registry.async_get(entity_id)) is None:
+            continue
+        if present and reg.disabled_by is er.RegistryEntryDisabler.INTEGRATION:
+            registry.async_update_entity(entity_id, disabled_by=None)
+        elif not present and reg.disabled_by is None:
+            registry.async_update_entity(
+                entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION
+            )
 
 
 def _sync_settings_to_options(hass: HomeAssistant, entry: ConfigEntry) -> None:

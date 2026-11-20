@@ -120,7 +120,14 @@ class NovusBusFanEntity(CoordinatorEntity[NovusCoordinator], FanEntity):
         attributes: dict[str, Any] = {
             "ventilation_mode": data.get("ventilation_mode"),
             "original_levels": self.coordinator.temporary_settings(),
+            **self.coordinator.installed_parts,
         }
+        if data.get("ventilation_mode") == "automatic":
+            word = self.coordinator.data.get("param_63")
+            if isinstance(word, int):
+                attributes["automatic_type"] = (
+                    "sensor_automatic" if word & 0x08 else "time_automatic"
+                )
         if isinstance(setpoint := data.get("fan_setpoint"), float | int):
             attributes["bus_setpoint"] = setpoint
         if data.get("ventilation_mode") == "away":

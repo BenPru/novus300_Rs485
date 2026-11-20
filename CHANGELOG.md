@@ -2,6 +2,36 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.20
+
+### Highlights
+- **Automatable summer ventilation:** new `switch.novus300_summer_ventilation` replaces the activation checkbox in the options. It is offered only when the unit configuration confirms an installed bypass.
+- **Fan imbalance fine adjustment:** each of the three ventilation levels now has its own signed adjustment, −50 to +50 % in whole-percent steps, next to its speed setting.
+- **Dynamic second dashboard view:** the "Sensoren" view now uses a base diagram and separate equipment overlays, with temperatures at the sensor locations and a compact layout. Both views and the independent editable dashboard copy are now documented in English and German.
+
+### Added
+- Signed decoding, encoding, persistence and options synchronization for imbalance registers `0x31`, `0x32` and `0x33`. Positive level/imbalance changes and summer on/off frames have regression tests from panel captures; negative values and boundaries are tested with generated frames.
+- Summer activation changes only bit `0x80` in the known plant word `0x1B`. Parameter writes share a lock and installation changes merge against the latest word, preserving the summer flag.
+- Summer commands wait up to 15 seconds for matching bus feedback and raise an explicit error on missing confirmation or write failure, without an optimistic state change.
+- A summer-ventilation tile and automation examples; the existing bypass tile opens its details instead of attempting unsupported flap control.
+- Fan attributes for installed bypass, reheater, earth heat exchanger, defroster and brine defroster, plus the automatic subtype when known.
+- A structured `message_table` attribute and additional disabled-by-default diagnostic sensors for hardware configuration and system-status bits.
+
+### Changed and fixed
+- Bypass and summer switch entities are enabled/disabled from the plant flag as values arrive, preserving manual user disabling. Obsolete installed-part binary sensors are removed in favour of fan attributes.
+- Replaced `novus300-schema.svg` with `novus300-base.svg` and transparent reheater/EWT/brine/bypass/defroster layers. The overview keeps its airflow graphic; both views need no custom frontend cards.
+- Updated the earth-heat-exchanger installation labels to match the included installed-part mapping; filter reset is now a diagnostic button.
+- Unknown imbalance fields stay blank and are not silently written as zero when other settings are saved. The existing ordering rule applies to fan speeds only, not imbalance.
+- The general settings dialog now reports write failures instead of saving as if they succeeded. Bypass installation cannot be changed with an unknown plant word.
+- The bridge whitelist accepts only the new single-register imbalance writes in the supported signed range; CRC checks and restrictions on other registers remain intact.
+- English/German entity and dashboard documentation now distinguishes summer activation, bypass installation and actual flap feedback, and explains how to maintain YAML and editable UI dashboards separately.
+
+### Upgrade and validation notes
+- **Update the bridge script** on the serial host as well as the integration, restart the bridge service and Home Assistant, then update the dashboard YAML and any editable copy independently. Integration/HACS updates do not overwrite a UI dashboard.
+- Existing entity IDs remain stable. Automations using summer activation should use `switch.novus300_summer_ventilation`; installation and temperature thresholds remain in the options.
+- Validation uses bus-free protocol, bridge, coordinator, entity-registry and options tests, including malformed/range-rejected writes, signed limits, missing feedback and stale installation values.
+- **Direct bypass opening/closing is still not implemented.** Register `0x1A` is feedback, not a verified actuator command. Summer activation does not force the flap. Bus feedback is not hardware confirmation; physical flap movement was not tested.
+
 ## 2026.11.19
 
 ### Highlights

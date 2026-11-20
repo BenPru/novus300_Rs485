@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 900" font-family="sans-serif">
+  <g fill="none" stroke-width="19" stroke-linejoin="round"><path d="M120 702H236M315 702H350Q375 702 375 727V840Q375 865 345 865H100Q75 865 75 840V772M370 759H400" stroke="#43a047"/></g>
+  <circle cx="375" cy="759" r="8" fill="#d9f9f4"/>
+  <rect x="331" y="718" width="79" height="79" fill="none" stroke="#9fb3c8" stroke-width="2" stroke-dasharray="8 6"/>
+  <g fill="#d9f9f4"><text x="392" y="710" font-size="16">EWT-Klappe</text><text x="220" y="890" text-anchor="middle" font-size="22">Erdwärmetauscher</text></g>
+  <g fill="#102a43" stroke="#d9f9f4" stroke-width="2"><circle cx="95" cy="690" r="26"/><circle cx="210" cy="790" r="26"/></g>
+  <g fill="#d9f9f4" font-size="20" font-weight="bold" text-anchor="middle"><text x="95" y="697">T5</text><text x="210" y="797">T6</text></g>
+  <g fill="#9fb3c8" font-size="15" text-anchor="middle"><text x="95" y="732">t_aut</text><text x="210" y="832">t_sde</text></g>
+</svg>

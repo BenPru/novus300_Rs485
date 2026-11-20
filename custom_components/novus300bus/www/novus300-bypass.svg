@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 900" font-family="sans-serif">
+  <g fill="none" stroke-width="19" stroke-linejoin="round"><path d="M690 435V595Q690 608 670 616Q640 628 645 652Q650 680 690 690Q705 700 705 725V759" stroke="#43a047"/></g>
+  <circle cx="690" cy="759" r="8" fill="#d9f9f4"/>
+  <rect x="658" y="718" width="79" height="79" fill="none" stroke="#9fb3c8" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="718" y="708" fill="#d9f9f4" font-size="16">Bypass-Klappe</text>
+</svg>

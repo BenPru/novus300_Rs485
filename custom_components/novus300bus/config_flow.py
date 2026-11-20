@@ -41,6 +41,7 @@ from .const import (
     DEFAULT_FAN_LEVEL_2_PERCENTAGE,
     DEFAULT_FAN_LEVEL_3_PERCENTAGE,
     FAN_STAGE_KEYS,
+    FAN_IMBALANCE_KEYS,
     DEFAULT_PARITY,
     DEFAULT_SERIAL_PORT,
     DEFAULT_TINKERFORGE_HOST,
@@ -58,6 +59,7 @@ BUS_SETTING_KEYS = (
     CONF_FAN_LEVEL_3_PERCENTAGE,
     CONF_BOOST_DURATION_MINUTES,
     CONF_AWAY_DURATION_MINUTES,
+    *FAN_IMBALANCE_KEYS,
 )
 INT_KEYS = (*BUS_SETTING_KEYS, CONF_FILTER_INTERVAL_DAYS)
 
@@ -77,13 +79,13 @@ PERCENTAGE_KEYS = (
 PLANT_SELECTS = {
     "defroster": (0x1E, None, {"1": (1, "Elektro", "Electric"), "2": (2, "PTC", "PTC"), "3": (3, "Sole", "Brine")}),
     "reheater": (0x21, None, {"0": (0, "Keine", "None"), "1": (1, "Elektroheizregister", "Electric heater"), "3": (3, "Warmwasserheizregister", "Water heater")}),
-    "ewt": (0x24, None, {"0": (0, "Vorhanden", "Present"), "4": (4, "Nicht vorhanden", "Not present")}),
+    "ewt": (0x24, None, {"0": (0, "Nicht vorhanden", "Not present"), "4": (4, "Vorhanden", "Present")}),
     "automatic": (0x63, 0x08, {"time": (0, "Zeitautomatik", "Time automatic"), "sensor": (0x08, "Sensorautomatik", "Sensor automatic")}),
     "frost": (0x7B, None, {"0": (0, "Eco", "Eco"), "1": (1, "Sicher", "Safe"), "2": (2, "Feuchte WT", "Humidity HX")}),
 }
 RESOLVED_REGISTERS = {0x48, 0x56, 0x5C, 0x5F, 0x60, 0x61, 0x41, 0x42, 0x43, 0x47, 0x49, 0x4A, 0x4B, 0x4C, 0x5A, 0x63, 0x1B, 0x1E, 0x21, 0x24, 0x7B}
 # checkbox -> (register, bit mask, set bit means unchecked)
-PLANT_FLAGS = {"bypass": (0x1B, 0x04, True), "summer": (0x1B, 0x80, False)}
+PLANT_FLAGS = {"bypass": (0x1B, 0x04, True)}
 SELECT_DEFAULT_BASE = {0x63: 0x1F0}
 
 BYPASS_NUMBERS = (0x41, 0x42, 0x43, 0x49)
@@ -317,15 +319,15 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         german = self.hass.config.language.startswith("de")
         if not missing:
             return (
-                "Stufen und Zeiten wurden aus der Anlage gelesen."
+                "Stufen, Disbalance und Zeiten wurden aus der Anlage gelesen."
                 if german
-                else "Fan levels and durations were read from the unit."
+                else "Fan levels, imbalance and durations were read from the unit."
             )
         names = ", ".join(missing)
         return (
-            f"Noch nicht aus der Anlage gelesen (Bedienteil-Menü einmal öffnen): {names}. Hier gelten Ersatzwerte."
+            f"Noch nicht aus der Anlage gelesen (Bedienteil-Menü einmal öffnen): {names}. Unbekannte Disbalance bleibt leer; andere Felder zeigen Ersatzwerte."
             if german
-            else f"Not yet read from the unit (open the panel menu once): {names}. Fallback values are shown."
+            else f"Not yet read from the unit (open the panel menu once): {names}. Unknown imbalance stays blank; other fields show fallback values."
         )
 
     def _value(self, key: str, default: str | int | bool) -> str | int | bool:
@@ -363,9 +365,24 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         """Configure the bus and the unit's settings."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            for key in FAN_IMBALANCE_KEYS:
+                if key in user_input and user_input[key] is not None and (
+                    isinstance(user_input[key], bool)
+                    or not isinstance(user_input[key], int | float)
+                    or user_input[key] not in range(-50, 51)
+                ):
+                    errors[key] = "invalid_imbalance"
+            if errors:
+                return self.async_show_form(
+                    step_id="general",
+                    data_schema=self._general_schema(user_input),
+                    errors=errors,
+                    description_placeholders={"source": self._source_text([])},
+                )
             user_input = {
                 key: int(value) if key in INT_KEYS else value
                 for key, value in user_input.items()
+                if key not in FAN_IMBALANCE_KEYS or value is not None
             }
             levels = [user_input[k] for k in PERCENTAGE_KEYS]
             if not 17 <= levels[0] < levels[1] < levels[2] <= 100:
@@ -374,7 +391,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             if coordinator is not None and not errors:
                 try:
                     await coordinator.async_write_settings(
-                        {key: user_input[key] for key in BUS_SETTING_KEYS}
+                        {key: user_input[key] for key in BUS_SETTING_KEYS if key in user_input}
                     )
                     coordinator.clear_temporary_settings()
                     interval = user_input[CONF_FILTER_INTERVAL_DAYS]
@@ -382,9 +399,24 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                         await coordinator.async_set_filter_interval(interval)
                 except HomeAssistantError as err:
                     LOGGER.warning("Unable to write settings to the Novus: %s", err)
+                    errors["base"] = "write_failed"
             if not errors:
                 return self._save(user_input)
 
+        coordinator = getattr(self._config_entry, "runtime_data", None)
+        missing = (
+            [k for k in coordinator.settings_not_read() if k not in FAN_STAGE_KEYS]
+            if coordinator
+            else []
+        )
+        return self.async_show_form(
+            step_id="general",
+            data_schema=self._general_schema(user_input),
+            errors=errors,
+            description_placeholders={"source": self._source_text(missing)},
+        )
+
+    def _general_schema(self, user_input=None) -> vol.Schema:
         fields: dict = {
             vol.Required(
                 CONF_DAILY_TIME_SYNC,
@@ -408,22 +440,31 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             current = int(self._value(key, default))
             if key in PERCENTAGE_KEYS:
                 fields[vol.Required(key, default=current)] = _percentage_selector()
+                imbalance_key = FAN_IMBALANCE_KEYS[PERCENTAGE_KEYS.index(key)]
+                imbalance = self._unit().get(imbalance_key)
+                if user_input and imbalance_key in user_input:
+                    imbalance = user_input[imbalance_key]
+                elif imbalance is None:
+                    imbalance = self._config_entry.options.get(imbalance_key)
+                marker = (
+                    vol.Optional(imbalance_key, default=imbalance)
+                    if imbalance is not None
+                    else vol.Optional(imbalance_key)
+                )
+                fields[marker] = selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=-50,
+                        max=50,
+                        step=1,
+                        mode=selector.NumberSelectorMode.BOX,
+                        unit_of_measurement="%",
+                    )
+                )
             else:
                 fields[vol.Required(key, default=str(current))] = _setting_selector(
                     key, current
                 )
-        coordinator = getattr(self._config_entry, "runtime_data", None)
-        missing = (
-            [k for k in coordinator.settings_not_read() if k not in FAN_STAGE_KEYS]
-            if coordinator
-            else []
-        )
-        return self.async_show_form(
-            step_id="general",
-            data_schema=vol.Schema(fields),
-            errors=errors,
-            description_placeholders={"source": self._source_text(missing)},
-        )
+        return vol.Schema(fields)
 
     def _unit(self) -> dict:
         coordinator = getattr(self._config_entry, "runtime_data", None)
@@ -636,10 +677,9 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_bypass_form(self, user_input=None) -> FlowResult:
-        """Bypass installed and summer ventilation active (checkboxes).
+        """Bypass installation and temperature thresholds.
 
-        While the unit value is unknown (the panel has not sent it yet) the
-        checkboxes show assumed defaults and only a deviation from them is written.
+        Installation changes require a known unit word so unrelated flags survive.
         """
         data = self._unit()
         word = data.get("param_1b")
@@ -652,9 +692,12 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             changes: dict[int, int] = {}
             self._number_changes(BYPASS_NUMBERS, user_input, data, changes, errors)
-            value = word if known else 0x7B
+            value = word
             for name, (_, mask, inverted) in PLANT_FLAGS.items():
                 if name in user_input and bool(user_input[name]) != shown[name]:
+                    if not known:
+                        errors["base"] = "configuration_unknown"
+                        continue
                     on = bool(user_input[name]) != inverted
                     value = (value | mask) if on else (value & ~mask)
                     changes[0x1B] = value
@@ -675,9 +718,9 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         note = ""
         if not known:
             note = (
-                "**Aktueller Wert unbekannt** (das Bedienteil sendet ihn erst, wenn dort die Seite „Bypass“ bzw. „Sommerlüftung“ geöffnet wird). Die Haken zeigen nur Annahmen; geschrieben wird nur, wenn du einen Haken änderst.\n\n"
+                "**Aktueller Wert unbekannt** (am Bedienteil die Seite „Bypass“ öffnen). Die Installation kann erst nach Empfang des Anlagenwerts geändert werden.\n\n"
                 if german
-                else "**Current value unknown** (the panel only sends it when its bypass / summer ventilation page is opened). The checkboxes show assumptions only; something is written only if you change a checkbox.\n\n"
+                else "**Current value unknown** (open the bypass page on the panel). Installation can only be changed after the unit configuration has been received.\n\n"
             )
         return self.async_show_form(
             step_id="bypass_form",

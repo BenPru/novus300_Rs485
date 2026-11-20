@@ -98,13 +98,19 @@ views:
               color: "#ffffff"
               font-size: 16px
               font-weight: bold
-          - type: state-icon
-            entity: switch.novus300_bypass
-            style:
-              top: 78%
-              left: 50%
-              "--mdc-icon-size": 44px
-              color: "#ffffff"
+          - type: conditional
+            conditions:
+              - entity: fan.novus300
+                attribute: bypass_present
+                state_not: "false"
+            elements:
+              - type: state-icon
+                entity: switch.novus300_bypass
+                style:
+                  top: 78%
+                  left: 50%
+                  "--mdc-icon-size": 44px
+                  color: "#ffffff"
       - type: vertical-stack
         cards:
         - type: tile
@@ -144,6 +150,23 @@ views:
               entity: switch.novus300_bypass
               name: Bypass geöffnet
               color: orange
+              tap_action:
+                action: more-info
+              visibility:
+                - condition: state
+                  entity: fan.novus300
+                  attribute: bypass_present
+                  state_not: "false"
+            - type: tile
+              entity: switch.novus300_summer_ventilation
+              name: Sommerlüftung
+              visibility:
+                - condition: state
+                  entity: switch.novus300_summer_ventilation
+                  state_not: unavailable
+                - condition: state
+                  entity: switch.novus300_summer_ventilation
+                  state_not: unknown
         - type: tile
           entity: switch.novus300_power
           name: Betriebsstatus
@@ -220,6 +243,10 @@ views:
             name: Lüftungsmodus
           - type: attribute
             entity: fan.novus300
+            attribute: automatic_type
+            name: Automatik-Art
+          - type: attribute
+            entity: fan.novus300
             attribute: bus_setpoint
             name: Sollwert vom Bus
             suffix: "%"
@@ -242,39 +269,25 @@ views:
             entity: switch.novus300_power
             attribute: raw_value
             name: Rohwert
-          - type: section
-            label: Bypass
-          - type: attribute
-            entity: switch.novus300_bypass
-            attribute: air_path
-            name: Luftweg
-          - type: attribute
-            entity: switch.novus300_bypass
-            attribute: raw_value
-            name: Statuswort
-          - type: section
-            label: Meldung
-          - type: attribute
-            entity: sensor.novus300_message
-            attribute: code
-            name: Code
-          - type: attribute
-            entity: sensor.novus300_message
-            attribute: occurred_at
-            name: Zeitpunkt
-            format: datetime
-          - type: attribute
-            entity: sensor.novus300_message
-            attribute: previous_message
-            name: Vorherige Meldung
-          - type: attribute
-            entity: sensor.novus300_message
-            attribute: previous_message_2
-            name: Vorherige Meldung 2
-          - type: attribute
-            entity: sensor.novus300_message
-            attribute: previous_message_3
-            name: Vorherige Meldung 3
+      - type: markdown
+        title: Meldungen
+        content: |
+          {% set rows = state_attr('sensor.novus300_message', 'message_table') or [] %}
+          | | Zeitpunkt | Code | Meldung | Hinweis |
+          |---|---|---|---|---|
+          {% for r in rows -%}
+          | {{ r.row }} | {{ as_datetime(r.time).strftime('%d.%m.%Y %H:%M:%S') if r.time else '–' }} | {{ r.code if r.code is not none else '–' }} | {{ r.message }} | {{ r.hint or '–' }} |
+          {% endfor %}
+      - type: markdown
+        title: Bauteile
+        content: |
+          {% set f = 'fan.novus300' %}
+          {% macro vorhanden(a) %}{% set v = state_attr(f, a) %}{{ 'vorhanden' if v == true else 'nicht vorhanden' if v == false else 'unbekannt' }}{% endmacro %}
+          **Bypass:** {{ vorhanden('bypass_present') }}{% if state_attr(f, 'bypass_present') == true and states('switch.novus300_bypass') in ('on', 'off') %}, {{ 'auf' if is_state('switch.novus300_bypass', 'on') else 'zu' }} (Luftweg: {{ state_attr('switch.novus300_bypass', 'air_path') }}, Statuswort: {{ state_attr('switch.novus300_bypass', 'raw_value') }}){% endif %}<br>
+          **Nachheizregister:** {{ vorhanden('reheater_present') }}<br>
+          **Erdwärmetauscher (EWT-Klappe):** {{ vorhanden('ewt_present') }}<br>
+          **Defroster:** {{ vorhanden('defroster_present') }}<br>
+          **Sole-Defroster:** {{ vorhanden('brine_defroster_present') }}
       - type: markdown
         title: Statuswechsel
         content: |
@@ -305,64 +318,265 @@ views:
           [Einstellungen ändern](/config/integrations/integration/novus300bus)
   - title: Sensoren
     path: novus300-sensoren
-    panel: true
+    type: sections
+    max_columns: 2
     icon: mdi:thermometer
-    cards:
+    sections:
+    - type: grid
+      cards:
       - type: picture-elements
-        image: /novus300bus/novus300-schema.svg?v=2
+        image: /novus300bus/novus300-base.svg?v=3
         elements:
-          - type: state-label
-            entity: sensor.novus300_extract_air_temperature
+        - type: state-label
+          entity: sensor.novus300_extract_air_temperature
+          style:
+            left: 85.7%
+            top: 54.5%
+            color: '#ffffff'
+            background-color: '#0b6fa8'
+            padding: 2px 6px
+            border-radius: 4px
+            font-size: clamp(6px, 1.3vw, 13px)
+            font-weight: bold
+        - type: state-label
+          entity: sensor.novus300_supply_air_temperature
+          style:
+            left: 62.7%
+            top: 55%
+            color: '#ffffff'
+            background-color: '#b3302d'
+            padding: 2px 6px
+            border-radius: 4px
+            font-size: clamp(6px, 1.3vw, 13px)
+            font-weight: bold
+        - type: state-label
+          entity: sensor.novus300_outdoor_air_temperature
+          style:
+            left: 85.7%
+            top: 73%
+            color: '#ffffff'
+            background-color: '#2e7d32'
+            padding: 2px 6px
+            border-radius: 4px
+            font-size: clamp(6px, 1.3vw, 13px)
+            font-weight: bold
+        - type: state-label
+          entity: sensor.novus300_exhaust_air_temperature
+          style:
+            left: 62.7%
+            top: 71.3%
+            color: '#000000'
+            background-color: '#ffd54f'
+            padding: 2px 6px
+            border-radius: 4px
+            font-size: clamp(6px, 1.3vw, 13px)
+            font-weight: bold
+        - type: conditional
+          conditions:
+          - entity: fan.novus300
+            attribute: reheater_present
+            state_not: 'false'
+          elements:
+          - type: image
+            image: /novus300bus/novus300-reheater.svg?v=3
             style:
-              left: 85.7%
-              top: 54.5%
-              color: "#ffffff"
-              background-color: "#0b6fa8"
-              padding: 3px 12px
-              border-radius: 8px
-              font-size: 26px
-              font-weight: bold
-          - type: state-label
-            entity: sensor.novus300_supply_air_temperature
+              left: 50%
+              top: 50%
+              width: 100%
+              pointer-events: none
+        - type: conditional
+          conditions:
+          - entity: fan.novus300
+            attribute: ewt_present
+            state_not: 'false'
+          elements:
+          - type: image
+            image: /novus300bus/novus300-ewt.svg?v=3
             style:
-              left: 62.7%
-              top: 55%
-              color: "#ffffff"
-              background-color: "#b3302d"
-              padding: 3px 12px
-              border-radius: 8px
-              font-size: 26px
-              font-weight: bold
-          - type: state-label
-            entity: sensor.novus300_outdoor_air_temperature
+              left: 50%
+              top: 50%
+              width: 100%
+              pointer-events: none
+        - type: conditional
+          conditions:
+          - entity: fan.novus300
+            attribute: ewt_present
+            state_not: 'false'
+          - entity: fan.novus300
+            attribute: brine_defroster_present
+            state: 'true'
+          elements:
+          - type: image
+            image: /novus300bus/novus300-brine.svg?v=3
             style:
-              left: 85.7%
-              top: 73%
-              color: "#ffffff"
-              background-color: "#2e7d32"
-              padding: 3px 12px
-              border-radius: 8px
-              font-size: 26px
-              font-weight: bold
-          - type: state-label
-            entity: sensor.novus300_exhaust_air_temperature
+              left: 50%
+              top: 50%
+              width: 100%
+              pointer-events: none
+        - type: conditional
+          conditions:
+          - entity: fan.novus300
+            attribute: bypass_present
+            state_not: 'false'
+          elements:
+          - type: image
+            image: /novus300bus/novus300-bypass.svg?v=3
             style:
-              left: 62.7%
-              top: 71.3%
-              color: "#000000"
-              background-color: "#ffd54f"
-              padding: 3px 12px
-              border-radius: 8px
-              font-size: 26px
-              font-weight: bold
-          - type: state-label
-            entity: switch.novus300_bypass
+              left: 50%
+              top: 50%
+              width: 100%
+              pointer-events: none
+        - type: conditional
+          conditions:
+          - entity: fan.novus300
+            attribute: defroster_present
+            state_not: 'false'
+          elements:
+          - type: image
+            image: /novus300bus/novus300-defroster.svg?v=3
+            style:
+              left: 50%
+              top: 50%
+              width: 100%
+              pointer-events: none
+        - type: conditional
+          conditions:
+          - entity: fan.novus300
+            attribute: bypass_present
+            state_not: 'false'
+          - entity: switch.novus300_bypass
+            state: 'on'
+          elements:
+          - type: label
+            text: 'Bypass: Auf'
             style:
               left: 69.8%
               top: 90.5%
-              color: "#ffffff"
-              background-color: "#334e68"
-              padding: 3px 12px
-              border-radius: 8px
-              font-size: 26px
+              color: '#ffffff'
+              background-color: '#334e68'
+              padding: 2px 6px
+              border-radius: 4px
+              font-size: clamp(6px, 1.3vw, 13px)
               font-weight: bold
+        - type: conditional
+          conditions:
+          - entity: fan.novus300
+            attribute: bypass_present
+            state_not: 'false'
+          - entity: switch.novus300_bypass
+            state: 'off'
+          elements:
+          - type: label
+            text: 'Bypass: Zu'
+            style:
+              left: 69.8%
+              top: 90.5%
+              color: '#ffffff'
+              background-color: '#334e68'
+              padding: 2px 6px
+              border-radius: 4px
+              font-size: clamp(6px, 1.3vw, 13px)
+              font-weight: bold
+        - type: state-label
+          entity: select.novus300_ventilation_mode
+          style:
+            left: 78.3%
+            top: 56%
+            color: '#ffffff'
+            font-size: clamp(6px, 1.3vw, 13px)
+            font-weight: bold
+            white-space: nowrap
+        - type: state-label
+          entity: fan.novus300
+          style:
+            left: 78.3%
+            top: 61.5%
+            color: '#ffffff'
+            font-size: clamp(6px, 1.3vw, 13px)
+            font-weight: bold
+            white-space: nowrap
+          attribute: percentage
+          suffix: ' %'
+        - type: conditional
+          conditions:
+          - entity: sensor.novus300_message
+            state: Keine Meldung
+          elements:
+          - type: icon
+            icon: mdi:check-circle
+            entity: sensor.novus300_message
+            tap_action:
+              action: more-info
+            style:
+              left: 5%
+              top: 8%
+              color: '#66bb6a'
+              --mdc-icon-size: clamp(14px, 2.6vw, 28px)
+        - type: conditional
+          conditions:
+          - entity: sensor.novus300_message
+            state_not: Keine Meldung
+          elements:
+          - type: icon
+            icon: mdi:alert
+            entity: sensor.novus300_message
+            tap_action:
+              action: more-info
+            style:
+              left: 5%
+              top: 8%
+              color: '#ef5350'
+              --mdc-icon-size: clamp(14px, 2.6vw, 28px)
+        - type: state-label
+          entity: sensor.novus300_message
+          style:
+            left: 20%
+            top: 8%
+            color: '#ffffff'
+            font-size: clamp(6px, 1.3vw, 13px)
+            font-weight: bold
+            white-space: nowrap
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: sensor.novus300_filter_time_remaining
+            below: 1
+          elements:
+          - type: icon
+            icon: mdi:air-filter
+            entity: sensor.novus300_filter_time_remaining
+            tap_action:
+              action: more-info
+            style:
+              left: 5%
+              top: 17%
+              color: '#ef5350'
+              --mdc-icon-size: clamp(14px, 2.6vw, 28px)
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: sensor.novus300_filter_time_remaining
+            above: 0.99
+          elements:
+          - type: icon
+            icon: mdi:air-filter
+            entity: sensor.novus300_filter_time_remaining
+            tap_action:
+              action: more-info
+            style:
+              left: 5%
+              top: 17%
+              color: '#8ad9f8'
+              --mdc-icon-size: clamp(14px, 2.6vw, 28px)
+        - type: state-label
+          entity: sensor.novus300_filter_time_remaining
+          style:
+            left: 20%
+            top: 17%
+            color: '#ffffff'
+            font-size: clamp(6px, 1.3vw, 13px)
+            font-weight: bold
+            white-space: nowrap
+        grid_options:
+          columns: full
+      column_span: 2

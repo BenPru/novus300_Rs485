@@ -140,7 +140,7 @@ is still in boost.
 
 ## Options (settings dialog)
 
-Open **Settings → Devices & services → Paul Novus 300 RS-485 Bus → gear icon**. All fields are in one dialog; a note at the top lists the values the unit has not broadcast yet (they still show defaults). Saving writes the unit settings to the unit (bridge with command whitelist required).
+Open **Settings → Devices & services → Paul Novus 300 RS-485 Bus → gear icon**, then choose the settings group. General settings list values the unit has not broadcast yet. Saving writes unit settings over the bridge (command whitelist required).
 
 | Field | What it does | Values / default |
 |---|---|---|
@@ -149,6 +149,7 @@ Open **Settings → Devices & services → Paul Novus 300 RS-485 Bus → gear ic
 | **Parity** | Bus parity. | none (the bus uses MARK parity; the bridge handles it) |
 | **Synchronize time daily** | Sets the unit's date and time to Home Assistant's time every day at 03:00 and checks the drift. | on |
 | **Ventilation level 1 / 2 / 3 (%)** | Fan percentage of the three levels, written to the unit. Must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %, otherwise the dialog shows an error. Shows the original value even while a percentage temporarily overrides level 1 or 3. | 35 / 60 / 90 % |
+| **Level 1 / 2 / 3: fan imbalance (%)** | Independent fine adjustment alongside each level. Signed whole percentages; values are remembered from the bus. Unknown values stay blank and are not written unless entered. | −50 to +50 %, step 1 |
 | **Boost duration** | How long the boost level runs after `button.novus300_boost`. Dropdown in 5-minute steps (5–120). | 15 min |
 | **Away: ventilation time (min/h)** | Ventilation minutes per hour at level 1 in away mode. | 15 / 30 / 45, default 30 |
 | **Show levels instead of automatic when the fan is set by percentage** | Off: the mode select stays on *Automatic* while `fan.novus300` sets a percentage. On: it shows level 1 or 3. | off |
@@ -165,17 +166,18 @@ Notes:
 ## Unit settings
 
 These values live in the unit. The ventilation levels are plain number fields
-(0–100 %, any whole number); the durations are dropdowns:
+(17–100 %, increasing whole numbers); the durations are dropdowns:
 
 | Setting | Unit step | Default |
 |---|---|---:|
-| Ventilation level 1 / 2 / 3 | any value 0–100 % | 35 / 60 / 90 % |
+| Ventilation level 1 / 2 / 3 | whole percentages, 17–100 % | 35 / 60 / 90 % |
+| Fan imbalance level 1 / 2 / 3 | −50 to +50 %, step 1 | read from unit; blank if unknown |
 | Boost duration | 5 min | 15 min (factory) |
 | Away: ventilation time | 15 / 30 / 45 min/h | 30 min/h |
 
 The filter interval (30–180 days, 10-day steps) is a dropdown in the options; saving writes it to the unit. `button.novus300_filter_reset` and the `novus300bus.reset_filter` service reset the filter runtime (both registers set to the configured interval).
 
-Saving the options writes all five values to the unit over the RS-485 bridge.
+Saving general settings writes the level/duration values and supplied imbalance values over the RS-485 bridge. Update `tools/novus300_serial_bridge.py` on the bridge host for imbalance writes; the whitelist still rejects unrelated registers and invalid ranges.
 The unit broadcasts them only rarely (one register every few minutes in a slow rotation, not right at start-up) and they are stored in the options automatically once seen; the integration remembers the values last
 seen on the bus (when saved on the panel) and offers them as defaults. Boost and
 away have no percentage on the panel. Boost has a duration; away is the
@@ -184,6 +186,12 @@ ventilation time per hour (min/h) at level 1 for moisture protection. `fan.novus
 for the configured **Boost duration**. Standby and boost/away show the raw bus
 value for the fan setpoint.
 
+### Summer ventilation and bypass
+
+Summer ventilation activation is now `switch.novus300_summer_ventilation`, not a checkbox in the options. It is offered only with a confirmed installed bypass; manual entity disabling is respected. `switch.turn_on` / `switch.turn_off` can be used in automations. Only bit `0x80` in the known plant configuration is changed; unknown configuration or missing bus confirmation produces an error rather than a successful-looking state.
+
+This enables the unit's summer-ventilation function; it **does not force the bypass flap open or closed**. `switch.novus300_bypass` remains read-only feedback. A verified direct actuation command is still missing, and physical flap movement has not been tested. Bypass installation and temperature thresholds remain in the options.
+
 ## Entities
 
 A complete list with all attributes: [docs/ENTITIES.md](docs/ENTITIES.md).
@@ -191,6 +199,8 @@ A complete list with all attributes: [docs/ENTITIES.md](docs/ENTITIES.md).
 ### Dashboard
 
 [`dashboards/novus300.yaml`](dashboards/novus300.yaml) is a ready-made dashboard (standard cards only, including a "Details (Attribute)" card and the status-change list). The graphic is served by the integration itself (at `/novus300bus/novus300-airflow.svg`); nothing has to be copied to `config/www/`. In short: create a new dashboard → raw configuration editor → paste the file's content. **Detailed step-by-step guide (variants, checks, troubleshooting): [docs/DASHBOARD.md](docs/DASHBOARD.md).**
+
+It includes **Übersicht** (controls and airflow) and **Sensoren** (second plant diagram with sensor positions and equipment-dependent overlays). The guide also explains a second **editable UI dashboard** alongside the YAML dashboard and why both copies need updating separately.
 
 ![Dashboard overview](docs/images/dashboard.png)
 
@@ -250,6 +260,20 @@ automation:
       - action: notify.notify
         data:
           message: "Novus 300: {{ trigger.to_state.state }}"
+
+# Activate summer ventilation by schedule (only with a confirmed bypass)
+  - alias: "Novus: summer ventilation in the evening"
+    triggers:
+      - trigger: time
+        at: "21:00:00"
+    conditions:
+      - condition: state
+        entity_id: switch.novus300_summer_ventilation
+        state: "off"
+    actions:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.novus300_summer_ventilation
 ```
 
 After changing the filter, press `button.novus300_filter_reset` (or call `novus300bus.reset_filter`).

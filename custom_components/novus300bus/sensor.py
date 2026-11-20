@@ -191,6 +191,18 @@ SENSORS = (
         SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    NovusSensorDescription(
+        "param_25",
+        "Hardware-Konfigurations-ID",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_default=False,
+    ),
+    NovusSensorDescription(
+        "param_44",
+        "Systemstatus-Bits",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_default=False,
+    ),
 )
 
 
@@ -345,6 +357,30 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
             names = ("previous_message", "previous_message_2", "previous_message_3")
             for name, entry in zip(names, self.coordinator.message_log(), strict=False):
                 attributes[name] = describe_message(entry)
+            rows = [
+                {
+                    "row": "Aktuell",
+                    "time": attributes.get("occurred_at", ""),
+                    "code": attributes["code"],
+                    "message": self.native_value,
+                    "hint": attributes.get("hint", ""),
+                }
+            ]
+            for number, entry in enumerate(self.coordinator.message_log(), 1):
+                code = int(entry["code"])
+                key = MESSAGES.get(code, "")
+                rows.append(
+                    {
+                        "row": "Vorher" if number == 1 else f"Vorher {number}",
+                        "time": datetime.fromisoformat(str(entry["time"])).isoformat(
+                            timespec="seconds"
+                        ),
+                        "code": code,
+                        "message": MESSAGE_TEXTS.get(key, f"Meldung {code}"),
+                        "hint": MESSAGE_INFO.get(key, ("", ""))[1],
+                    }
+                )
+            attributes["message_table"] = rows
             attributes["observed"] = self.coordinator.message_history()
             attributes["status_events"] = [
                 f"{datetime.fromisoformat(event['time']):%d.%m.%Y %H:%M:%S} · "

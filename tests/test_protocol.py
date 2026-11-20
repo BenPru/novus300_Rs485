@@ -136,7 +136,11 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(
             readings,
             [
-                {"fan_level_1_percentage": 35, "register_62": 11},
+                {
+                    "fan_level_1_percentage": 35,
+                    "fan_level_1_imbalance": 0,
+                    "register_62": 11,
+                },
                 {"boost_duration_minutes": 20},
                 {"away_duration_minutes": 30},
             ],
@@ -155,6 +159,46 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(frame.hex(), "01008503b28036002f")
         readings = NovusFrameParser().feed(frame)
         self.assertEqual(readings, [{"fan_stage_3_percentage": 47}])
+
+    def test_decodes_captured_fan_imbalance_frames(self):
+        readings = NovusFrameParser().feed(
+            bytes.fromhex("0100850966a22e001531000162000b")
+            + bytes.fromhex("01008506df252f003d320001")
+            + bytes.fromhex("01008506a9f930004c330001")
+        )
+        self.assertEqual(
+            readings,
+            [
+                {
+                    "fan_level_1_percentage": 21,
+                    "fan_level_1_imbalance": 1,
+                    "register_62": 11,
+                },
+                {"fan_level_2_percentage": 61, "fan_level_2_imbalance": 1},
+                {"fan_level_3_percentage": 76, "fan_level_3_imbalance": 1},
+            ],
+        )
+
+    def test_signed_imbalance_writes_and_limits(self):
+        for level in range(1, 4):
+            key = f"fan_level_{level}_imbalance"
+            for value in (-50, -1, 0, 1, 50):
+                with self.subTest(level=level, value=value):
+                    frame = build_setting_frame(key, value)
+                    self.assertEqual(frame[6:], bytes((0x30 + level, 0, value & 0xFF)))
+                    self.assertEqual(NovusFrameParser().feed(frame), [{key: value}])
+            for invalid in (-51, 51, 1.5, True):
+                with self.subTest(level=level, invalid=invalid):
+                    with self.assertRaises(ValueError):
+                        build_setting_frame(key, invalid)
+
+    def test_summer_flag_frames_match_capture(self):
+        for value, frame in (
+            (0xFB, "0100850477931b00fb00"),
+            (0x7B, "01008504ef881b007b00"),
+        ):
+            self.assertEqual(build_select_frame(0x1B, value).hex(), frame)
+            self.assertEqual(NovusFrameParser().feed(bytes.fromhex(frame)), [{"param_1b": value}])
 
     def test_decodes_startup_parameter_block(self):
         from custom_components.novus300bus.protocol import _decode_registers

@@ -110,6 +110,7 @@ class NovusFilterResetButton(ButtonEntity):
     _attr_translation_key = "filter_reset"
     _attr_unique_id = "novus300bus_filter_reset"
     _attr_icon = "mdi:air-filter"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: NovusCoordinator) -> None:
         """Initialize the filter reset button."""

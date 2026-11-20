@@ -2,6 +2,36 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.20
+
+### Highlights
+- **Automatisierbare Sommerlüftung:** `switch.novus300_summer_ventilation` ersetzt die Aktivierungs-Checkbox in den Optionen. Der Schalter wird nur angeboten, wenn die Anlagenkonfiguration einen vorhandenen Bypass bestätigt.
+- **Disbalance-Feineinstellung:** Jede der drei Lüftungsstufen erhält direkt neben dem Prozentwert eine eigene Einstellung von −50 bis +50 % in ganzen Prozentschritten.
+- **Dynamische zweite Dashboard-Ansicht:** „Sensoren“ nutzt ein Basisschema mit separaten Ausstattungsebenen, Temperaturen an den Sensorpositionen und kompakter Darstellung. Beide Ansichten und die unabhängige editierbare Dashboard-Kopie sind jetzt deutsch und englisch dokumentiert.
+
+### Neu
+- Vorzeichenrichtige Auswertung, Codierung, Speicherung und Optionsübernahme der Disbalance-Register `0x31`, `0x32` und `0x33`. Positive Stufen-/Disbalance-Änderungen und Sommerlüftung An/Aus sind mit Panel-Mitschnitten getestet; negative Werte und Grenzen mit erzeugten Frames.
+- Sommeraktivierung ändert ausschließlich Bit `0x80` des bekannten Anlagenworts `0x1B`. Parameterschreiben nutzt eine gemeinsame Sperre; Installationsänderungen werden mit dem aktuellen Wort zusammengeführt und erhalten das Sommerflag.
+- Sommerbefehle warten bis zu 15 Sekunden auf passende Bus-Rückmeldung. Fehlende Bestätigung und Schreibfehler werden ausdrücklich gemeldet; keine optimistische Zustandsänderung.
+- Sommerlüftungs-Kachel und Automationsbeispiele; die bestehende Bypass-Kachel öffnet Details statt einen nicht unterstützten Stellbefehl zu versuchen.
+- Lüfterattribute für vorhandenen Bypass, Nachheizung, EWT, Defroster und Sole-Defroster sowie den bekannten Automatik-Untertyp.
+- Strukturiertes Attribut `message_table` und zusätzliche, standardmäßig deaktivierte Diagnosesensoren für Hardware-Konfiguration und Systemstatus-Bits.
+
+### Geändert und behoben
+- Bypass- und Sommerschalter werden anhand eintreffender Anlagenflags aktiviert/deaktiviert; manuelles Deaktivieren bleibt erhalten. Alte Ausstattungs-Binärsensoren werden zugunsten von Lüfterattributen entfernt.
+- `novus300-schema.svg` durch `novus300-base.svg` und transparente Nachheizungs-/EWT-/Sole-/Bypass-/Defroster-Ebenen ersetzt. Die Übersicht behält ihre Luftstromgrafik; beide Ansichten benötigen keine Zusatzkarten.
+- EWT-Installationsbeschriftungen an die enthaltene Ausstattungsauswertung angepasst; Filter-Reset ist jetzt ein Diagnosebutton.
+- Unbekannte Disbalance bleibt leer und wird beim Speichern anderer Einstellungen nicht stillschweigend mit null überschrieben. Die bestehende aufsteigende Stufenprüfung gilt nur für Lüfterprozente.
+- Der allgemeine Einstellungsdialog meldet Schreibfehler, statt vermeintlich erfolgreich zu speichern. Ohne bekanntes Anlagenwort kann die Bypass-Installation nicht geändert werden.
+- Die Bridge-Whitelist erlaubt nur die neuen Einzelregister-Disbalancebefehle im unterstützten signed Bereich. CRC-Prüfung und Sperren anderer Register bleiben erhalten.
+- Entitäts- und Dashboard-Dokumentation unterscheiden Sommeraktivierung, Bypass-Installation und tatsächliche Klappenrückmeldung; YAML- und editierbare UI-Kopie einschließlich separater Aktualisierung sind beschrieben.
+
+### Update- und Prüfhinweise
+- **Bridge-Skript ebenfalls aktualisieren**, Bridge-Dienst und Home Assistant neu starten; Dashboard-YAML und editierbare Kopien separat aktualisieren. Integrations-/HACS-Updates überschreiben kein UI-Dashboard.
+- Bestehende Entity-IDs bleiben stabil. Sommeraktivierungs-Automationen verwenden `switch.novus300_summer_ventilation`; Installation und Temperaturschwellen bleiben in den Optionen.
+- Busfreie Tests prüfen Protokoll, Bridge, Coordinator, Entitätsverwaltung und Optionen einschließlich verworfener Frames/Werte, signed Grenzen, fehlender Rückmeldung und veralteter Installationswerte.
+- **Direktes Bypass-Öffnen/Schließen bleibt offen.** Register `0x1A` ist eine Rückmeldung, kein belegter Stellbefehl. Sommeraktivierung erzwingt keine Klappenstellung. Bus-Rückmeldung ist keine Hardwarebestätigung; physische Klappenbewegung wurde nicht getestet.
+
 ## 2026.11.19
 
 ### Highlights

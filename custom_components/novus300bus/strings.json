@@ -71,6 +71,9 @@
           "fan_level_1_percentage": "Ventilation level 1 (%)",
           "fan_level_2_percentage": "Ventilation level 2 (%)",
           "fan_level_3_percentage": "Ventilation level 3 (%)",
+          "fan_level_1_imbalance": "Level 1: fan imbalance (%)",
+          "fan_level_2_imbalance": "Level 2: fan imbalance (%)",
+          "fan_level_3_imbalance": "Level 3: fan imbalance (%)",
           "boost_duration_minutes": "Boost duration",
           "away_duration_minutes": "Away: ventilation time (min/h)",
           "show_fan_levels": "Show levels instead of automatic when the fan is set by percentage",
@@ -100,10 +103,9 @@
       },
       "bypass_form": {
         "title": "Bypass and summer ventilation",
-        "description": "{state}The temperatures also apply to summer ventilation without a bypass (upper threshold = temperature, 'closed below' = inactive below). Without a bypass the lower threshold has no effect.",
+        "description": "{state}Activate summer ventilation using the entity switch (only with a confirmed bypass). Installation and temperature thresholds stay here; neither setting forces the flap open or closed.",
         "data": {
           "bypass": "Bypass installed",
-          "summer": "Summer ventilation active",
           "p41": "Upper threshold / summer ventilation temperature",
           "p42": "Lower threshold",
           "p43": "Hysteresis",
@@ -143,7 +145,9 @@
       "levels_order": "Levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %.",
       "not_loaded": "Not connected to the bus.",
       "write_failed": "Writing to the unit failed.",
-      "invalid_number": "Enter a value with one decimal within the allowed range (hysteresis in steps of 0.5)."
+      "invalid_number": "Enter a value with one decimal within the allowed range (hysteresis in steps of 0.5).",
+      "invalid_imbalance": "Enter a whole percentage from -50 to 50.",
+      "configuration_unknown": "The unit configuration has not been received. Open the bypass page on the panel first."
     }
   },
   "entity": {
@@ -190,6 +194,12 @@
       },
       "filter_time_remaining": {
         "name": "Filter remaining time"
+      },
+      "param_25": {
+        "name": "Hardware configuration ID"
+      },
+      "param_44": {
+        "name": "System status bits"
       }
     },
     "switch": {
@@ -198,6 +208,9 @@
       },
       "bypass": {
         "name": "Bypass open"
+      },
+      "summer_ventilation": {
+        "name": "Summer ventilation active"
       }
     },
     "fan": {

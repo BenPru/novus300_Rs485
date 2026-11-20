@@ -13,9 +13,13 @@ SETTING_REGISTERS = {
     0x2E: "fan_level_1_percentage",
     0x2F: "fan_level_2_percentage",
     0x30: "fan_level_3_percentage",
+    0x31: "fan_level_1_imbalance",
+    0x32: "fan_level_2_imbalance",
+    0x33: "fan_level_3_imbalance",
     0x3B: "boost_duration_minutes",
     0x3C: "away_duration_minutes",
 }
+IMBALANCE_REGISTERS = (0x31, 0x32, 0x33)
 
 # Seven additional fan stages (%), announced in the unit's start-up dump.
 FAN_STAGE_REGISTERS = {
@@ -245,7 +249,14 @@ def build_filter_reset_frame(days: int) -> bytes:
 def build_setting_frame(key: str, value: int) -> bytes:
     """Return the panel frame that stores one menu setting in the unit."""
     register = next(reg for reg, name in SETTING_REGISTERS.items() if name == key)
-    return _build_register_write(bytes((register, 0x00, value)))
+    if register in IMBALANCE_REGISTERS and (
+        isinstance(value, bool) or not isinstance(value, int) or not -50 <= value <= 50
+    ):
+        raise ValueError(f"Invalid fan imbalance: {value}")
+    return _build_register_write(
+        bytes((register, 0x00))
+        + value.to_bytes(1, "little", signed=register in IMBALANCE_REGISTERS)
+    )
 
 
 # Writable unit parameters, raw limits in 0.1 degC (verified against the panel menus).
@@ -373,7 +384,9 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
                 raw, "little", signed=len(raw) == 2
             )
         elif register in SETTING_REGISTERS:
-            readings[SETTING_REGISTERS[register]] = raw[0]
+            readings[SETTING_REGISTERS[register]] = int.from_bytes(
+                raw, "little", signed=register in IMBALANCE_REGISTERS
+            )
         elif register in COUNTER_REGISTERS:
             readings[COUNTER_REGISTERS[register]] = _duration_seconds(raw)
     for slot, parts in log.items():
