@@ -149,7 +149,7 @@ Open **Settings → Devices & services → Paul Novus 300 RS-485 Bus → gear ic
 | **Parity** | Bus parity. | none (the bus uses MARK parity; the bridge handles it) |
 | **Synchronize time daily** | Sets the unit's date and time to Home Assistant's time every day at 03:00 and checks the drift. | on |
 | **Ventilation level 1 / 2 / 3 (%)** | Fan percentage of the three levels, written to the unit. Must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %, otherwise the dialog shows an error. Shows the original value even while a percentage temporarily overrides level 1 or 3. | 35 / 60 / 90 % |
-| **Level 1 / 2 / 3: fan imbalance (%)** | Independent fine adjustment alongside each level. Signed whole percentages; values are remembered from the bus. Unknown values stay blank and are not written unless entered. | −50 to +50 %, step 1 |
+| **Level 1 / 2 / 3: fan imbalance (%)** | Independent fine adjustment grouped with each level. Values are remembered from the bus; unknown values stay blank and are not written unless entered. | −50 to +50 %, step 0.5 |
 | **Boost duration** | How long the boost level runs after `button.novus300_boost`. Dropdown in 5-minute steps (5–120). | 15 min |
 | **Away: ventilation time (min/h)** | Ventilation minutes per hour at level 1 in away mode. | 15 / 30 / 45, default 30 |
 | **Show levels instead of automatic when the fan is set by percentage** | Off: the mode select stays on *Automatic* while `fan.novus300` sets a percentage. On: it shows level 1 or 3. | off |
@@ -171,7 +171,7 @@ These values live in the unit. The ventilation levels are plain number fields
 | Setting | Unit step | Default |
 |---|---|---:|
 | Ventilation level 1 / 2 / 3 | whole percentages, 17–100 % | 35 / 60 / 90 % |
-| Fan imbalance level 1 / 2 / 3 | −50 to +50 %, step 1 | read from unit; blank if unknown |
+| Fan imbalance level 1 / 2 / 3 | −50 to +50 %, step 0.5 | read from unit; blank if unknown |
 | Boost duration | 5 min | 15 min (factory) |
 | Away: ventilation time | 15 / 30 / 45 min/h | 30 min/h |
 

@@ -103,6 +103,15 @@ class SummerControlTest(unittest.IsolatedAsyncioTestCase):
             )
         co._async_send.assert_not_awaited()
 
+    async def test_half_percent_is_written_and_remembered_without_truncation(self):
+        co = coordinator()
+        with patch("custom_components.novus300bus.coordinator.asyncio.sleep", new=AsyncMock()):
+            await co.async_write_settings({"fan_level_1_imbalance": -0.5})
+        self.assertEqual(co._async_send.await_args.args[0][8:], b"\xff")
+        self.assertEqual(co.setting_value("fan_level_1_imbalance"), -0.5)
+        self.assertEqual(co.settings_from_bus()["fan_level_1_imbalance"], -0.5)
+        self.assertNotIn("fan_level_1_imbalance", co.settings_not_read())
+
 
 class EntityGatingTest(unittest.TestCase):
     def test_gates_both_switches_without_overriding_user_disable(self):
@@ -147,7 +156,8 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
     async def test_unknown_imbalance_has_no_default_and_is_not_written(self):
         flow, co = self.flow()
         schema = flow._general_schema()
-        fields = {marker.schema: marker for marker in schema.schema}
+        group = schema.schema["fan_level_1"]
+        fields = {marker.schema: marker for marker in group.schema.schema}
         self.assertIs(fields["fan_level_1_imbalance"].default, vol.UNDEFINED)
         result = await flow.async_step_general(
             {
@@ -186,7 +196,7 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
     async def test_invalid_imbalance_and_summer_checkbox_removed(self):
         flow, co = self.flow({"param_1b": 0x7B})
         result = await flow.async_step_general({"fan_level_1_imbalance": 50.5})
-        self.assertEqual(result["errors"], {"fan_level_1_imbalance": "invalid_imbalance"})
+        self.assertEqual(result["errors"], {"base": "invalid_imbalance"})
         co.async_write_settings.assert_not_awaited()
         result = await flow.async_step_bypass_form()
         self.assertNotIn("summer", {marker.schema for marker in result["data_schema"].schema})
@@ -197,3 +207,88 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
         result = await flow.async_step_bypass_form({"bypass": False})
         self.assertEqual(result["errors"], {"base": "configuration_unknown"})
         co.async_write_parameters.assert_not_awaited()
+
+    async def test_level_sections_write_flat_settings_without_group_options(self):
+        flow, co = self.flow()
+        self.assertEqual(
+            [field.schema for field in flow._general_schema().schema][2],
+            "filter_interval_days",
+        )
+        data = {
+            "fan_level_1": {"fan_level_1_percentage": 20, "fan_level_1_imbalance": -0.5},
+            "fan_level_2": {"fan_level_2_percentage": 60},
+            "fan_level_3": {"fan_level_3_percentage": 80, "fan_level_3_imbalance": 5},
+            "boost_duration_minutes": 15,
+            "away_duration_minutes": 15,
+            "filter_interval_days": 90,
+        }
+        await flow.async_step_general(data)
+        written = co.async_write_settings.await_args.args[0]
+        self.assertEqual(written["fan_level_1_imbalance"], -0.5)
+        self.assertEqual(written["fan_level_3_imbalance"], 5)
+        self.assertNotIn("fan_level_2_imbalance", written)
+        self.assertNotIn("fan_level_1", flow._save.call_args.args[0])
+        for field in flow._general_schema().schema.values():
+            if hasattr(field, "options"):
+                self.assertTrue(field.options["collapsed"])
+
+    async def test_frost_and_reheating_sections_keep_register_writes(self):
+        flow, co = self.flow()
+        co.async_write_parameters = AsyncMock()
+        form = await flow.async_step_plant_form()
+        frost = form["data_schema"].schema["frost_protection"]
+        self.assertIn("p47", frost.schema.schema)
+        self.assertTrue(frost.options["collapsed"])
+        await flow.async_step_plant_form(
+            {"frost_protection": {"p47": "5.5"}, "reheating": {"p5a": "20.5"}}
+        )
+        co.async_write_parameters.assert_awaited_once_with({0x47: 55, 0x5A: 205})
+
+    async def test_threshold_sections_keep_register_writes(self):
+        flow, co = self.flow()
+        co.async_write_parameters = AsyncMock()
+        await flow.async_step_plant_form(
+            {"frost_protection": {"p48": "1.0"}, "reheating": {"p5c": "2.0"}}
+        )
+        co.async_write_parameters.assert_awaited_once_with({0x48: 10, 0x5C: 20})
+
+    async def test_summer_section_keeps_threshold_writes(self):
+        flow, co = self.flow({"param_1b": 0x7B})
+        co.async_write_parameters = AsyncMock()
+        await flow.async_step_bypass_form({"summer_ventilation": {"p41": "23.5"}})
+        co.async_write_parameters.assert_awaited_once_with({0x41: 235})
+
+    async def test_automatic_moves_above_levels_and_preserves_register_bits(self):
+        flow, co = self.flow({"param_63": 0x1F0})
+        co.async_write_parameters = AsyncMock()
+        names = [field.schema for field in flow._general_schema().schema]
+        self.assertEqual(names[3:5], ["automatic", "fan_level_1"])
+        await flow.async_step_general(
+            {
+                "automatic": "sensor",
+                "fan_level_1": {"fan_level_1_percentage": 20},
+                "fan_level_2": {"fan_level_2_percentage": 60},
+                "fan_level_3": {"fan_level_3_percentage": 80},
+                "boost_duration_minutes": 15,
+                "away_duration_minutes": 15,
+                "filter_interval_days": 90,
+            }
+        )
+        co.async_write_parameters.assert_awaited_once_with({0x63: 0x1F8})
+        self.assertNotIn("automatic", flow._save.call_args.args[0])
+
+    async def test_read_only_values_are_last_and_threshold_menu_is_removed(self):
+        flow, co = self.flow({"param_4d": 17})
+        flow.async_show_menu = Mock(side_effect=lambda **kwargs: kwargs)
+        menu = await flow.async_step_init()
+        self.assertNotIn("extra", menu["menu_options"])
+        self.assertEqual(menu["menu_options"][-1], "advanced")
+        form = await flow.async_step_advanced()
+        self.assertIn("0x4D", form["description_placeholders"]["values"])
+        form = await flow.async_step_plant_form()
+        fields = form["data_schema"].schema
+        self.assertNotIn("automatic", fields)
+        self.assertEqual(
+            [key.schema for key in fields["frost_protection"].schema.schema][:2],
+            ["defroster", "frost"],
+        )

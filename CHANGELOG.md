@@ -2,6 +2,16 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.20.1
+
+### Fixed
+- **Device configuration:** "Summer ventilation active" belongs to the device's **Configuration** block, not its general controls. Bypass-only availability and automation support remain unchanged.
+- **Options layout:** each ventilation level and its imbalance share a section. Frost protection (including minimum supply air temperature), reheating and summer ventilation have their own sections with shorter field labels. All sections start collapsed; submitted values are preserved after input errors and stored options remain compatible.
+- **Half-percent imbalance:** accepts 0.5 % steps without integer truncation, including bus encoding/decoding and persistence (one signed raw increment = 0.5 %). Update the bridge script for the corresponding raw limits.
+- **Filter interval** is the third field in general settings, before the grouped ventilation levels.
+- The separate thresholds page is removed: its writable fields now live in the matching plant sections; read-only characteristic values appear only on the final advanced page. Automatic mode is above level 1 on the first page; defroster type precedes frost protection mode.
+- Validated with 42 bus-free regression tests. No ventilation settings or bypass position were changed for testing.
+
 ## 2026.11.20
 
 ### Highlights

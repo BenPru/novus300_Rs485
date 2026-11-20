@@ -246,13 +246,19 @@ def build_filter_reset_frame(days: int) -> bytes:
     )
 
 
-def build_setting_frame(key: str, value: int) -> bytes:
+def build_setting_frame(key: str, value: int | float) -> bytes:
     """Return the panel frame that stores one menu setting in the unit."""
     register = next(reg for reg, name in SETTING_REGISTERS.items() if name == key)
-    if register in IMBALANCE_REGISTERS and (
-        isinstance(value, bool) or not isinstance(value, int) or not -50 <= value <= 50
-    ):
-        raise ValueError(f"Invalid fan imbalance: {value}")
+    if register in IMBALANCE_REGISTERS:
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int | float)
+            or value * 2 not in range(-100, 101)
+        ):
+            raise ValueError(f"Invalid fan imbalance: {value}")
+        value = int(value * 2)
+    elif not isinstance(value, int):
+        raise ValueError(f"Invalid integer setting: {value}")
     return _build_register_write(
         bytes((register, 0x00))
         + value.to_bytes(1, "little", signed=register in IMBALANCE_REGISTERS)
@@ -384,8 +390,9 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
                 raw, "little", signed=len(raw) == 2
             )
         elif register in SETTING_REGISTERS:
-            readings[SETTING_REGISTERS[register]] = int.from_bytes(
-                raw, "little", signed=register in IMBALANCE_REGISTERS
+            value = int.from_bytes(raw, "little", signed=register in IMBALANCE_REGISTERS)
+            readings[SETTING_REGISTERS[register]] = (
+                value / 2 if register in IMBALANCE_REGISTERS else value
             )
         elif register in COUNTER_REGISTERS:
             readings[COUNTER_REGISTERS[register]] = _duration_seconds(raw)

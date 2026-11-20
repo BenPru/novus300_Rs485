@@ -7,7 +7,7 @@ import logging
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
@@ -61,7 +61,10 @@ BUS_SETTING_KEYS = (
     CONF_AWAY_DURATION_MINUTES,
     *FAN_IMBALANCE_KEYS,
 )
-INT_KEYS = (*BUS_SETTING_KEYS, CONF_FILTER_INTERVAL_DAYS)
+INT_KEYS = (
+    *(key for key in BUS_SETTING_KEYS if key not in FAN_IMBALANCE_KEYS),
+    CONF_FILTER_INTERVAL_DAYS,
+)
 
 SETTING_GRIDS = {
     CONF_BOOST_DURATION_MINUTES: range(5, 121, 5),
@@ -90,22 +93,14 @@ SELECT_DEFAULT_BASE = {0x63: 0x1F0}
 
 BYPASS_NUMBERS = (0x41, 0x42, 0x43, 0x49)
 HYSTERESIS_REGISTERS = (0x43, 0x48, 0x5C, 0x61)
-EXTRA_NUMBERS = (0x48, 0x5C, 0x56, 0x5F, 0x60, 0x61)
-# Sensor characteristic (read only): (register, de, en, unit, divisor)
-SENSOR_CURVE = (
-    (0x4D, "Spannung U_min (?)", "Voltage U_min (?)", "V", 10),
-    (0x4E, "Drehzahl bei U_min", "Speed at U_min", "%", 1),
-    (0x4F, "Spannung U_max (?)", "Voltage U_max (?)", "V", 10),
-    (0x50, "Drehzahl bei U_max", "Speed at U_max", "%", 1),
-    (0x51, "Strom I_min", "Current I_min", "mA", 10),
-    (0x52, "Drehzahl bei I_min", "Speed at I_min", "%", 1),
-    (0x53, "Strom I_max", "Current I_max", "mA", 10),
-    (0x54, "Drehzahl bei I_max", "Speed at I_max", "%", 1),
-)
-PLANT_NUMBERS = (0x4A, 0x4B, 0x4C, 0x47, 0x5A)
-PLANT_FORM_ORDER = ("automatic", "frost", 0x4A, 0x4B, 0x4C, 0x47, "reheater", 0x5A, "defroster", "ewt")
+PLANT_NUMBERS = (0x4A, 0x4B, 0x4C, 0x47, 0x48, 0x5A, 0x5C, 0x56, 0x5F, 0x60, 0x61)
+PLANT_FORM_GROUPS = {
+    "frost_protection": ("defroster", "frost", 0x4A, 0x4B, 0x4C, 0x47, 0x48, 0x56),
+    "reheating": ("reheater", 0x5A, 0x5C),
+    "ewt": ("ewt", 0x5F, 0x60, 0x61),
+}
 DIALOG_REGISTERS = {
-    "plant": ((0x47, 0x4A, 0x4B, 0x4C, 0x5A, 0x63, 0x24, 0x7B), (0x1E, 0x21)),
+    "plant": ((0x47, 0x48, 0x4A, 0x4B, 0x4C, 0x5A, 0x5C, 0x56, 0x5F, 0x60, 0x61, 0x24, 0x7B), (0x1E, 0x21)),
     "bypass": ((0x41, 0x42, 0x43, 0x49, 0x1B), ()),
 }
 PANEL_PAGES = {
@@ -350,7 +345,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         """Offer the settings groups as a menu."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["general", "plant", "bypass", "extra", "advanced"],
+            menu_options=["general", "plant", "bypass", "advanced"],
         )
 
     def _save(self, user_input: dict[str, str | int | bool]) -> FlowResult:
@@ -359,19 +354,29 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             title="", data={**self._config_entry.options, **user_input}
         )
 
+    @staticmethod
+    def _flatten_sections(user_input, names):
+        values = dict(user_input)
+        for name in names:
+            values.update(values.pop(name, {}))
+        return values
+
     async def async_step_general(
-        self, user_input: dict[str, str | int | bool] | None = None
+        self, user_input: dict | None = None
     ) -> FlowResult:
         """Configure the bus and the unit's settings."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = self._flatten_sections(
+                user_input, (f"fan_level_{level}" for level in range(1, 4))
+            )
             for key in FAN_IMBALANCE_KEYS:
                 if key in user_input and user_input[key] is not None and (
                     isinstance(user_input[key], bool)
                     or not isinstance(user_input[key], int | float)
-                    or user_input[key] not in range(-50, 51)
+                    or user_input[key] * 2 not in range(-100, 101)
                 ):
-                    errors[key] = "invalid_imbalance"
+                    errors["base"] = "invalid_imbalance"
             if errors:
                 return self.async_show_form(
                     step_id="general",
@@ -390,6 +395,11 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             coordinator = getattr(self._config_entry, "runtime_data", None)
             if coordinator is not None and not errors:
                 try:
+                    changes: dict[int, int] = {}
+                    data = coordinator.unit_values()
+                    if "automatic" in user_input and "param_63" not in data:
+                        raise HomeAssistantError("Automatic mode configuration is unknown")
+                    self._select_changes(user_input, data, changes)
                     await coordinator.async_write_settings(
                         {key: user_input[key] for key in BUS_SETTING_KEYS if key in user_input}
                     )
@@ -397,11 +407,15 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                     interval = user_input[CONF_FILTER_INTERVAL_DAYS]
                     if interval != coordinator.filter_interval_days():
                         await coordinator.async_set_filter_interval(interval)
+                    if changes:
+                        await coordinator.async_write_parameters(changes)
                 except HomeAssistantError as err:
                     LOGGER.warning("Unable to write settings to the Novus: %s", err)
                     errors["base"] = "write_failed"
             if not errors:
-                return self._save(user_input)
+                return self._save(
+                    {key: value for key, value in user_input.items() if key != "automatic"}
+                )
 
         coordinator = getattr(self._config_entry, "runtime_data", None)
         missing = (
@@ -429,17 +443,31 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                 default=self._value(CONF_SHOW_FAN_LEVELS, DEFAULT_SHOW_FAN_LEVELS),
             )
         ] = bool
+        interval = (
+            user_input.get(CONF_FILTER_INTERVAL_DAYS)
+            if user_input and CONF_FILTER_INTERVAL_DAYS in user_input
+            else self._value(CONF_FILTER_INTERVAL_DAYS, DEFAULT_FILTER_INTERVAL_DAYS)
+        )
+        fields[vol.Required(CONF_FILTER_INTERVAL_DAYS, default=str(interval))] = (
+            _setting_selector(CONF_FILTER_INTERVAL_DAYS, int(interval))
+        )
+        fields.update([self._select_field("automatic", self._unit(), user_input)])
         for key, default in (
             (CONF_FAN_LEVEL_1_PERCENTAGE, DEFAULT_FAN_LEVEL_1_PERCENTAGE),
             (CONF_FAN_LEVEL_2_PERCENTAGE, DEFAULT_FAN_LEVEL_2_PERCENTAGE),
             (CONF_FAN_LEVEL_3_PERCENTAGE, DEFAULT_FAN_LEVEL_3_PERCENTAGE),
             (CONF_BOOST_DURATION_MINUTES, DEFAULT_BOOST_DURATION_MINUTES),
             (CONF_AWAY_DURATION_MINUTES, DEFAULT_AWAY_DURATION_MINUTES),
-            (CONF_FILTER_INTERVAL_DAYS, DEFAULT_FILTER_INTERVAL_DAYS),
         ):
-            current = int(self._value(key, default))
+            current = int(
+                user_input.get(key, self._value(key, default))
+                if user_input
+                else self._value(key, default)
+            )
             if key in PERCENTAGE_KEYS:
-                fields[vol.Required(key, default=current)] = _percentage_selector()
+                level_fields = {
+                    vol.Required(key, default=current): _percentage_selector()
+                }
                 imbalance_key = FAN_IMBALANCE_KEYS[PERCENTAGE_KEYS.index(key)]
                 imbalance = self._unit().get(imbalance_key)
                 if user_input and imbalance_key in user_input:
@@ -451,14 +479,18 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                     if imbalance is not None
                     else vol.Optional(imbalance_key)
                 )
-                fields[marker] = selector.NumberSelector(
+                level_fields[marker] = selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=-50,
                         max=50,
-                        step=1,
+                        step=0.5,
                         mode=selector.NumberSelectorMode.BOX,
                         unit_of_measurement="%",
                     )
+                )
+                level = PERCENTAGE_KEYS.index(key) + 1
+                fields[vol.Required(f"fan_level_{level}")] = section(
+                    vol.Schema(level_fields), {"collapsed": True}
                 )
             else:
                 fields[vol.Required(key, default=str(current))] = _setting_selector(
@@ -656,8 +688,11 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         data = self._unit()
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = self._flatten_sections(user_input, PLANT_FORM_GROUPS)
             changes: dict[int, int] = {}
             self._number_changes(PLANT_NUMBERS, user_input, data, changes, errors)
+            if errors:
+                errors["base"] = "invalid_number"
             self._select_changes(user_input, data, changes)
             if not errors:
                 error = await self._write(changes)
@@ -666,12 +701,17 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                 errors["base"] = error
         numbers = dict(zip(PLANT_NUMBERS, self._number_fields(PLANT_NUMBERS, data, user_input).items()))
         fields = {}
-        for item in PLANT_FORM_ORDER:
-            if isinstance(item, int):
-                marker, sel = numbers[item]
-            else:
-                marker, sel = self._select_field(item, data, user_input)
-            fields[marker] = sel
+        for name, items in PLANT_FORM_GROUPS.items():
+            group = {}
+            for item in items:
+                marker, sel = (
+                    numbers[item] if isinstance(item, int)
+                    else self._select_field(item, data, user_input)
+                )
+                group[marker] = sel
+            fields[vol.Optional(name, default=dict)] = section(
+                vol.Schema(group), {"collapsed": True}
+            )
         return self.async_show_form(
             step_id="plant_form", data_schema=vol.Schema(fields), errors=errors
         )
@@ -690,6 +730,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         }
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = self._flatten_sections(user_input, ("summer_ventilation",))
             changes: dict[int, int] = {}
             self._number_changes(BYPASS_NUMBERS, user_input, data, changes, errors)
             value = word
@@ -714,7 +755,10 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             ): selector.BooleanSelector()
             for name in PLANT_FLAGS
         }
-        fields.update(self._number_fields(BYPASS_NUMBERS, data, user_input))
+        fields[vol.Optional("summer_ventilation", default=dict)] = section(
+            vol.Schema(self._number_fields(BYPASS_NUMBERS, data, user_input)),
+            {"collapsed": True},
+        )
         note = ""
         if not known:
             note = (
@@ -759,34 +803,6 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         if word is None or not word & 0x80:
             return self._save({})
         return await self._threshold_form("summer_settings", (0x41, 0x43, 0x49), user_input)
-
-    async def async_step_extra(self, user_input=None) -> FlowResult:
-        """Thresholds of frost protection, reheating, brine defroster and earth heat exchanger."""
-        data = self._unit()
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            changes: dict[int, int] = {}
-            self._number_changes(EXTRA_NUMBERS, user_input, data, changes, errors)
-            if not errors:
-                error = await self._write(changes)
-                if not error:
-                    return self._save({})
-                errors["base"] = error
-        german = self._german()
-        lines = []
-        for reg, de, en, unit, divisor in SENSOR_CURVE:
-            value = data.get(f"param_{reg:02x}")
-            if value is None:
-                continue
-            shown = f"{value / divisor:.1f}" if divisor > 1 else str(value)
-            lines.append(f"- {de if german else en}: **{shown} {unit}**")
-        curve = "\n".join(lines) or ("Noch nicht gelesen." if german else "Not read yet.")
-        return self.async_show_form(
-            step_id="extra",
-            data_schema=vol.Schema(self._number_fields(EXTRA_NUMBERS, data, user_input)),
-            errors=errors,
-            description_placeholders={"curve": curve},
-        )
 
     async def async_step_advanced(
         self, user_input: dict[str, str | int | bool] | None = None

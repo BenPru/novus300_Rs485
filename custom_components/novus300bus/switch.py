@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import EntityCategory
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -185,6 +186,7 @@ class NovusSummerVentilationSwitch(CoordinatorEntity[NovusCoordinator], SwitchEn
     _attr_translation_key = "summer_ventilation"
     _attr_unique_id = "novus300bus_summer_ventilation"
     _attr_icon = "mdi:weather-sunny"
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: NovusCoordinator) -> None:

@@ -171,23 +171,23 @@ class NovusFrameParserTest(unittest.TestCase):
             [
                 {
                     "fan_level_1_percentage": 21,
-                    "fan_level_1_imbalance": 1,
+                    "fan_level_1_imbalance": 0.5,
                     "register_62": 11,
                 },
-                {"fan_level_2_percentage": 61, "fan_level_2_imbalance": 1},
-                {"fan_level_3_percentage": 76, "fan_level_3_imbalance": 1},
+                {"fan_level_2_percentage": 61, "fan_level_2_imbalance": 0.5},
+                {"fan_level_3_percentage": 76, "fan_level_3_imbalance": 0.5},
             ],
         )
 
     def test_signed_imbalance_writes_and_limits(self):
         for level in range(1, 4):
             key = f"fan_level_{level}_imbalance"
-            for value in (-50, -1, 0, 1, 50):
+            for value in (-50, -1, -0.5, 0, 0.5, 1, 50):
                 with self.subTest(level=level, value=value):
                     frame = build_setting_frame(key, value)
-                    self.assertEqual(frame[6:], bytes((0x30 + level, 0, value & 0xFF)))
+                    self.assertEqual(frame[6:], bytes((0x30 + level, 0, int(value * 2) & 0xFF)))
                     self.assertEqual(NovusFrameParser().feed(frame), [{key: value}])
-            for invalid in (-51, 51, 1.5, True):
+            for invalid in (-50.5, 50.5, 0.25, True):
                 with self.subTest(level=level, invalid=invalid):
                     with self.assertRaises(ValueError):
                         build_setting_frame(key, invalid)

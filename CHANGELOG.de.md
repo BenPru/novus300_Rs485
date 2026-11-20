@@ -2,6 +2,16 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.20.1
+
+### Behoben
+- **Gerätekonfiguration:** „Sommerlüftung aktiv“ gehört zum Geräteblock **Konfiguration** statt zu den allgemeinen Bedienelementen. Bypass-Bedingung und Automationstauglichkeit bleiben unverändert.
+- **Optionslayout:** Jede Lüftungsstufe und ihre Disbalance stehen gemeinsam in einem Abschnitt. Frostschutz (einschließlich minimaler Zulufttemperatur), Nachheizung und Sommerlüftung erhalten eigene Blöcke mit kürzeren Feldnamen. Alle Blöcke starten zugeklappt; bei Eingabefehlern bleiben Werte erhalten und gespeicherte Optionen bleiben kompatibel.
+- **Halbe Disbalance-Prozente:** 0,5-%-Schritte ohne Abschneiden durch Ganzzahlkonvertierung, einschließlich Bus-Codierung/-Auswertung und Speicherung (ein signed Rohwertschritt = 0,5 %). Bridge-Skript für die entsprechenden Rohwertgrenzen aktualisieren.
+- **Filterintervall** steht an dritter Stelle der allgemeinen Einstellungen, vor den gruppierten Lüftungsstufen.
+- Die separate Schwellenseite entfällt: Schreibbare Felder stehen in den passenden Anlagenblöcken, reine Kennlinien-Lesewerte nur auf der letzten erweiterten Seite. Automatikmodus steht auf der ersten Seite über Stufe 1, Defroster-Typ über Frostschutzmodus.
+- Mit 42 busfreien Regressionstests geprüft. Für die Tests wurden weder Lüftungswerte noch Bypass-Stellung verändert.
+
 ## 2026.11.20
 
 ### Highlights

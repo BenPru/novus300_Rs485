@@ -12,7 +12,7 @@ key shown below.
 | --- | --- | --- | --- | --- |
 | `switch.novus300_power` | switch | Operating state | – | yes |
 | `switch.novus300_bypass` | switch | Bypass open | – | no |
-| `switch.novus300_summer_ventilation` | switch | Summer ventilation active | – | yes, with known bypass configuration |
+| `switch.novus300_summer_ventilation` | switch | Summer ventilation active | configuration | yes, with known bypass configuration |
 | `fan.novus300` | fan | Ventilation | – | no |
 | `select.novus300_ventilation_mode` | select | Ventilation mode | – | no |
 | `button.novus300_boost` | button | Boost ventilation | – | no |
@@ -190,6 +190,6 @@ and 0x62 as raw numbers.
 Serial device / bridge URL, baud rate, parity, **Synchronize time daily**
 (03:00), ventilation levels 1–3 in % (17 % ≤ level 1 < level 2 < level 3 ≤
 100 %), boost duration, away ventilation time (minutes per hour), filter
-interval (30–180 d), fan imbalance per level (−50 to +50 %, step 1), and the 0-10 V options (enable, Tinkerforge host, port
+interval (30–180 d), fan imbalance per level (−50 to +50 %, step 0.5), and the 0-10 V options (enable, Tinkerforge host, port
 and UID, automatic mode helper entity). Levels, durations and the filter
 interval are written to the unit when the options are saved.

@@ -21,14 +21,14 @@ is_allowed_frame = bridge.is_allowed_frame
 class BridgeWhitelistTest(unittest.TestCase):
     def test_all_imbalance_stages_accept_signed_limits(self):
         for level in range(1, 4):
-            for value in (-50, -1, 0, 1, 50):
+            for value in (-50, -1, -0.5, 0, 0.5, 1, 50):
                 with self.subTest(level=level, value=value):
                     self.assertTrue(
                         is_allowed_frame(build_setting_frame(f"fan_level_{level}_imbalance", value))
                     )
 
     def test_rejects_bad_imbalance_and_unrelated_status_writes(self):
-        for register, value in ((0x31, -51), (0x32, 51), (0x33, 127), (0x1A, 0x20)):
+        for register, value in ((0x31, -101), (0x32, 101), (0x33, 127), (0x1A, 0x20)):
             with self.subTest(register=register, value=value):
                 self.assertFalse(
                     is_allowed_frame(

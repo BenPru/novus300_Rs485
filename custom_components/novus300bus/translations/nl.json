@@ -41,47 +41,61 @@
           "general": "Algemeen en apparaatinstellingen",
           "plant": "Plant parameters",
           "bypass": "Bypass and summer ventilation",
-          "extra": "Thresholds: frost protection, reheating, defroster, damper",
           "advanced": "Geavanceerd: apparaatparameters"
-        }
-      },
-      "extra": {
-        "title": "Thresholds: frost protection, reheating, defroster, damper",
-        "description": "Written to the unit. Empty fields stay unchanged. Hysteresis in steps of 0.5 K.\n\nSensor characteristic (read only):\n{curve}",
-        "data": {
-          "p48": "Frost protection supply air: hysteresis",
-          "p5c": "Reheating: hysteresis",
-          "p56": "Brine defroster: cooling threshold",
-          "p5f": "Earth heat exchanger damper: lower threshold",
-          "p60": "Earth heat exchanger damper: upper threshold",
-          "p61": "Earth heat exchanger damper: hysteresis"
         }
       },
       "plant_form": {
         "title": "Plant parameters",
-        "description": "Automatic mode, frost protection, reheating and installation types are written to the unit (like the panel menu). Empty fields stay unchanged. **Caution:** defroster type and reheating affect hardware - only set what is installed. The effect of the frost protection mode is unconfirmed.",
-        "data": {
-          "automatic": "Automatic mode",
-          "frost": "Frost protection mode",
-          "p4a": "Frost protection outdoor air: Safe",
-          "p4b": "Frost protection outdoor air: Eco",
-          "p4c": "Frost protection outdoor air: Humidity HX",
-          "p47": "Minimum supply air temperature",
-          "reheater": "Reheating: type",
-          "p5a": "Reheating: duct temperature",
-          "defroster": "Defroster type",
-          "ewt": "Earth heat exchanger damper"
+        "description": "frost protection, reheating and installation types are written to the unit (like the panel menu). Empty fields stay unchanged. **Caution:** defroster type and reheating affect hardware - only set what is installed. The effect of the frost protection mode is unconfirmed.",
+        "sections": {
+          "frost_protection": {
+            "name": "Frost protection",
+            "data": {
+              "defroster": "Defroster type",
+              "frost": "Mode",
+              "p4a": "Outdoor air: Safe",
+              "p4b": "Outdoor air: Eco",
+              "p4c": "Outdoor air: Humidity HX",
+              "p47": "Minimum supply air temperature",
+              "p48": "Supply air: hysteresis",
+              "p56": "Brine defroster: cooling threshold"
+            }
+          },
+          "reheating": {
+            "name": "Reheating",
+            "data": {
+              "reheater": "Type",
+              "p5a": "Duct temperature",
+              "p5c": "Hysteresis"
+            }
+          },
+          "ewt": {
+            "name": "Earth heat exchanger damper",
+            "data": {
+              "ewt": "Installed",
+              "p5f": "Lower threshold",
+              "p60": "Upper threshold",
+              "p61": "Hysteresis"
+            }
+          }
         }
       },
       "bypass_form": {
         "title": "Bypass and summer ventilation",
         "description": "{state}Activate summer ventilation using the entity switch (only with a confirmed bypass). Installation and temperature thresholds stay here; neither setting forces the flap open or closed.",
         "data": {
-          "bypass": "Bypass installed",
-          "p41": "Upper threshold / summer ventilation temperature",
-          "p42": "Lower threshold",
-          "p43": "Hysteresis",
-          "p49": "Bypass closed below / summer ventilation inactive below"
+          "bypass": "Bypass installed"
+        },
+        "sections": {
+          "summer_ventilation": {
+            "name": "Summer ventilation",
+            "data": {
+              "p41": "Upper threshold",
+              "p42": "Lower threshold",
+              "p43": "Hysteresis",
+              "p49": "Closed / inactive below"
+            }
+          }
         }
       },
       "bypass_settings": {
@@ -110,6 +124,11 @@
           "missing_restart": "Restart unit (off and on, wait for values)",
           "missing_recheck": "Check again",
           "missing_open": "Open anyway"
+        }
+      },
+      "general": {
+        "data": {
+          "automatic": "Automatic mode"
         }
       }
     }

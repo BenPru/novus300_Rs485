@@ -48,38 +48,43 @@
           "general": "Allgemein und Anlageneinstellungen",
           "plant": "Anlagenparameter",
           "bypass": "Bypass und Sommerlüftung",
-          "extra": "Schwellen: Frostschutz, Nachheizung, Defroster, Klappe",
           "advanced": "Erweitert: Parameterblock (nur lesen)"
-        }
-      },
-      "extra": {
-        "title": "Schwellen: Frostschutz, Nachheizung, Defroster, Klappe",
-        "description": "Wird in die Anlage geschrieben. Leere Felder bleiben unverändert. Hysterese in 0,5-K-Schritten.\n\nSensor-Kennlinie (nur lesen):\n{curve}",
-        "data": {
-          "p48": "Frostschutz Zuluft: Hysterese",
-          "p5c": "Nachheizung: Hysterese",
-          "p56": "Sole-Defroster: Kühlschwelle",
-          "p5f": "EWT-Klappe: untere Schwelle",
-          "p60": "EWT-Klappe: obere Schwelle",
-          "p61": "EWT-Klappe: Hysterese"
         }
       },
       "general": {
         "title": "Allgemein und Anlageneinstellungen",
         "data": {
           "daily_time_sync": "Uhrzeit täglich synchronisieren",
-          "fan_level_1_percentage": "Lüftungsstufe 1 (%)",
-          "fan_level_2_percentage": "Lüftungsstufe 2 (%)",
-          "fan_level_3_percentage": "Lüftungsstufe 3 (%)",
-          "fan_level_1_imbalance": "Stufe 1: Disbalance (%)",
-          "fan_level_2_imbalance": "Stufe 2: Disbalance (%)",
-          "fan_level_3_imbalance": "Stufe 3: Disbalance (%)",
           "boost_duration_minutes": "Dauer Stoßlüftung",
           "away_duration_minutes": "Abwesend: Lüftungszeit (min/h)",
           "show_fan_levels": "Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird",
-          "filter_interval_days": "Filterintervall"
+          "filter_interval_days": "Filterintervall",
+          "automatic": "Automatik-Modus"
         },
-        "description": "{source}"
+        "description": "{source}",
+        "sections": {
+          "fan_level_1": {
+            "name": "Lüftungsstufe 1",
+            "data": {
+              "fan_level_1_percentage": "Lüfterleistung (%)",
+              "fan_level_1_imbalance": "Disbalance (%)"
+            }
+          },
+          "fan_level_2": {
+            "name": "Lüftungsstufe 2",
+            "data": {
+              "fan_level_2_percentage": "Lüfterleistung (%)",
+              "fan_level_2_imbalance": "Disbalance (%)"
+            }
+          },
+          "fan_level_3": {
+            "name": "Lüftungsstufe 3",
+            "data": {
+              "fan_level_3_percentage": "Lüfterleistung (%)",
+              "fan_level_3_imbalance": "Disbalance (%)"
+            }
+          }
+        }
       },
       "advanced": {
         "title": "Erweitert: Parameterblock (nur lesen)",
@@ -87,29 +92,56 @@
       },
       "plant_form": {
         "title": "Anlagenparameter",
-        "description": "Automatik, Frostschutz, Nachheizung und Einbau-Typen werden in die Anlage geschrieben (wie im Bedienteil-Menü). Leere Felder bleiben unverändert. **Achtung:** Defroster-Typ und Nachheizung betreffen die Hardware - nur einstellen, was tatsächlich verbaut ist. Die Wirkung des Frostschutzmodus ist unbestätigt.",
-        "data": {
-          "automatic": "Automatik-Modus",
-          "frost": "Frostschutzmodus",
-          "p4a": "Frostschutz Außenluft: Sicher",
-          "p4b": "Frostschutz Außenluft: Eco",
-          "p4c": "Frostschutz Außenluft: Feuchte WT",
-          "p47": "Minimale Zulufttemperatur",
-          "reheater": "Nachheizung: Typ",
-          "p5a": "Nachheizung: Kanaltemperatur",
-          "defroster": "Defroster-Typ",
-          "ewt": "EWT-Klappe"
+        "description": "Frostschutz, Nachheizung und Einbau-Typen werden in die Anlage geschrieben (wie im Bedienteil-Menü). Leere Felder bleiben unverändert. **Achtung:** Defroster-Typ und Nachheizung betreffen die Hardware - nur einstellen, was tatsächlich verbaut ist. Die Wirkung des Frostschutzmodus ist unbestätigt.",
+        "sections": {
+          "frost_protection": {
+            "name": "Frostschutz",
+            "data": {
+              "defroster": "Defroster-Typ",
+              "frost": "Modus",
+              "p4a": "Außenluft: Sicher",
+              "p4b": "Außenluft: Eco",
+              "p4c": "Außenluft: Feuchte WT",
+              "p47": "Minimale Zulufttemperatur",
+              "p48": "Zuluft: Hysterese",
+              "p56": "Sole-Defroster: Kühlschwelle"
+            }
+          },
+          "reheating": {
+            "name": "Nachheizung",
+            "data": {
+              "reheater": "Typ",
+              "p5a": "Kanaltemperatur",
+              "p5c": "Hysterese"
+            }
+          },
+          "ewt": {
+            "name": "EWT-Klappe",
+            "data": {
+              "ewt": "Vorhanden",
+              "p5f": "Untere Schwelle",
+              "p60": "Obere Schwelle",
+              "p61": "Hysterese"
+            }
+          }
         }
       },
       "bypass_form": {
         "title": "Bypass und Sommerlüftung",
         "description": "{state}Sommerlüftung über den Entitätsschalter aktivieren (nur bei bestätigt vorhandenem Bypass). Installation und Temperaturschwellen bleiben hier; keine dieser Einstellungen erzwingt die Klappenstellung.",
         "data": {
-          "bypass": "Bypass vorhanden",
-          "p41": "Obere Schwelle / Sommerlüftung Temperatur",
-          "p42": "Untere Schwelle",
-          "p43": "Hysterese",
-          "p49": "Bypass geschlossen unterhalb / Sommerlüftung inaktiv unter"
+          "bypass": "Bypass vorhanden"
+        },
+        "sections": {
+          "summer_ventilation": {
+            "name": "Sommerlüftung",
+            "data": {
+              "p41": "Obere Schwelle",
+              "p42": "Untere Schwelle",
+              "p43": "Hysterese",
+              "p49": "Geschlossen / inaktiv unterhalb"
+            }
+          }
         }
       },
       "bypass_settings": {
@@ -146,7 +178,7 @@
       "not_loaded": "Nicht mit dem Bus verbunden.",
       "write_failed": "Schreiben in die Anlage fehlgeschlagen.",
       "invalid_number": "Wert mit einer Nachkommastelle im zulässigen Bereich eingeben (Hysterese in 0,5-Schritten).",
-      "invalid_imbalance": "Ganzen Prozentwert von -50 bis 50 eingeben.",
+      "invalid_imbalance": "Prozentwert von -50 bis 50 in 0,5er-Schritten eingeben.",
       "configuration_unknown": "Die Anlagenkonfiguration wurde noch nicht empfangen. Zuerst am Bedienteil die Bypass-Seite öffnen."
     }
   },

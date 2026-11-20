@@ -319,7 +319,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         except OSError as err:
             raise HomeAssistantError(f"Unable to write to the Novus bus: {err}") from err
 
-    def setting_value(self, key: str, actual: bool = False) -> int:
+    def setting_value(self, key: str, actual: bool = False) -> int | float:
         """Return a menu setting last seen on the bus, else the configured one.
 
         While a setting is temporarily overridden, the original value is
@@ -329,17 +329,23 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         if not actual and isinstance(original, int) and not isinstance(original, bool):
             return original
         value = self._values.get(key)
-        if isinstance(value, int) and not isinstance(value, bool):
+        if (
+            isinstance(value, int | float if key in FAN_IMBALANCE_KEYS else int)
+            and not isinstance(value, bool)
+        ):
             return value
         configured = self._config.get(key, SETTING_DEFAULTS[key])
-        return int(configured)
+        return float(configured) if key in FAN_IMBALANCE_KEYS else int(configured)
 
-    def settings_from_bus(self) -> dict[str, int]:
+    def settings_from_bus(self) -> dict[str, int | float]:
         """Return the menu settings the unit itself has sent."""
         return {
             key: value
             for key in SETTING_DEFAULTS
-            if isinstance(value := self._values.get(key), int)
+            if isinstance(
+                value := self._values.get(key),
+                int | float if key in FAN_IMBALANCE_KEYS else int,
+            )
             and not isinstance(value, bool)
             and f"{ORIGINAL_PREFIX}{key}" not in self._values
         }
@@ -486,23 +492,26 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         return [
             key
             for key in SETTING_DEFAULTS
-            if not isinstance(self._values.get(key), int)
+            if not isinstance(
+                self._values.get(key), int | float if key in FAN_IMBALANCE_KEYS else int
+            )
         ]
 
-    async def async_write_settings(self, settings: dict[str, int]) -> None:
+    async def async_write_settings(self, settings: dict[str, int | float]) -> None:
         """Store menu settings in the unit, as the panel does when saving."""
         for key in FAN_IMBALANCE_KEYS:
             if key in settings and (
                 isinstance(settings[key], bool)
-                or not isinstance(settings[key], int)
-                or not -50 <= settings[key] <= 50
+                or not isinstance(settings[key], int | float)
+                or settings[key] * 2 not in range(-100, 101)
             ):
-                raise HomeAssistantError("Fan imbalance must be an integer from -50 to 50")
+                raise HomeAssistantError("Fan imbalance must be -50 to 50 in steps of 0.5")
         for key, value in settings.items():
             if key not in SETTING_DEFAULTS:
                 continue
-            await self._async_send(build_setting_frame(key, int(value)))
-            self._values[key] = int(value)
+            value = value if key in FAN_IMBALANCE_KEYS else int(value)
+            await self._async_send(build_setting_frame(key, value))
+            self._values[key] = value
             await asyncio.sleep(1)
         self._counter_store.async_delay_save(self._persisted_values, 5)
         self.async_set_updated_data(dict(self._values))

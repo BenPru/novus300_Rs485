@@ -162,7 +162,7 @@ diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
 | **Parität** | Parität des Busses. | none (der Bus nutzt MARK-Parität; das übernimmt die Bridge) |
 | **Uhrzeit täglich synchronisieren** | Setzt Datum und Uhrzeit der Anlage täglich um 03:00 auf die Zeit von Home Assistant und prüft die Abweichung. | an |
 | **Lüftungsstufe 1 / 2 / 3 (%)** | Lüfter-Prozentwert der drei Stufen, wird in die Anlage geschrieben. Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %, sonst zeigt der Dialog einen Fehler. Zeigt den ursprünglichen Wert, auch wenn gerade ein Prozentwert Stufe 1 oder 3 vorübergehend überschreibt. | 35 / 60 / 90 % |
-| **Stufe 1 / 2 / 3: Disbalance (%)** | Separate Feineinstellung direkt bei jeder Stufe. Ganze Prozentwerte mit Vorzeichen; empfangene Werte werden gemerkt. Unbekannte Werte bleiben leer und werden ohne Eingabe nicht geschrieben. | −50 bis +50 %, Schritt 1 |
+| **Stufe 1 / 2 / 3: Disbalance (%)** | Separate Feineinstellung gemeinsam mit jeder Stufe gruppiert. Empfangene Werte werden gemerkt; unbekannte Werte bleiben leer und werden ohne Eingabe nicht geschrieben. | −50 bis +50 %, Schritt 0,5 |
 | **Dauer Stoßlüftung** | Wie lange die Stoßlüftung nach `button.novus300_boost` läuft. Auswahl in 5-Minuten-Schritten (5–120). | 15 min |
 | **Abwesend: Lüftungszeit (min/h)** | Lüftungsminuten pro Stunde auf Stufe 1 im Modus Abwesend. | 15 / 30 / 45, Standard 30 |
 | **Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird** | Aus: Die Modus-Auswahl bleibt auf *Automatik*, solange `fan.novus300` einen Prozentwert setzt. An: Sie zeigt Stufe 1 oder 3. | aus |
@@ -184,7 +184,7 @@ Diese Werte liegen in der Anlage. Die Lüftungsstufen sind normale Zahlenfelder
 | Einstellung | Schrittweite der Anlage | Standardwert |
 |---|---|---:|
 | Lüftungsstufe 1 / 2 / 3 | ganze Prozentwerte, 17–100 % | 35 / 60 / 90 % |
-| Disbalance Stufe 1 / 2 / 3 | −50 bis +50 %, Schritt 1 | Anlagenwert; leer, solange unbekannt |
+| Disbalance Stufe 1 / 2 / 3 | −50 bis +50 %, Schritt 0,5 | Anlagenwert; leer, solange unbekannt |
 | Dauer Stoßlüftung | 5 min | 15 min (Werk) |
 | Abwesend: Lüftungszeit | 15 / 30 / 45 min/h | 30 min/h |
 

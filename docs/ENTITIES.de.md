@@ -12,7 +12,7 @@ gefolgt vom unten genannten Schlüssel.
 | --- | --- | --- | --- | --- |
 | `switch.novus300_power` | switch | Betriebsstatus | – | ja |
 | `switch.novus300_bypass` | switch | Bypass geöffnet | – | nein |
-| `switch.novus300_summer_ventilation` | switch | Sommerlüftung aktiv | – | ja, bei bekannter Bypass-Konfiguration |
+| `switch.novus300_summer_ventilation` | switch | Sommerlüftung aktiv | Konfiguration | ja, bei bekannter Bypass-Konfiguration |
 | `fan.novus300` | fan | Lüftung | – | nein |
 | `select.novus300_ventilation_mode` | select | Lüftungsmodus | – | nein |
 | `button.novus300_boost` | button | Stoßlüftung | – | nein |
@@ -194,7 +194,7 @@ bekannte Wert wird nach einem Neustart wiederhergestellt, bis ein neuer kommt.
 Serielles Gerät / Bridge-URL, Baudrate, Parität, **Uhrzeit täglich
 synchronisieren** (03:00), Lüftungsstufen 1–3 in % (17 % ≤ Stufe 1 < Stufe 2 <
 Stufe 3 ≤ 100 %), Stoßlüftungsdauer, Abwesend-Lüftungszeit (Minuten pro
-Stunde), Filterintervall (30–180 d), Disbalance je Stufe (−50 bis +50 %, Schritt 1) und die 0-10-V-Optionen (aktivieren,
+Stunde), Filterintervall (30–180 d), Disbalance je Stufe (−50 bis +50 %, Schritt 0,5) und die 0-10-V-Optionen (aktivieren,
 Tinkerforge-Host, Port und UID, Hilfsentität für den Automatikmodus). Stufen,
 Dauern und Filterintervall werden beim Speichern der Optionen in die Anlage
 geschrieben.
