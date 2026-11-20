@@ -95,9 +95,9 @@ BYPASS_NUMBERS = (0x41, 0x42, 0x43, 0x49)
 HYSTERESIS_REGISTERS = (0x43, 0x48, 0x5C, 0x61)
 PLANT_NUMBERS = (0x4A, 0x4B, 0x4C, 0x47, 0x48, 0x5A, 0x5C, 0x56, 0x5F, 0x60, 0x61)
 PLANT_FORM_GROUPS = {
+    "ewt": ("ewt", 0x5F, 0x60, 0x61),
     "frost_protection": ("defroster", "frost", 0x4A, 0x4B, 0x4C, 0x47, 0x48, 0x56),
     "reheating": ("reheater", 0x5A, 0x5C),
-    "ewt": ("ewt", 0x5F, 0x60, 0x61),
 }
 DIALOG_REGISTERS = {
     "plant": ((0x47, 0x48, 0x4A, 0x4B, 0x4C, 0x5A, 0x5C, 0x56, 0x5F, 0x60, 0x61, 0x24, 0x7B), (0x1E, 0x21)),
@@ -361,6 +361,18 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             values.update(values.pop(name, {}))
         return values
 
+    @staticmethod
+    def _section_field(name, fields, required=False, collapsed=True):
+        defaults = {
+            marker.schema: marker.default()
+            for marker in fields
+            if marker.default is not vol.UNDEFINED
+        }
+        marker = vol.Required if required else vol.Optional
+        return marker(name, default=defaults), section(
+            vol.Schema(fields), {"collapsed": collapsed}
+        )
+
     async def async_step_general(
         self, user_input: dict | None = None
     ) -> FlowResult:
@@ -489,8 +501,8 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                     )
                 )
                 level = PERCENTAGE_KEYS.index(key) + 1
-                fields[vol.Required(f"fan_level_{level}")] = section(
-                    vol.Schema(level_fields), {"collapsed": True}
+                fields.update(
+                    [self._section_field(f"fan_level_{level}", level_fields, required=True)]
                 )
             else:
                 fields[vol.Required(key, default=str(current))] = _setting_selector(
@@ -659,9 +671,13 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             current = next((o for o, (v, _, _) in options.items() if v == key), None)
         if user_input and name in user_input:
             current = user_input[name]
+        if name == "ewt" and current is not None and not isinstance(current, bool):
+            current = current == "4"
         marker = (
             vol.Optional(name, default=current) if current is not None else vol.Optional(name)
         )
+        if name == "ewt":
+            return marker, selector.BooleanSelector()
         return marker, selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[
@@ -675,9 +691,12 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
     @staticmethod
     def _select_changes(user_input, data, changes) -> None:
         for name, (reg, mask, options) in PLANT_SELECTS.items():
-            if user_input.get(name) not in options:
+            selected = user_input.get(name)
+            if name == "ewt" and isinstance(selected, bool):
+                selected = "4" if selected else "0"
+            if selected not in options:
                 continue
-            value = options[user_input[name]][0]
+            value = options[selected][0]
             if mask is not None:
                 value = (data.get(f"param_{reg:02x}", SELECT_DEFAULT_BASE[reg]) & ~mask) | value
             if value != data.get(f"param_{reg:02x}"):
@@ -709,9 +728,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                     else self._select_field(item, data, user_input)
                 )
                 group[marker] = sel
-            fields[vol.Optional(name, default=dict)] = section(
-                vol.Schema(group), {"collapsed": True}
-            )
+            fields.update([self._section_field(name, group)])
         return self.async_show_form(
             step_id="plant_form", data_schema=vol.Schema(fields), errors=errors
         )
@@ -755,9 +772,14 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             ): selector.BooleanSelector()
             for name in PLANT_FLAGS
         }
-        fields[vol.Optional("summer_ventilation", default=dict)] = section(
-            vol.Schema(self._number_fields(BYPASS_NUMBERS, data, user_input)),
-            {"collapsed": True},
+        fields.update(
+            [
+                self._section_field(
+                    "summer_ventilation",
+                    self._number_fields(BYPASS_NUMBERS, data, user_input),
+                    collapsed=False,
+                )
+            ]
         )
         note = ""
         if not known:

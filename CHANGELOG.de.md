@@ -2,21 +2,20 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
-## 2026.11.20.1
+## 2026.11.20
 
 ### Behoben
 - **Gerätekonfiguration:** „Sommerlüftung aktiv“ gehört zum Geräteblock **Konfiguration** statt zu den allgemeinen Bedienelementen. Bypass-Bedingung und Automationstauglichkeit bleiben unverändert.
-- **Optionslayout:** Jede Lüftungsstufe und ihre Disbalance stehen gemeinsam in einem Abschnitt. Frostschutz (einschließlich minimaler Zulufttemperatur), Nachheizung und Sommerlüftung erhalten eigene Blöcke mit kürzeren Feldnamen. Alle Blöcke starten zugeklappt; bei Eingabefehlern bleiben Werte erhalten und gespeicherte Optionen bleiben kompatibel.
+- **Optionslayout:** Jede Lüftungsstufe und ihre Disbalance stehen gemeinsam in einem Abschnitt. Frostschutz (einschließlich minimaler Zulufttemperatur), Nachheizung und Sommerlüftung erhalten eigene Blöcke mit kürzeren Feldnamen. Sommerlüftung startet aufgeklappt, andere Blöcke zugeklappt. „EWT-Klappe vorhanden“ ist eine Checkbox. Bei Eingabefehlern bleiben Werte erhalten und gespeicherte Optionen bleiben kompatibel.
 - **Halbe Disbalance-Prozente:** 0,5-%-Schritte ohne Abschneiden durch Ganzzahlkonvertierung, einschließlich Bus-Codierung/-Auswertung und Speicherung (ein signed Rohwertschritt = 0,5 %). Bridge-Skript für die entsprechenden Rohwertgrenzen aktualisieren.
-- **Filterintervall** steht an dritter Stelle der allgemeinen Einstellungen, vor den gruppierten Lüftungsstufen.
+- **Filterintervall** steht an dritter Stelle der allgemeinen Einstellungen, vor den gruppierten Lüftungsstufen. Der EWT-Klappenblock steht ganz oben auf der Anlagenparameterseite.
+- Abschnittsvorgaben enthalten die bekannten Feldwerte, damit gruppierte Anlagenparameter nicht leer erscheinen; unbekannte Felder bleiben leer und fehlerhafte Eingaben zur Korrektur sichtbar.
 - Die separate Schwellenseite entfällt: Schreibbare Felder stehen in den passenden Anlagenblöcken, reine Kennlinien-Lesewerte nur auf der letzten erweiterten Seite. Automatikmodus steht auf der ersten Seite über Stufe 1, Defroster-Typ über Frostschutzmodus.
-- Mit 42 busfreien Regressionstests geprüft. Für die Tests wurden weder Lüftungswerte noch Bypass-Stellung verändert.
-
-## 2026.11.20
+- Mit 46 busfreien Regressionstests geprüft, einschließlich Übernahme neuer Anlagenwerte statt veralteter Formularwerte ohne Schreibzugriff. Für die Tests wurden weder Lüftungswerte noch Bypass-Stellung verändert.
 
 ### Highlights
 - **Automatisierbare Sommerlüftung:** `switch.novus300_summer_ventilation` ersetzt die Aktivierungs-Checkbox in den Optionen. Der Schalter wird nur angeboten, wenn die Anlagenkonfiguration einen vorhandenen Bypass bestätigt.
-- **Disbalance-Feineinstellung:** Jede der drei Lüftungsstufen erhält direkt neben dem Prozentwert eine eigene Einstellung von −50 bis +50 % in ganzen Prozentschritten.
+- **Disbalance-Feineinstellung:** Jede der drei Lüftungsstufen erhält direkt neben dem Prozentwert eine eigene Einstellung von −50 bis +50 % in 0,5-Prozentschritten.
 - **Dynamische zweite Dashboard-Ansicht:** „Sensoren“ nutzt ein Basisschema mit separaten Ausstattungsebenen, Temperaturen an den Sensorpositionen und kompakter Darstellung. Beide Ansichten und die unabhängige editierbare Dashboard-Kopie sind jetzt deutsch und englisch dokumentiert.
 
 ### Neu

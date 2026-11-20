@@ -2,21 +2,20 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
-## 2026.11.20.1
+## 2026.11.20
 
 ### Fixed
 - **Device configuration:** "Summer ventilation active" belongs to the device's **Configuration** block, not its general controls. Bypass-only availability and automation support remain unchanged.
-- **Options layout:** each ventilation level and its imbalance share a section. Frost protection (including minimum supply air temperature), reheating and summer ventilation have their own sections with shorter field labels. All sections start collapsed; submitted values are preserved after input errors and stored options remain compatible.
+- **Options layout:** each ventilation level and its imbalance share a section. Frost protection (including minimum supply air temperature), reheating and summer ventilation have their own sections with shorter field labels. Summer ventilation starts expanded; other sections start collapsed. The EWT installed field is a checkbox. Submitted values are preserved after input errors and stored options remain compatible.
 - **Half-percent imbalance:** accepts 0.5 % steps without integer truncation, including bus encoding/decoding and persistence (one signed raw increment = 0.5 %). Update the bridge script for the corresponding raw limits.
-- **Filter interval** is the third field in general settings, before the grouped ventilation levels.
+- **Filter interval** is the third field in general settings, before the grouped ventilation levels. The EWT damper block is first on the plant parameters page.
+- Section defaults include the known field values, preventing grouped plant parameters from appearing empty; unknown fields stay blank and invalid input remains visible for correction.
 - The separate thresholds page is removed: its writable fields now live in the matching plant sections; read-only characteristic values appear only on the final advanced page. Automatic mode is above level 1 on the first page; defroster type precedes frost protection mode.
-- Validated with 42 bus-free regression tests. No ventilation settings or bypass position were changed for testing.
-
-## 2026.11.20
+- Validated with 46 bus-free regression tests, including fresh unit readings replacing stale form values without writes. No ventilation settings or bypass position were changed for testing.
 
 ### Highlights
 - **Automatable summer ventilation:** new `switch.novus300_summer_ventilation` replaces the activation checkbox in the options. It is offered only when the unit configuration confirms an installed bypass.
-- **Fan imbalance fine adjustment:** each of the three ventilation levels now has its own signed adjustment, −50 to +50 % in whole-percent steps, next to its speed setting.
+- **Fan imbalance fine adjustment:** each of the three ventilation levels now has its own signed adjustment, −50 to +50 % in 0.5-percent steps, next to its speed setting.
 - **Dynamic second dashboard view:** the "Sensoren" view now uses a base diagram and separate equipment overlays, with temperatures at the sensor locations and a compact layout. Both views and the independent editable dashboard copy are now documented in English and German.
 
 ### Added

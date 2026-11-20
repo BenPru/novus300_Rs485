@@ -292,3 +292,74 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
             [key.schema for key in fields["frost_protection"].schema.schema][:2],
             ["defroster", "frost"],
         )
+
+    async def test_sections_expose_known_values_as_parent_defaults(self):
+        flow, co = self.flow(
+            {
+                "param_47": 55,
+                "param_4a": 0,
+                "param_21": 1,
+                "param_5a": 500,
+                "param_41": 230,
+                "fan_level_1_percentage": 21,
+                "fan_level_1_imbalance": -0.5,
+            }
+        )
+        plant = (await flow.async_step_plant_form())["data_schema"].schema
+        defaults = {marker.schema: marker.default() for marker in plant}
+        self.assertEqual(defaults["frost_protection"]["p47"], "5.5")
+        self.assertEqual(defaults["frost_protection"]["p4a"], "0.0")
+        self.assertNotIn("frost", defaults["frost_protection"])
+        self.assertEqual(defaults["reheating"], {"reheater": "1", "p5a": "50.0"})
+        general = {
+            marker.schema: marker.default() for marker in flow._general_schema().schema
+            if marker.default is not vol.UNDEFINED
+        }
+        self.assertEqual(
+            general["fan_level_1"],
+            {"fan_level_1_percentage": 21, "fan_level_1_imbalance": -0.5},
+        )
+        bypass = (await flow.async_step_bypass_form())["data_schema"].schema
+        summer = next(marker for marker in bypass if marker.schema == "summer_ventilation")
+        self.assertEqual(summer.default(), {"p41": "23.0"})
+        self.assertFalse(bypass[summer].options["collapsed"])
+
+    async def test_section_defaults_preserve_invalid_input_for_correction(self):
+        flow, co = self.flow({"param_47": 55})
+        form = await flow.async_step_plant_form({"frost_protection": {"p47": "oops"}})
+        self.assertEqual(form["errors"]["base"], "invalid_number")
+        frost = next(
+            marker for marker in form["data_schema"].schema
+            if marker.schema == "frost_protection"
+        )
+        self.assertEqual(frost.default()["p47"], "oops")
+
+    async def test_ewt_checkbox_preserves_installation_register_mapping(self):
+        for raw, wanted, expected in ((0, True, 4), (4, False, 0)):
+            with self.subTest(raw=raw):
+                flow, co = self.flow({"param_24": raw})
+                co.async_write_parameters = AsyncMock()
+                form = await flow.async_step_plant_form()
+                self.assertEqual(next(iter(form["data_schema"].schema)).schema, "ewt")
+                group = form["data_schema"].schema["ewt"].schema.schema
+                checkbox = next(marker for marker in group if marker.schema == "ewt")
+                self.assertEqual(checkbox.default(), raw == 4)
+                self.assertEqual(group[checkbox].selector_type, "boolean")
+                await flow.async_step_plant_form({"ewt": {"ewt": wanted}})
+                co.async_write_parameters.assert_awaited_once_with({0x24: expected})
+
+    async def test_sections_follow_new_unit_readings_without_writing(self):
+        flow, co = self.flow({"param_47": 55})
+        co.async_write_parameters = AsyncMock()
+        flow._config_entry.options["p47"] = "9.9"
+
+        async def displayed_temperature():
+            fields = (await flow.async_step_plant_form())["data_schema"].schema
+            frost = next(key for key in fields if key.schema == "frost_protection")
+            return frost.default()["p47"]
+
+        self.assertEqual(await displayed_temperature(), "5.5")
+        co._async_publish({"param_47": 60})
+        self.assertEqual(await displayed_temperature(), "6.0")
+        co.async_write_parameters.assert_not_awaited()
+        co._async_send.assert_not_awaited()
