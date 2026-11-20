@@ -2,7 +2,9 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
-## Unveröffentlicht
+## 2026.11.20
+
+### Stufenwiederherstellung und Hardwarediagnosen
 
 - Gespeicherten Original-Prozentwert erhalten, wenn eine weitere temporäre
   Prozentänderung fehlschlägt, damit die inaktive Stufe später zurückgesetzt
@@ -14,8 +16,6 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - Deutsche/englische Diagnoseanleitung und GitHub-Issue-Formular für neue
   Hardware ergänzt, mit Aktionszeitpunkten, Rohpuffergrenzen und Datenschutzprüfung.
 
-## 2026.11.20
-
 ### Behoben
 - **Gerätekonfiguration:** „Sommerlüftung aktiv“ gehört zum Geräteblock **Konfiguration** statt zu den allgemeinen Bedienelementen. Bypass-Bedingung und Automationstauglichkeit bleiben unverändert.
 - **Optionslayout:** Jede Lüftungsstufe und ihre Disbalance stehen gemeinsam in einem Abschnitt. Frostschutz (einschließlich minimaler Zulufttemperatur), Nachheizung und Sommerlüftung erhalten eigene Blöcke mit kürzeren Feldnamen. Sommerlüftung startet aufgeklappt, andere Blöcke zugeklappt. „EWT-Klappe vorhanden“ ist eine Checkbox. Bei Eingabefehlern bleiben Werte erhalten und gespeicherte Optionen bleiben kompatibel.
@@ -23,7 +23,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - **Filterintervall** steht an dritter Stelle der allgemeinen Einstellungen, vor den gruppierten Lüftungsstufen. Der EWT-Klappenblock steht ganz oben auf der Anlagenparameterseite.
 - Abschnittsvorgaben enthalten die bekannten Feldwerte, damit gruppierte Anlagenparameter nicht leer erscheinen; unbekannte Felder bleiben leer und fehlerhafte Eingaben zur Korrektur sichtbar.
 - Die separate Schwellenseite entfällt: Schreibbare Felder stehen in den passenden Anlagenblöcken, reine Kennlinien-Lesewerte nur auf der letzten erweiterten Seite. Automatikmodus steht auf der ersten Seite über Stufe 1, Defroster-Typ über Frostschutzmodus.
-- Mit 46 busfreien Regressionstests geprüft, einschließlich Übernahme neuer Anlagenwerte statt veralteter Formularwerte ohne Schreibzugriff. Für die Tests wurden weder Lüftungswerte noch Bypass-Stellung verändert.
+- Mit 50 busfreien Regressionstests geprüft, einschließlich Übernahme neuer Anlagenwerte statt veralteter Formularwerte ohne Schreibzugriff. Für die Tests wurden weder Lüftungswerte noch Bypass-Stellung verändert.
 
 ### Highlights
 - **Automatisierbare Sommerlüftung:** `switch.novus300_summer_ventilation` ersetzt die Aktivierungs-Checkbox in den Optionen. Der Schalter wird nur angeboten, wenn die Anlagenkonfiguration einen vorhandenen Bypass bestätigt.

@@ -2,7 +2,9 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
-## Unreleased
+## 2026.11.20
+
+### Fan restoration and hardware diagnostics
 
 - Preserve the remembered original fan percentage if a further temporary
   percentage change fails, allowing later restoration of the inactive stage.
@@ -13,8 +15,6 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - Add English/German diagnostic collection guides and a new-hardware GitHub
   issue form, including timestamped actions, raw-buffer limits and privacy review.
 
-## 2026.11.20
-
 ### Fixed
 - **Device configuration:** "Summer ventilation active" belongs to the device's **Configuration** block, not its general controls. Bypass-only availability and automation support remain unchanged.
 - **Options layout:** each ventilation level and its imbalance share a section. Frost protection (including minimum supply air temperature), reheating and summer ventilation have their own sections with shorter field labels. Summer ventilation starts expanded; other sections start collapsed. The EWT installed field is a checkbox. Submitted values are preserved after input errors and stored options remain compatible.
@@ -22,7 +22,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - **Filter interval** is the third field in general settings, before the grouped ventilation levels. The EWT damper block is first on the plant parameters page.
 - Section defaults include the known field values, preventing grouped plant parameters from appearing empty; unknown fields stay blank and invalid input remains visible for correction.
 - The separate thresholds page is removed: its writable fields now live in the matching plant sections; read-only characteristic values appear only on the final advanced page. Automatic mode is above level 1 on the first page; defroster type precedes frost protection mode.
-- Validated with 46 bus-free regression tests, including fresh unit readings replacing stale form values without writes. No ventilation settings or bypass position were changed for testing.
+- Validated with 50 bus-free regression tests, including fresh unit readings replacing stale form values without writes. No ventilation settings or bypass position were changed for testing.
 
 ### Highlights
 - **Automatable summer ventilation:** new `switch.novus300_summer_ventilation` replaces the activation checkbox in the options. It is offered only when the unit configuration confirms an installed bypass.
