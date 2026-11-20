@@ -29,6 +29,7 @@ with the command whitelist enabled, can request a ventilation mode via
 - [Unit settings](#unit-settings)
 - [Entities](#entities) · [Dashboard](#dashboard) · [Automation examples](#automation-examples)
 - [Troubleshooting](#troubleshooting)
+- [Report new hardware with diagnostics](docs/DIAGNOSTICS.md)
 - [Passive bus capture preparation](#passive-bus-capture-preparation)
 - [HACS](#hacs)
 - [License](#license)
@@ -280,7 +281,18 @@ After changing the filter, press `button.novus300_filter_reset` (or call `novus3
 
 #### Option: real fan levels
 
-By default the mode select stays on **Automatic** while a fan percentage is active. Enable **Show levels instead of automatic when the fan is set by percentage** (`show_fan_levels`) in the integration options to show level 1/3 instead. Selecting a level always restores its original percentage.
+By default the mode select stays on **Automatic** while a fan percentage is active. Enable **Show levels instead of automatic when the fan is set by percentage** (`show_fan_levels`) in the integration options to show level 1/3 instead.
+
+Selecting a level **in Home Assistant** requests restoration of the original
+percentages, even when reselecting the current level. A mode change reported
+by the physical panel also triggers restoration of the now-inactive temporary
+level. Pressing the already-active panel level again does not currently trigger
+restoration; existing captures do not unambiguously establish that action.
+
+On a reported restore write failure, the original is retained and a later
+coordinator update retries after a 60-second backoff. Stage-percentage writes
+do not wait for unit readback: a successful send is **not a guarantee** that
+the unit has physically applied the original value.
 
 
 - supply, outdoor, extract, and exhaust air temperatures
@@ -305,6 +317,10 @@ again.
 | `fan.novus300` cannot be controlled | Set the panel to Automatic and verify Tinkerforge host, port, UID, and Brick Daemon. |
 | Fixed panel level has the wrong percentage | Adjust the matching Ventilation level option; it is written to the unit. |
 | Filter or operating time is missing | Wait for the unit's complete register dump; these registers are not broadcast continuously. |
+
+To help identify values from another unit or accessories such as an EWT damper,
+follow the [diagnostic collection and GitHub issue guide](docs/DIAGNOSTICS.md).
+It covers timestamped panel actions, downloads, the rolling raw log and privacy.
 
 ## Passive bus capture preparation
 

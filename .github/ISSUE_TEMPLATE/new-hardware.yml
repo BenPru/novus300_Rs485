@@ -1,0 +1,75 @@
+name: New hardware / diagnostic data
+description: Report another unit or accessory, such as an EWT damper, with reviewed diagnostics.
+title: "[Hardware] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        English or German is welcome.
+        Read the collection and privacy guide first:
+        [English](https://github.com/BenPru/novus300_Rs485/blob/main/docs/DIAGNOSTICS.md) /
+        [Deutsch](https://github.com/BenPru/novus300_Rs485/blob/main/docs/DIAGNOSTICS.de.md).
+        Diagnostics are **not anonymized by this integration**. Review a copy before uploading publicly.
+        Do not change installation flags, protection settings or wiring for this report.
+  - type: input
+    id: hardware
+    attributes:
+      label: Ventilation unit and panel
+      description: Exact model of each device and firmware versions, or "unknown".
+      placeholder: "Unit: ...; panel: ...; firmware: ..."
+    validations:
+      required: true
+  - type: textarea
+    id: equipment
+    attributes:
+      label: Installed equipment
+      description: |
+        List physically fitted equipment and its type/model (bypass, EWT damper, defroster,
+        brine defroster, reheater). Separately state what the panel/integration reports.
+        Mark unknown details as unknown; do not change installation flags.
+    validations:
+      required: true
+  - type: textarea
+    id: versions
+    attributes:
+      label: Software and connection
+      description: Home Assistant and integration versions; USB or TCP bridge, and bridge version if known. No private addresses needed.
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: Missing or unexpected values
+      description: What should be visible, what HA shows, and what the physical panel shows.
+    validations:
+      required: true
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Action log with timestamps and timezone
+      description: |
+        Include date/time with UTC offset, panel versus HA action, before/after values,
+        restoration of original settings and the corresponding filename.
+        A passive report with no changes is welcome; state that explicitly.
+        For stages, distinguish changing stage from pressing the already-active stage again.
+      placeholder: |
+        YYYY-MM-DD hh:mm:ss+01:00 | panel action or passive observation | before -> after | filename.json
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Reviewed diagnostic files
+      description: |
+        Drag integration diagnostic JSON files (or a ZIP) here and wait for uploads to finish.
+        Download immediately after each action; the raw log only holds 3000 received chunks.
+        Describe any redactions. Do not paste the whole raw log or attach HA backups or secrets.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Public attachment review
+      options:
+        - label: I reviewed the attachments and removed sensitive or identifying information before public upload.
+          required: true

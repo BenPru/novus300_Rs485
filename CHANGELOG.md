@@ -2,6 +2,17 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## Unreleased
+
+- Preserve the remembered original fan percentage if a further temporary
+  percentage change fails, allowing later restoration of the inactive stage.
+- Add bus-free regression tests using captured panel mode feedback for
+  restoration, preservation of an active override and retry after write errors.
+  Clarify that same-stage panel reselection is not established by existing
+  captures and that stage writes do not wait for unit confirmation.
+- Add English/German diagnostic collection guides and a new-hardware GitHub
+  issue form, including timestamped actions, raw-buffer limits and privacy review.
+
 ## 2026.11.20
 
 ### Fixed

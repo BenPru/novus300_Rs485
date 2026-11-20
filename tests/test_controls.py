@@ -12,6 +12,8 @@ import voluptuous as vol
 from custom_components.novus300bus import _sync_bypass_entity
 from custom_components.novus300bus.config_flow import NovusOptionsFlow
 from custom_components.novus300bus.coordinator import NovusCoordinator
+from custom_components.novus300bus.fan import NovusBusFanEntity
+from custom_components.novus300bus.protocol import NovusFrameParser, build_setting_frame
 from custom_components.novus300bus.switch import NovusSummerVentilationSwitch
 
 
@@ -111,6 +113,120 @@ class SummerControlTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(co.setting_value("fan_level_1_imbalance"), -0.5)
         self.assertEqual(co.settings_from_bus()["fan_level_1_imbalance"], -0.5)
         self.assertNotIn("fan_level_1_imbalance", co.settings_not_read())
+
+
+class FanRestoreTest(unittest.IsolatedAsyncioTestCase):
+    def fan(self, co):
+        entity = NovusBusFanEntity(co)
+        tasks = []
+
+        def create_task(coro):
+            task = asyncio.create_task(coro)
+            tasks.append(task)
+            return task
+
+        def publish(data):
+            co.data = data
+            entity._handle_coordinator_update()
+
+        entity.hass = SimpleNamespace(async_create_task=create_task)
+        entity.async_write_ha_state = Mock()
+        co.async_set_updated_data.side_effect = publish
+        return entity, tasks
+
+    def receive(self, co, frame):
+        for readings in NovusFrameParser().feed(bytes.fromhex(frame)):
+            co._async_publish(readings)
+
+    async def test_captured_panel_transitions_restore_inactive_level(self):
+        frames = {
+            "level_1": "01008506d4f8270001290001",
+            "level_2": "010085066b53270002290002",
+            "level_3": "01008506fe35270003290003",
+            "automatic": "010085061ed9270006290006",
+        }
+        for old_mode, original, overridden in (("level_1", 20, 35), ("level_3", 75, 85)):
+            key = f"fan_{old_mode}_percentage"
+            for new_mode, frame in frames.items():
+                with self.subTest(old_mode=old_mode, new_mode=new_mode):
+                    co = coordinator({
+                        "ventilation_mode": old_mode,
+                        key: overridden,
+                        f"orig_{key}": original,
+                    })
+                    _, tasks = self.fan(co)
+                    with patch("custom_components.novus300bus.coordinator.asyncio.sleep", new=AsyncMock()):
+                        self.receive(co, frame)
+                        await asyncio.gather(*tasks)
+                    if new_mode == old_mode:
+                        co._async_send.assert_not_awaited()
+                        self.assertEqual(co.temporary_settings(), {key: original})
+                    else:
+                        co._async_send.assert_awaited_once_with(build_setting_frame(key, original))
+                        self.assertEqual(co.setting_value(key, actual=True), original)
+                        self.assertEqual(co.temporary_settings(), {})
+
+    async def test_restoring_inactive_level_preserves_other_active_override(self):
+        first = "fan_level_1_percentage"
+        third = "fan_level_3_percentage"
+        co = coordinator({
+            "ventilation_mode": "level_1",
+            first: 35, f"orig_{first}": 20,
+            third: 85, f"orig_{third}": 75,
+        })
+        _, tasks = self.fan(co)
+        with patch("custom_components.novus300bus.coordinator.asyncio.sleep", new=AsyncMock()):
+            self.receive(co, "01008506fe35270003290003")
+            await asyncio.gather(*tasks)
+        co._async_send.assert_awaited_once_with(build_setting_frame(first, 20))
+        self.assertEqual(co.temporary_settings(), {third: 75})
+        self.assertEqual(co.setting_value(third, actual=True), 85)
+
+    async def test_failed_restore_retains_original_and_retries_after_backoff(self):
+        key = "fan_level_1_percentage"
+        co = coordinator({
+            "ventilation_mode": "level_1",
+            key: 35, f"orig_{key}": 20,
+        })
+        entity, tasks = self.fan(co)
+        co._async_send.side_effect = HomeAssistantError("Disconnected")
+        with patch("custom_components.novus300bus.fan.monotonic", return_value=100):
+            self.receive(co, "010085066b53270002290002")
+            with self.assertLogs("custom_components.novus300bus.fan", level="WARNING"):
+                await asyncio.gather(*tasks)
+        self.assertFalse(entity._busy)
+        self.assertEqual(co.temporary_settings(), {key: 20})
+        with patch("custom_components.novus300bus.fan.monotonic", return_value=159):
+            self.receive(co, "010085066b53270002290002")
+        self.assertEqual(len(tasks), 1)
+        co._async_send.side_effect = None
+        with (
+            patch("custom_components.novus300bus.fan.monotonic", return_value=161),
+            patch("custom_components.novus300bus.coordinator.asyncio.sleep", new=AsyncMock()),
+        ):
+            self.receive(co, "010085066b53270002290002")
+            await asyncio.gather(*tasks)
+        self.assertEqual(len(tasks), 2)
+        self.assertEqual(co._async_send.await_args.args, (build_setting_frame(key, 20),))
+        self.assertEqual(co.temporary_settings(), {})
+
+    async def test_failed_second_override_does_not_forget_original(self):
+        key = "fan_level_1_percentage"
+        co = coordinator({
+            "ventilation_mode": "level_1",
+            key: 35, f"orig_{key}": 20,
+        })
+        _, tasks = self.fan(co)
+        co._async_send.side_effect = HomeAssistantError("Disconnected")
+        with self.assertRaises(HomeAssistantError):
+            await co.async_set_temporary_setting(key, 30)
+        self.assertEqual(co.temporary_settings(), {key: 20})
+        co._async_send.reset_mock(side_effect=True)
+        with patch("custom_components.novus300bus.coordinator.asyncio.sleep", new=AsyncMock()):
+            self.receive(co, "010085066b53270002290002")
+            await asyncio.gather(*tasks)
+        co._async_send.assert_awaited_once_with(build_setting_frame(key, 20))
+        self.assertEqual(co.temporary_settings(), {})
 
 
 class EntityGatingTest(unittest.TestCase):

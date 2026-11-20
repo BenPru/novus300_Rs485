@@ -33,6 +33,7 @@ anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 - [Anlageneinstellungen](#anlageneinstellungen)
 - [Angelegte Entitäten](#angelegte-entitäten) · [Dashboard](#dashboard) · [Automatisierungsbeispiele](#automatisierungsbeispiele)
 - [Fehlerdiagnose](#fehlerdiagnose)
+- [Neue Hardware mit Diagnosedaten melden](docs/DIAGNOSTICS.de.md)
 - [Vorbereitung der passiven Busaufzeichnung](#vorbereitung-der-passiven-busaufzeichnung)
 - [HACS-Status und Aufnahme](#hacs-status-und-aufnahme)
 - [Uhrzeit-Synchronisation](#uhrzeit-synchronisation)
@@ -295,7 +296,20 @@ Nach dem Filterwechsel `button.novus300_filter_reset` drücken (oder den Dienst 
 
 #### Option: echte Lüfterstufen
 
-Standardmäßig bleibt die Modus-Auswahl auf **Automatik**, solange ein Lüfter-Prozentwert aktiv ist. In den Optionen der Integration lässt sich **Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird** (`show_fan_levels`) aktivieren, dann erscheint Stufe 1/3. Die Wahl einer Stufe stellt immer deren ursprünglichen Prozentwert wieder her.
+Standardmäßig bleibt die Modus-Auswahl auf **Automatik**, solange ein Lüfter-Prozentwert aktiv ist. In den Optionen der Integration lässt sich **Stufen statt Automatik anzeigen, wenn der Lüfter per Prozent gesteuert wird** (`show_fan_levels`) aktivieren, dann erscheint Stufe 1/3.
+
+Die Stufenwahl **in Home Assistant** fordert die Wiederherstellung der
+Originalwerte an, auch bei erneuter Wahl der aktuellen Stufe. Ein vom
+physischen Panel gemeldeter Moduswechsel löst ebenfalls die Wiederherstellung
+der nun inaktiven temporären Stufe aus. Erneutes Drücken derselben bereits
+aktiven Panel-Stufe löst dies derzeit nicht aus; diese Aktion ist in den
+vorhandenen Mitschnitten nicht eindeutig belegt.
+
+Bei gemeldetem Schreibfehler bleibt der Originalwert erhalten. Nach 60 Sekunden
+Wartezeit wird bei einem weiteren Coordinator-Update erneut versucht,
+zurückzusetzen. Stufen-Prozentwerte werden ohne abgewartete Anlagenrückmeldung
+geschrieben: Erfolgreiches Senden **garantiert nicht**, dass die Anlage den
+Originalwert tatsächlich übernommen hat.
 
 
 - Temperaturen für Zu-, Außen-, Ab- und Fortluft
@@ -320,6 +334,10 @@ Modus erneut am Bus erscheint.
 | `fan.novus300` ist nicht steuerbar | Panel auf Automatik stellen; Tinkerforge-Host, Port, UID und Brick Daemon prüfen. |
 | Feste Panel-Stufe zeigt falschen Prozentwert | Die passende Lüftungsstufe in den Integrationsoptionen anpassen; sie wird in die Anlage geschrieben. |
 | Filter-/Betriebszeit fehlt | Auf den vollständigen Register-Dump der Anlage warten; dieser wird nicht kontinuierlich gesendet. |
+
+Zum Zuordnen neuer Werte anderer Anlagen oder etwa einer EWT-Klappe dient die
+[Anleitung für Diagnosedaten und GitHub-Issues](docs/DIAGNOSTICS.de.md).
+Sie erklärt Panel-Aktionsprotokoll, Download, Rohdatenpuffer und Datenschutz.
 
 ## Vorbereitung der passiven Busaufzeichnung
 

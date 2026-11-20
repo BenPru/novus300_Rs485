@@ -371,12 +371,14 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     async def async_set_temporary_setting(self, key: str, value: int) -> None:
         """Write a setting, remembering its original value for later restore."""
         marker = f"{ORIGINAL_PREFIX}{key}"
-        if marker not in self._values:
+        new_override = marker not in self._values
+        if new_override:
             self._values[marker] = self.setting_value(key)
         try:
             await self.async_write_settings({key: value})
         except HomeAssistantError:
-            self._values.pop(marker, None)
+            if new_override:
+                self._values.pop(marker, None)
             raise
 
     async def async_restore_settings(self, keep: str | None = None) -> None:

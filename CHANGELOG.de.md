@@ -2,6 +2,18 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## Unveröffentlicht
+
+- Gespeicherten Original-Prozentwert erhalten, wenn eine weitere temporäre
+  Prozentänderung fehlschlägt, damit die inaktive Stufe später zurückgesetzt
+  werden kann.
+- Busfreie Regressionstests mit aufgezeichneter Panel-Modusrückmeldung für
+  Wiederherstellung, Erhalt einer aktiven Überschreibung und Wiederholung nach
+  Schreibfehlern. Erneute Wahl derselben Panel-Stufe ist in vorhandenen
+  Mitschnitten nicht belegt; Stufenschreiben wartet keine Anlagenbestätigung ab.
+- Deutsche/englische Diagnoseanleitung und GitHub-Issue-Formular für neue
+  Hardware ergänzt, mit Aktionszeitpunkten, Rohpuffergrenzen und Datenschutzprüfung.
+
 ## 2026.11.20
 
 ### Behoben
