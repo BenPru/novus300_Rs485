@@ -59,9 +59,17 @@ body:
   - type: textarea
     id: diagnostics
     attributes:
-      label: Reviewed diagnostic files
+      label: Upload diagnostic data
       description: |
-        Drag integration diagnostic JSON files (or a ZIP) here and wait for uploads to finish.
+        1. In Home Assistant, open Settings > Devices & services > Integrations >
+           Paul Novus 300 RS-485 Bus. In the relevant entry's three-dot menu,
+           select Download diagnostics.
+        2. Review a copy of the JSON file and remove sensitive information before uploading publicly.
+        3. Drag the reviewed JSON file (or a ZIP) into this field and wait for the upload to finish.
+
+        Collection and privacy guide:
+        [English](https://github.com/BenPru/novus300_Rs485/blob/main/docs/DIAGNOSTICS.md) /
+        [Deutsch](https://github.com/BenPru/novus300_Rs485/blob/main/docs/DIAGNOSTICS.de.md).
         Download immediately after each action; the raw log only holds 3000 received chunks.
         Describe any redactions. Do not paste the whole raw log or attach HA backups or secrets.
     validations:
