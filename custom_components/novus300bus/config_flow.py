@@ -11,7 +11,7 @@ from homeassistant.data_entry_flow import FlowResult, section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
-from .protocol import PARAMETER_LIMITS
+from .protocol import PARAMETER_LIMITS, bypass_is_present
 from .const import (
     CONF_AWAY_DURATION_MINUTES,
     CONF_BAUDRATE,
@@ -90,7 +90,7 @@ PLANT_SELECTS = {
 }
 RESOLVED_REGISTERS = {0x48, 0x56, 0x5C, 0x5F, 0x60, 0x61, 0x41, 0x42, 0x43, 0x47, 0x49, 0x4A, 0x4B, 0x4C, 0x5A, 0x63, 0x1B, 0x1E, 0x21, 0x24, 0x7B}
 # checkbox -> (register, bit mask, set bit means unchecked)
-PLANT_FLAGS = {"bypass": (0x1B, 0x04, True)}
+PLANT_FLAGS = {"bypass": (0x1B, 0x04, False)}
 SELECT_DEFAULT_BASE = {0x63: 0x1F0}
 
 BYPASS_NUMBERS = (0x41, 0x42, 0x43, 0x49)
@@ -535,7 +535,11 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         boot, panel = DIALOG_REGISTERS[self._dialog]
         return (
             [reg for reg in boot if f"param_{reg:02x}" not in data],
-            [reg for reg in panel if f"param_{reg:02x}" not in data],
+            [
+                reg for reg in panel
+                if f"param_{reg:02x}" not in data
+                and not (reg == 0x1E and data.get("defroster_status_raw") == 0x08)
+            ],
         )
 
     async def _gate(self) -> FlowResult:
@@ -752,7 +756,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         """
         data = self._unit()
         word = data.get("param_1b")
-        known = word is not None
+        known = bypass_is_present(word) is not None
         shown = {
             name: (bool(word & mask) != inverted) if known else name == "bypass"
             for name, (_, mask, inverted) in PLANT_FLAGS.items()
@@ -827,7 +831,7 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
     async def async_step_bypass_settings(self, user_input=None) -> FlowResult:
         """Bypass thresholds; without a bypass only the summer ventilation ones remain."""
         word = self._unit().get("param_1b")
-        if word is not None and word & 0x04:
+        if bypass_is_present(word) is False:
             return await self.async_step_summer_settings()
         return await self._threshold_form("bypass_settings", (0x41, 0x42, 0x43, 0x49), user_input)
 

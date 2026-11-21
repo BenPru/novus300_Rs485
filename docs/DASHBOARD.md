@@ -17,7 +17,7 @@ Select **Sensoren** in the top navigation to open the second view. It is include
 - The graphic `novus300-airflow.svg` is **served by the integration itself** at `/novus300bus/novus300-airflow.svg`. It no longer has to be copied to `config/www/`. Restart Home Assistant after updating the integration.
 - The sensors view uses `novus300-base.svg` plus transparent overlays `novus300-reheater.svg`, `novus300-ewt.svg`, `novus300-brine.svg`, `novus300-bypass.svg` and `novus300-defroster.svg`, served at the same URL prefix. The old `novus300-schema.svg` is no longer shipped.
 - Overlays use the `bypass_present`, `reheater_present`, `ewt_present`, `defroster_present` and `brine_defroster_present` attributes of `fan.novus300`. Parts confirmed absent are hidden; unknown installation values may still show an overlay until received. Separate installed-part binary sensors are no longer used.
-- Summer ventilation is shown only while `switch.novus300_summer_ventilation` has a usable state and a bypass is confirmed. **Bypass open** is feedback only, not a manual flap control.
+- Summer ventilation is shown only while `switch.novus300_summer_ventilation` has a usable state and the unit is configured without a bypass. **Bypass open** is feedback only, not a manual flap control.
 
 ## Option A: Own dashboard in the UI (recommended)
 

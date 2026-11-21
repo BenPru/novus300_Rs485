@@ -102,7 +102,7 @@ def select_payload_allowed(payload: bytes) -> bool:
     if payload[:2] == b"\x63\x00":
         return payload[2:] in (b"\xf0\x01", b"\xf8\x01")
     if payload[:2] == b"\x1b\x00":
-        return len(payload) == 4 and payload[3] == 0 and payload[2] & 0x7B == 0x7B
+        return len(payload) == 4 and payload[3] == 0 and payload[2] & 0x73 == 0x73
     if payload[:2] == b"\x1e\x00":
         return len(payload) == 6 and payload[2:5] == b"\x0c\x7f\x00" and payload[5] in (1, 2, 3)
     if payload[:2] == b"\x21\x00":

@@ -199,7 +199,7 @@ value for the fan setpoint.
 
 ### Summer ventilation and bypass
 
-Summer ventilation activation is now `switch.novus300_summer_ventilation`, not a checkbox in the options. It is offered only with a confirmed installed bypass; manual entity disabling is respected. `switch.turn_on` / `switch.turn_off` can be used in automations. Only bit `0x80` in the known plant configuration is changed; unknown configuration or missing bus confirmation produces an error rather than a successful-looking state.
+Summer ventilation activation is `switch.novus300_summer_ventilation`, not a checkbox in the options. It is offered only when the configuration confirms **no bypass**; manual entity disabling is respected. With a bypass, the read-only bypass feedback is enabled instead. `switch.turn_on` / `switch.turn_off` can be used in automations. Only bit `0x80` in the known plant configuration is changed; unknown configuration or missing bus confirmation produces an error rather than a successful-looking state.
 
 This enables the unit's summer-ventilation function; it **does not force the bypass flap open or closed**. `switch.novus300_bypass` remains read-only feedback. A verified direct actuation command is still missing, and physical flap movement has not been tested. Bypass installation and temperature thresholds remain in the options.
 
@@ -272,7 +272,7 @@ automation:
         data:
           message: "Novus 300: {{ trigger.to_state.state }}"
 
-# Activate summer ventilation by schedule (only with a confirmed bypass)
+# Activate summer ventilation by schedule (only without a configured bypass)
   - alias: "Novus: summer ventilation in the evening"
     triggers:
       - trigger: time

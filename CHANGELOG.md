@@ -2,6 +2,23 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.21
+
+### Highlights
+- **Correct bypass detection:** the installation bit was interpreted backwards. An installed bypass is now recognised independently of its activation state, restoring the matching entity and equipment display.
+- **Defroster presence from the short status:** distinguish installed/absent without opening the panel menu. The exact electric/PTC/brine type is deliberately not guessed.
+
+### Fixed
+- Decode bypass installation bit `0x04` separately from activation bit `0x08` in register `0x1B`. The configuration checkbox and parameter builder use the same validated interpretation and preserve the other flags.
+- Enable bypass feedback for units with a bypass, and summer ventilation only for units configured without one. Preserve manually disabled entities.
+- Keep short register `0x1E` as `defroster_status_raw`, separate from the extended panel type. Expose generic presence as `fan.novus300` attribute `defroster_installed`; confirmed absence hides both defroster overlays and no longer requires a missing panel type in the settings dialog.
+- Accept the valid bypass flag combinations in the serial bridge whitelist, retaining CRC validation and restrictions on other writes.
+
+### Upgrade and validation notes
+- Update the integration **and the bridge script**, then restart Home Assistant and the bridge service. No ventilation-unit restart or automatic installation-parameter writes are needed. Dashboard files are unchanged.
+- **61 bus-free regression tests pass.** Short-status presence was compared with two known hardware configurations; this does not establish a universal exact-type mapping.
+- **Direct bypass opening/closing remains unsupported.** Correct equipment detection does not prove a physical flap position; summer ventilation does not force the flap.
+
 ## 2026.11.20
 
 ### Highlights

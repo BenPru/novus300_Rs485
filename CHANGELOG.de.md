@@ -2,6 +2,23 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.21
+
+### Highlights
+- **Bypass-Erkennung korrigiert:** Das Installationsbit wurde bisher umgekehrt ausgewertet. Ein eingebauter Bypass wird jetzt unabhängig vom Aktivierungszustand erkannt; passende Entität und Ausstattungsebene werden wieder angezeigt.
+- **Defroster-Präsenz aus dem Kurzstatus:** Vorhanden/nicht vorhanden lässt sich ohne Öffnen des Panel-Menüs unterscheiden. Der genaue Elektro-/PTC-/Sole-Typ wird bewusst nicht geraten.
+
+### Behoben
+- Bypass-Installationsbit `0x04` getrennt vom Aktivierungsbit `0x08` in Register `0x1B` auswerten. Konfigurations-Checkbox und Parameteraufbau verwenden dieselbe geprüfte Interpretation und erhalten die übrigen Flags.
+- Bypass-Rückmeldung bei Anlagen mit Bypass aktivieren, Sommerlüftung nur bei Anlagen ohne Bypass. Manuell deaktivierte Entitäten bleiben deaktiviert.
+- Kurzes Register `0x1E` als `defroster_status_raw` getrennt vom erweiterten Panel-Typ speichern. Generische Präsenz steht am Lüfter als `defroster_installed`; bestätigte Abwesenheit blendet beide Defroster-Ebenen aus und verlangt im Einstellungsdialog keinen fehlenden Panel-Typ mehr.
+- Gültige Bypass-Flagkombinationen in der Bridge-Whitelist zulassen; CRC-Prüfung und Beschränkungen anderer Schreibbefehle bleiben erhalten.
+
+### Update- und Prüfhinweise
+- Integration **und Bridge-Skript aktualisieren**, danach Home Assistant und Bridge-Dienst neu starten. Kein Neustart der Lüftungsanlage und kein automatisches Schreiben von Installationsparametern nötig. Dashboard-Dateien bleiben unverändert.
+- **61 busfreie Regressionstests bestanden.** Die Präsenz aus dem Kurzstatus wurde mit zwei bekannten Hardware-Konfigurationen verglichen; daraus folgt keine allgemeingültige Zuordnung des genauen Typs.
+- **Direktes Bypass-Öffnen/Schließen bleibt unimplementiert.** Korrekte Ausstattungserkennung belegt keine physische Klappenstellung; Sommerlüftung erzwingt diese nicht.
+
 ## 2026.11.20
 
 ### Highlights

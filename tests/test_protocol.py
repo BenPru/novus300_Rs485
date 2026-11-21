@@ -320,6 +320,7 @@ class NovusFrameParserTest(unittest.TestCase):
         readings = _decode_registers(block)
         self.assertEqual(readings["param_21"], 0)
         self.assertEqual(readings["param_24"], 0)
+        self.assertEqual(readings["defroster_status_raw"], 0x0C)
         self.assertNotIn("param_1e", readings)
         self.assertEqual(_decode_registers(bytes.fromhex("7b000000"))["param_7b"], 0)
         tail = bytes.fromhex(
@@ -330,6 +331,24 @@ class NovusFrameParserTest(unittest.TestCase):
         self.assertEqual(_decode_registers(tail)["param_79"], 0x4B)
         # panel format keeps its four bytes
         self.assertEqual(_decode_registers(bytes.fromhex("21000c800003"))["param_21"], 3)
+
+    def test_defroster_short_status_is_not_an_extended_panel_type(self):
+        from custom_components.novus300bus.protocol import _decode_registers
+
+        for raw in (0x08, 0x0C, 0x1C):
+            with self.subTest(raw=raw):
+                readings = _decode_registers(bytes((0x1E, 0, raw, 0x21, 0, 0)))
+                self.assertEqual(readings, {"defroster_status_raw": raw, "param_21": 0})
+        self.assertEqual(_decode_registers(bytes.fromhex("1e000c7f0002")), {"param_1e": 2})
+
+    def test_bypass_words_preserve_installation_activation_and_summer_bits(self):
+        for value in (0x73, 0x77, 0x7B, 0x7F, 0xF3, 0xF7, 0xFB, 0xFF):
+            with self.subTest(value=value):
+                frame = build_select_frame(0x1B, value)
+                self.assertEqual(NovusFrameParser().feed(frame), [{"param_1b": value}])
+        for value in (0, 0x70, 0x72, 0x177, -1):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                build_select_frame(0x1B, value)
 
     def test_maps_manual_error_codes(self) -> None:
         from custom_components.novus300bus.protocol import MESSAGES

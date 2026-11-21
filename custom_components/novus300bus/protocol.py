@@ -35,7 +35,7 @@ PARAMETER_REGISTER_WIDTHS = {
 for _register in (0x44, 0x55, 0x62):
     PARAMETER_REGISTER_WIDTHS.pop(_register)
 
-# Installation selections, stored as param_XX (0x1E/0x21: last byte only).
+# Panel installation selections (0x1E/0x21: last byte of the extended format).
 SELECT_REGISTER_WIDTHS = {0x1B: 2, 0x1E: 4, 0x21: 4, 0x24: 1, 0x7B: 1}
 
 REGISTER_WIDTHS = {
@@ -338,6 +338,8 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
         raw = payload[offset + 2 : offset + 2 + width]
         offset += 2 + width
         if boot_form:
+            if register == 0x1E:
+                readings["defroster_status_raw"] = raw[0]
             # Start-up dump: only "no reheater" (0) is conclusive, the type is not in it.
             if register == 0x21 and raw[0] == 0:
                 readings["param_21"] = 0
@@ -525,11 +527,23 @@ SELECT_VALUES = {
 }
 
 
+def bypass_is_present(word: NovusValue | None) -> bool | None:
+    """Decode installation, not activation, from a recognised bypass word."""
+    if (
+        not isinstance(word, int)
+        or isinstance(word, bool)
+        or word & ~0xFF
+        or word & 0x73 != 0x73
+    ):
+        return None
+    return bool(word & 0x04)
+
+
 def build_select_frame(register: int, value: int) -> bytes:
     """Return the panel frame that stores an installation selection."""
     head = bytes((register, 0x00))
     if register == 0x1B:
-        if value & ~0xFF != 0 or value & 0x7B != 0x7B:
+        if bypass_is_present(value) is None:
             raise ValueError(f"Invalid value for 0x1B: {value}")
         return _build_register_write(head + value.to_bytes(2, "little"))
     if register == 0x63:

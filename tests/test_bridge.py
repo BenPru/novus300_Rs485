@@ -37,9 +37,12 @@ class BridgeWhitelistTest(unittest.TestCase):
                 )
 
     def test_summer_frames_remain_allowed_but_bad_crc_does_not(self):
-        for value in (0x7B, 0xFB):
+        for value in (0x73, 0x77, 0x7B, 0x7F, 0xF3, 0xF7, 0xFB, 0xFF):
             frame = build_select_frame(0x1B, value)
             self.assertTrue(is_allowed_frame(frame))
             corrupt = bytearray(frame)
             corrupt[4] ^= 1
             self.assertFalse(is_allowed_frame(bytes(corrupt)))
+        for value in (0, 0x70, 0x177):
+            frame = _build_register_write(bytes((0x1B, 0)) + value.to_bytes(2, "little"))
+            self.assertFalse(is_allowed_frame(frame))

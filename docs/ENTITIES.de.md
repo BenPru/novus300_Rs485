@@ -70,7 +70,7 @@ Bewegung.
 | `air_path` | `heat_recovery`, `bypass`, `transition` (beide Flags gesetzt) oder `unknown` |
 | `raw_value` | Statuswort der Anlage (Flags 0x08 Wärmerückgewinnung, 0x20 Bypass) |
 
-Beide Bypass-bezogenen Schalter werden automatisch nur bei bestätigt vorhandenem Bypass aktiviert. Ohne Bypass werden sie deaktiviert; manuelles Deaktivieren durch den Nutzer bleibt erhalten.
+Die Bypass-Rückmeldung wird bei gesetztem Installationsbit `0x04` in Register `0x1B` aktiviert, unabhängig vom Aktivierungsbit `0x08`: Sowohl `0x0077` (inaktiv) als auch `0x007F` (aktiv) bedeuten konfigurierten Bypass. Sommerlüftung wird stattdessen bei einer Anlage ohne Bypass aktiviert. Manuelles Deaktivieren durch den Nutzer bleibt erhalten.
 
 Hinweis: Der Bypass-Stellmotor der Anlage des Autors ist defekt, daher konnten
 die Zustände `bypass` und `transition` nie beobachtet oder mitgeschnitten
@@ -80,7 +80,7 @@ werden.
 
 Automatisierbare Aktivierung der Sommerlüftung der Anlage; ersetzt die Options-Checkbox. Der Zustand folgt Bit `0x80` in Register `0x1B`. Schreiben erhält die anderen Anlagenflags und wartet bis zu 15 Sekunden auf passende Bus-Rückmeldung. Bei Fehler bleibt eine optimistische Zustandsänderung aus und ein Fehler wird gemeldet. Die Bus-Rückmeldung ist kein Nachweis einer physischen Klappenbewegung.
 
-Nur bei bestätigt vorhandenem Bypass und funktionierendem Coordinator verfügbar. Installation und Temperaturschwellen bleiben in den Optionen. Dies ist **kein** manueller Bypass-Auf/Zu-Befehl; dieser ist weiterhin nicht belegt.
+Nur bei bestätigt **ohne Bypass** konfigurierter Anlage und funktionierendem Coordinator verfügbar. Installation und Temperaturschwellen bleiben in den Optionen. Dies ist **kein** manueller Bypass-Auf/Zu-Befehl; dieser ist weiterhin nicht belegt.
 
 ## Lüfter
 
@@ -107,6 +107,7 @@ bei 0 der letzte bekannte Wert).
 | `ventilation_mode` | `automatic`, `level_1`, `level_2`, `level_3`, `boost`, `away`, `standby` oder `unknown` |
 | `original_levels` | vorübergehend überschriebene Stufen mit ihrem ursprünglichen Prozentwert (`fan_level_1_percentage`, `fan_level_3_percentage`) |
 | `bypass_present`, `reheater_present`, `ewt_present`, `defroster_present`, `brine_defroster_present` | Ausstattungsflags (`true`/`false`; bei unbekanntem Wert `null`), von der Sensoransicht statt separater Binärsensoren genutzt |
+| `defroster_installed` | Allgemeine Defroster-Anwesenheit aus dem kurzen Status `0x1E`: `0x08` nicht vorhanden, `0x0C`/`0x1C` vorhanden. Unterscheidet nicht zwischen PTC, Elektro und Sole. Bestätigte Abwesenheit blendet beide Defroster-Ebenen aus; typspezifische Flags bleiben bis zum Empfang eines gültigen Bedienteil-Typs unbekannt. Der Rohstatus steht als `defroster_status_raw` in Diagnose/Speicher. |
 | `automatic_type` | im Automatikmodus bei bekanntem Register `0x63`: `sensor_automatic` oder `time_automatic` |
 | `bus_setpoint` | Rohwert der Lüfteransteuerung der Anlage (Register 0x55) in % |
 | `away_minutes_per_hour` | nur im Modus Abwesend: Lüftungsminuten pro Stunde |

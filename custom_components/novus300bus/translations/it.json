@@ -82,7 +82,7 @@
       },
       "bypass_form": {
         "title": "Bypass and summer ventilation",
-        "description": "{state}Activate summer ventilation using the entity switch (only with a confirmed bypass). Installation and temperature thresholds stay here; neither setting forces the flap open or closed.",
+        "description": "{state}Activate summer ventilation using the entity switch only on units configured without a bypass. Installation and temperature thresholds stay here; neither setting forces the flap open or closed.",
         "data": {
           "bypass": "Bypass installed"
         },

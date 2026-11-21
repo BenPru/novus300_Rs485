@@ -68,7 +68,7 @@ the bypass is known. `on` means the bypass is open or moving.
 | `air_path` | `heat_recovery`, `bypass`, `transition` (both flags set) or `unknown` |
 | `raw_value` | status word of the unit (flags 0x08 heat recovery, 0x20 bypass) |
 
-Both bypass-related switches are enabled automatically only when the plant configuration confirms a bypass. With no bypass they are disabled; a user's manual disabling is kept.
+Bypass feedback is enabled when installation bit `0x04` in register `0x1B` is set, independently of activation bit `0x08`: both `0x0077` (inactive) and `0x007F` (active) mean a configured bypass. Summer ventilation is enabled instead when no bypass is configured. A user's manual disabling is kept.
 
 Note: the bypass actuator of the author's unit is defective, so the states
 `bypass` and `transition` could never be observed or recorded.
@@ -77,7 +77,7 @@ Note: the bypass actuator of the author's unit is defective, so the states
 
 Automation-capable activation of the unit's summer ventilation. Replaces the options checkbox. State comes from bit `0x80` of register `0x1B`. Writes preserve the other plant flags and wait up to 15 seconds for matching bus feedback; failure raises an error without an optimistic state change. Bus feedback is not proof of physical flap movement.
 
-Available only with a confirmed bypass and a healthy coordinator. Installation and temperature thresholds stay in the options. This is **not** a manual bypass open/close command; that remains unverified.
+Available only with a confirmed configuration **without a bypass** and a healthy coordinator. Installation and temperature thresholds stay in the options. This is **not** a manual bypass open/close command; that remains unverified.
 
 ## Fan
 
@@ -103,6 +103,7 @@ value if it is 0).
 | `ventilation_mode` | `automatic`, `level_1`, `level_2`, `level_3`, `boost`, `away`, `standby` or `unknown` |
 | `original_levels` | levels temporarily overridden with their original percentage (`fan_level_1_percentage`, `fan_level_3_percentage`) |
 | `bypass_present`, `reheater_present`, `ewt_present`, `defroster_present`, `brine_defroster_present` | installed-part flags (`true`/`false`; `null` when unknown), used by the sensors dashboard instead of separate binary sensors |
+| `defroster_installed` | Generic defroster presence from the short `0x1E` status: `0x08` absent, `0x0C`/`0x1C` installed. This does not distinguish PTC, electric or brine. A confirmed absence hides both defroster overlays; type-specific flags stay unknown until a valid panel type is received. The raw status is preserved as `defroster_status_raw` in diagnostics/storage. |
 | `automatic_type` | in automatic mode, when register `0x63` is known: `sensor_automatic` or `time_automatic` |
 | `bus_setpoint` | raw fan control value sent by the unit (register 0x55) in % |
 | `away_minutes_per_hour` | only in away mode: ventilation minutes per hour |

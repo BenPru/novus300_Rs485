@@ -49,7 +49,7 @@ class SummerControlTest(unittest.IsolatedAsyncioTestCase):
                 await (entity.async_turn_on() if desired else entity.async_turn_off())
                 self.assertEqual(entity.is_on, desired)
 
-    async def test_no_bypass_or_unknown_configuration_cannot_write(self):
+    async def test_installed_bypass_or_unknown_configuration_cannot_write(self):
         for values in ({}, {"param_1b": 0x7F}):
             co = coordinator(values)
             self.assertFalse(NovusSummerVentilationSwitch(co).available)
@@ -91,10 +91,10 @@ class SummerControlTest(unittest.IsolatedAsyncioTestCase):
         await asyncio.gather(summer, installation)
         self.assertEqual(co._async_send.await_args.args[0][8:], bytes.fromhex("ff00"))
 
-    async def test_loss_of_bypass_during_confirmation_is_an_error(self):
+    async def test_installing_bypass_during_confirmation_is_an_error(self):
         co = coordinator({"param_1b": 0x7B})
         co._async_send.side_effect = lambda _: co._async_publish({"param_1b": 0x7F})
-        with self.assertRaisesRegex(HomeAssistantError, "no longer reports a bypass"):
+        with self.assertRaisesRegex(HomeAssistantError, "no longer reports a configuration without"):
             await co.async_set_summer_ventilation(True)
 
     async def test_invalid_imbalance_is_rejected_before_any_write(self):
@@ -230,12 +230,41 @@ class FanRestoreTest(unittest.IsolatedAsyncioTestCase):
 
 
 class EntityGatingTest(unittest.TestCase):
+    def test_bypass_installation_is_independent_of_activation_and_summer_flags(self):
+        for raw, expected in (
+            (0x77, True), (0x7F, True), (0xF7, True), (0xFF, True),
+            (0x73, False), (0x7B, False), (0xF3, False), (0xFB, False),
+            (None, None), (0, None), (0x177, None), (True, None),
+        ):
+            with self.subTest(raw=raw):
+                self.assertIs(coordinator({"param_1b": raw}).bypass_present, expected)
+
+    def test_defroster_status_distinguishes_presence_without_guessing_type(self):
+        for raw, installed in ((0x08, False), (0x0C, True), (0x1C, True), (0xFF, None)):
+            with self.subTest(raw=raw):
+                co = coordinator({"defroster_status_raw": raw})
+                parts = co.installed_parts
+                self.assertIs(parts["defroster_installed"], installed)
+                expected_type_presence = False if installed is False else None
+                self.assertIs(parts["defroster_present"], expected_type_presence)
+                self.assertIs(parts["brine_defroster_present"], expected_type_presence)
+                self.assertEqual(co._persisted_values()["defroster_status_raw"], raw)
+        parts = coordinator({"defroster_status_raw": 0x0C, "param_1e": 2}).installed_parts
+        self.assertTrue(parts["defroster_present"])
+        self.assertFalse(parts["brine_defroster_present"])
+        parts = coordinator({"defroster_status_raw": 0x08, "param_1e": 2}).installed_parts
+        self.assertFalse(parts["defroster_present"])
+        self.assertFalse(parts["defroster_installed"])
+
     def test_gates_both_switches_without_overriding_user_disable(self):
-        for present, disabled, expected in (
-            (True, er.RegistryEntryDisabler.INTEGRATION, None),
-            (False, None, er.RegistryEntryDisabler.INTEGRATION),
-            (True, er.RegistryEntryDisabler.USER, "unchanged"),
-            (None, None, "unchanged"),
+        for present, disabled, changed_key, expected in (
+            (True, er.RegistryEntryDisabler.INTEGRATION, "bypass", None),
+            (False, er.RegistryEntryDisabler.INTEGRATION, "summer_ventilation", None),
+            (True, None, "summer_ventilation", er.RegistryEntryDisabler.INTEGRATION),
+            (False, None, "bypass", er.RegistryEntryDisabler.INTEGRATION),
+            (True, er.RegistryEntryDisabler.USER, None, None),
+            (False, er.RegistryEntryDisabler.USER, None, None),
+            (None, None, None, None),
         ):
             with self.subTest(present=present, disabled=disabled):
                 registry = Mock()
@@ -246,12 +275,11 @@ class EntityGatingTest(unittest.TestCase):
                     "custom_components.novus300bus.er.async_get", return_value=registry
                 ):
                     _sync_bypass_entity(Mock(), entry)
-                if expected == "unchanged":
+                if changed_key is None:
                     registry.async_update_entity.assert_not_called()
                 else:
-                    self.assertEqual(registry.async_update_entity.call_count, 2)
-                    self.assertTrue(
-                        all(c.kwargs == {"disabled_by": expected} for c in registry.async_update_entity.call_args_list)
+                    registry.async_update_entity.assert_called_once_with(
+                        f"switch.novus300bus_{changed_key}", disabled_by=expected
                     )
 
 
@@ -361,6 +389,25 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
         result = await flow.async_step_bypass_form({"bypass": False})
         self.assertEqual(result["errors"], {"base": "configuration_unknown"})
         co.async_write_parameters.assert_not_awaited()
+
+    async def test_bypass_checkbox_uses_installation_bit_and_preserves_activation(self):
+        for word, present, changed in ((0x77, True, 0x73), (0x7B, False, 0x7F)):
+            with self.subTest(word=word):
+                flow, co = self.flow({"param_1b": word})
+                co.async_write_parameters = AsyncMock()
+                form = await flow.async_step_bypass_form()
+                field = next(marker for marker in form["data_schema"].schema if marker.schema == "bypass")
+                self.assertIs(field.default(), present)
+                await flow.async_step_bypass_form({"bypass": not present})
+                co.async_write_parameters.assert_awaited_once_with({0x1B: changed})
+
+    async def test_absent_defroster_does_not_require_a_panel_type(self):
+        flow, _ = self.flow({"defroster_status_raw": 0x08})
+        flow._dialog = "plant"
+        self.assertNotIn(0x1E, flow._missing()[1])
+        flow, _ = self.flow({"defroster_status_raw": 0x0C})
+        flow._dialog = "plant"
+        self.assertIn(0x1E, flow._missing()[1])
 
     async def test_level_sections_write_flat_settings_without_group_options(self):
         flow, co = self.flow()

@@ -100,7 +100,7 @@
       },
       "plant_form": {
         "title": "Plant parameters",
-        "description": "frost protection, reheating and installation types are written to the unit (like the panel menu). Empty fields stay unchanged. **Caution:** defroster type and reheating affect hardware - only set what is installed. The effect of the frost protection mode is unconfirmed.",
+        "description": "Frost protection, reheating and installation types are written to the unit (like the panel menu). Empty fields stay unchanged. The short defroster status can identify presence, but does not identify PTC, electric or brine type; an unknown type stays blank. **Caution:** defroster type and reheating affect hardware - only set what is installed. The effect of the frost protection mode is unconfirmed.",
         "sections": {
           "frost_protection": {
             "name": "Frost protection",
@@ -136,7 +136,7 @@
       },
       "bypass_form": {
         "title": "Bypass and summer ventilation",
-        "description": "{state}Activate summer ventilation using the entity switch (only with a confirmed bypass). Installation and temperature thresholds stay here; neither setting forces the flap open or closed.",
+        "description": "{state}Activate summer ventilation using the entity switch only on units configured without a bypass. Installation and temperature thresholds stay here; neither setting forces the flap open or closed.",
         "data": {
           "bypass": "Bypass installed"
         },

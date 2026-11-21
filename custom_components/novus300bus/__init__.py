@@ -131,7 +131,7 @@ def _remove_obsolete_entities(hass: HomeAssistant) -> None:
 
 
 def _sync_bypass_entity(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Enable the bypass switch if the unit has a bypass, disable it if not.
+    """Enable bypass feedback or summer ventilation for the matching equipment.
 
     Only a state set by the integration is changed; a user's choice is kept.
     """
@@ -140,12 +140,13 @@ def _sync_bypass_entity(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
     registry = er.async_get(hass)
     for key in ("bypass", "summer_ventilation"):
+        enabled = present if key == "bypass" else not present
         entity_id = registry.async_get_entity_id("switch", DOMAIN, f"novus300bus_{key}")
         if entity_id is None or (reg := registry.async_get(entity_id)) is None:
             continue
-        if present and reg.disabled_by is er.RegistryEntryDisabler.INTEGRATION:
+        if enabled and reg.disabled_by is er.RegistryEntryDisabler.INTEGRATION:
             registry.async_update_entity(entity_id, disabled_by=None)
-        elif not present and reg.disabled_by is None:
+        elif not enabled and reg.disabled_by is None:
             registry.async_update_entity(
                 entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION
             )

@@ -64,6 +64,7 @@ from .protocol import (
     build_select_frame,
     build_setting_frame,
     build_time_frame,
+    bypass_is_present,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -83,6 +84,7 @@ KNOWN_IDENTITIES = {
 }
 
 PERSISTED_KEYS = {
+    "defroster_status_raw",
     "message_log_0",
     "message_log_1",
     "message_log_2",
@@ -556,8 +558,10 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     async def async_set_summer_ventilation(self, on: bool) -> None:
         """Change only the summer flag and wait for its bus feedback."""
         async with self._parameter_write_lock:
-            if self.bypass_present is not True:
-                raise HomeAssistantError("Summer ventilation requires a confirmed bypass")
+            if self.bypass_present is not False:
+                raise HomeAssistantError(
+                    "Summer ventilation requires a unit configured without a bypass"
+                )
             word = self._values["param_1b"]
             if bool(word & 0x80) == on:
                 return
@@ -569,8 +573,10 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                     while True:
                         await self._plant_word_received.wait()
                         self._plant_word_received.clear()
-                        if self.bypass_present is not True:
-                            raise HomeAssistantError("The unit no longer reports a bypass")
+                        if self.bypass_present is not False:
+                            raise HomeAssistantError(
+                                "The unit no longer reports a configuration without a bypass"
+                            )
                         if bool(self._values["param_1b"] & 0x80) == on:
                             return
             except TimeoutError as err:
@@ -604,9 +610,8 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     @property
     def bypass_present(self) -> bool | None:
-        """Return whether a bypass is installed (plant flag 0x1B bit 2 is set when absent)."""
-        word = self._values.get("param_1b")
-        return None if not isinstance(word, int) else not word & 0x04
+        """Return installation bit 0x04, independently of activation bit 0x08."""
+        return bypass_is_present(self._values.get("param_1b"))
 
     def _plant_value(self, register: int) -> int | None:
         value = self._values.get(f"param_{register:02x}")
@@ -616,12 +621,23 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     def installed_parts(self) -> dict[str, bool | None]:
         """Return which optional parts the plant has (None while unknown)."""
         reheater, ewt, defroster = (self._plant_value(r) for r in (0x21, 0x24, 0x1E))
+        installed = {0x08: False, 0x0C: True, 0x1C: True}.get(
+            self._values.get("defroster_status_raw")
+        )
+        known_type = defroster in (1, 2, 3)
+        if installed is None and known_type:
+            installed = True
         return {
             "bypass_present": self.bypass_present,
             "reheater_present": None if reheater is None else reheater != 0,
             "ewt_present": None if ewt is None else ewt != 0,
-            "defroster_present": None if defroster is None else defroster in (1, 2),
-            "brine_defroster_present": None if defroster is None else defroster == 3,
+            "defroster_installed": installed,
+            "defroster_present": (
+                False if installed is False else defroster in (1, 2) if known_type else None
+            ),
+            "brine_defroster_present": (
+                False if installed is False else defroster == 3 if known_type else None
+            ),
         }
 
     async def async_request_dump(self) -> None:

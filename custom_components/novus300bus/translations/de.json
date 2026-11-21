@@ -100,7 +100,7 @@
       },
       "plant_form": {
         "title": "Anlagenparameter",
-        "description": "Frostschutz, Nachheizung und Einbau-Typen werden in die Anlage geschrieben (wie im Bedienteil-Menü). Leere Felder bleiben unverändert. **Achtung:** Defroster-Typ und Nachheizung betreffen die Hardware - nur einstellen, was tatsächlich verbaut ist. Die Wirkung des Frostschutzmodus ist unbestätigt.",
+        "description": "Frostschutz, Nachheizung und Einbau-Typen werden in die Anlage geschrieben (wie im Bedienteil-Menü). Leere Felder bleiben unverändert. Der kurze Defroster-Status kann die Anwesenheit erkennen, aber nicht PTC, Elektro oder Sole unterscheiden; ein unbekannter Typ bleibt leer. **Achtung:** Defroster-Typ und Nachheizung betreffen die Hardware - nur einstellen, was tatsächlich verbaut ist. Die Wirkung des Frostschutzmodus ist unbestätigt.",
         "sections": {
           "frost_protection": {
             "name": "Frostschutz",
@@ -136,7 +136,7 @@
       },
       "bypass_form": {
         "title": "Bypass und Sommerlüftung",
-        "description": "{state}Sommerlüftung über den Entitätsschalter aktivieren (nur bei bestätigt vorhandenem Bypass). Installation und Temperaturschwellen bleiben hier; keine dieser Einstellungen erzwingt die Klappenstellung.",
+        "description": "{state}Sommerlüftung über den Entitätsschalter nur bei Anlagen ohne konfigurierten Bypass aktivieren. Installation und Temperaturschwellen bleiben hier; keine dieser Einstellungen erzwingt die Klappenstellung.",
         "data": {
           "bypass": "Bypass vorhanden"
         },

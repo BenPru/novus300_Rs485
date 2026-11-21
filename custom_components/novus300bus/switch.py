@@ -180,7 +180,7 @@ class NovusBypassSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
 
 
 class NovusSummerVentilationSwitch(CoordinatorEntity[NovusCoordinator], SwitchEntity):
-    """Activate summer ventilation without forcing the bypass flap."""
+    """Activate summer ventilation on a unit configured without a bypass."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "summer_ventilation"
@@ -196,7 +196,7 @@ class NovusSummerVentilationSwitch(CoordinatorEntity[NovusCoordinator], SwitchEn
 
     @property
     def available(self) -> bool:
-        return super().available and self.coordinator.bypass_present is True
+        return super().available and self.coordinator.bypass_present is False
 
     @property
     def is_on(self) -> bool | None:

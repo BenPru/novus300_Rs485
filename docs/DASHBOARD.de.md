@@ -17,7 +17,7 @@ Die zweite Ansicht oben über **Sensoren** öffnen. Sie ist in derselben YAML-Da
 - Die Grafik `novus300-airflow.svg` wird **von der Integration selbst** unter `/novus300bus/novus300-airflow.svg` ausgeliefert. Sie muss **nicht** mehr nach `config/www/` kopiert werden. Nach einem Update der Integration ist ein Neustart von Home Assistant nötig.
 - Die Sensoransicht nutzt `novus300-base.svg` mit transparenten Ebenen `novus300-reheater.svg`, `novus300-ewt.svg`, `novus300-brine.svg`, `novus300-bypass.svg` und `novus300-defroster.svg` unter demselben URL-Präfix. Die alte `novus300-schema.svg` wird nicht mehr ausgeliefert.
 - Die Ebenen verwenden die Attribute `bypass_present`, `reheater_present`, `ewt_present`, `defroster_present` und `brine_defroster_present` von `fan.novus300`. Bestätigt nicht vorhandene Teile werden ausgeblendet; bei unbekannter Ausstattung kann eine Ebene bis zum Empfang der Werte sichtbar bleiben. Separate Ausstattungs-Binärsensoren werden nicht mehr verwendet.
-- Sommerlüftung erscheint nur bei nutzbarem Zustand von `switch.novus300_summer_ventilation` und bestätigtem Bypass. **Bypass geöffnet** ist ausschließlich eine Rückmeldung, keine manuelle Klappensteuerung.
+- Sommerlüftung erscheint nur bei nutzbarem Zustand von `switch.novus300_summer_ventilation` und bestätigt ohne Bypass konfigurierter Anlage. **Bypass geöffnet** ist ausschließlich eine Rückmeldung, keine manuelle Klappensteuerung.
 
 ## Variante A: Eigenes Dashboard in der Oberfläche (empfohlen)
 

@@ -214,7 +214,7 @@ Abwesend zeigt die Lüfteransteuerung den Rohwert des Busses.
 
 ### Sommerlüftung und Bypass
 
-Die Aktivierung der Sommerlüftung erfolgt jetzt über `switch.novus300_summer_ventilation`, nicht mehr über eine Checkbox in den Optionen. Der Schalter wird nur bei bestätigt vorhandenem Bypass angeboten; manuelles Deaktivieren der Entität wird respektiert. `switch.turn_on` / `switch.turn_off` sind in Automationen nutzbar. Es wird nur Bit `0x80` der bekannten Anlagenkonfiguration geändert; unbekannte Konfiguration oder fehlende Busbestätigung führen zu einem Fehler statt zu einem vermeintlichen Erfolg.
+Die Aktivierung der Sommerlüftung erfolgt über `switch.novus300_summer_ventilation`, nicht mehr über eine Checkbox in den Optionen. Der Schalter wird nur bei bestätigt **ohne Bypass** konfigurierter Anlage angeboten; manuelles Deaktivieren der Entität wird respektiert. Bei vorhandenem Bypass wird stattdessen dessen lesende Rückmeldung aktiviert. `switch.turn_on` / `switch.turn_off` sind in Automationen nutzbar. Es wird nur Bit `0x80` der bekannten Anlagenkonfiguration geändert; unbekannte Konfiguration oder fehlende Busbestätigung führen zu einem Fehler statt zu einem vermeintlichen Erfolg.
 
 Das aktiviert die Sommerlüftungsfunktion der Anlage, **erzwingt aber kein Öffnen oder Schließen der Bypass-Klappe**. `switch.novus300_bypass` bleibt eine reine Rückmeldung. Ein belegter direkter Stellbefehl fehlt weiterhin; die physische Klappenbewegung ist nicht getestet. Bypass-Installation und Temperaturschwellen bleiben in den Optionen.
 
@@ -239,7 +239,7 @@ Verwendete Entitäten (alle von dieser Integration): `select.novus300_ventilatio
 #### Automatisierungsbeispiele
 
 ```yaml
-# Sommerlüftung nach Zeitplan, nur mit bestätigt vorhandenem Bypass
+# Sommerlüftung nach Zeitplan, nur ohne konfigurierten Bypass
 automation:
   - alias: "Novus: abends Sommerlüftung"
     triggers:
