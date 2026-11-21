@@ -58,6 +58,15 @@ anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 
 ## Installation mit HACS
 
+[![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=BenPru&repository=novus300_Rs485&category=integration)
+[![Integration hinzufügen](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=novus300bus)
+
+Der erste Button öffnet dieses Repository in HACS deiner Home-Assistant-Instanz.
+Die Integration herunterladen und Home Assistant neu starten; anschließend
+startet der zweite Button die Einrichtung. Beide Buttons nutzen My Home Assistant.
+
+Alternativ manuell installieren und einrichten:
+
 1. In HACS **Integrationen** öffnen.
 2. Über das Drei-Punkte-Menü **Benutzerdefinierte Repositorys** wählen.
 3. `https://github.com/BenPru/novus300_Rs485` eintragen und als Kategorie

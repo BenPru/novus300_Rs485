@@ -53,6 +53,15 @@ with the command whitelist enabled, can request a ventilation mode via
 
 ## Install with HACS
 
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=BenPru&repository=novus300_Rs485&category=integration)
+[![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=novus300bus)
+
+The first button opens this repository in HACS of your Home Assistant. Download
+the integration and restart Home Assistant, then use the second button to start
+its configuration. Both buttons use My Home Assistant.
+
+Alternatively, install and configure it manually:
+
 1. Open **HACS → Integrations**.
 2. Select the three-dot menu and choose **Custom repositories**.
 3. Add `https://github.com/BenPru/novus300_Rs485` with category
