@@ -2,6 +2,12 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## Unveröffentlicht
+
+### Behoben
+- Aktuelle gelernte Werte vor Abschluss eines Integrations-Entladens speichern und den verzögerten Schreibauftrag des alten Speichers beenden. Verhindert den Wechsel zwischen alten/neuen Bypass-Werten bei Entitäts-Reloads.
+- Lesethread seine Verbindung selbst schließen lassen und wartende Rückmeldungen nach dem Stoppen verwerfen. Verhindert Socket-Schließen während `read()` und veraltete Zustände aus einem bereits entladenen Coordinator.
+
 ## 2026.11.21
 
 ### Highlights

@@ -2,6 +2,12 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## Unreleased
+
+### Fixed
+- Flush the latest stored readings before completing an integration unload and cancel the old store's delayed write. This prevents old/new bypass settings from alternating across entity-registry reloads.
+- Let the serial reader close its own connection before unloading; reject queued readings after stop. This avoids closing the socket during `read()` and publishing stale state from an unloaded coordinator.
+
 ## 2026.11.21
 
 ### Highlights

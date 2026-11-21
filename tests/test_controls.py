@@ -1,12 +1,16 @@
 """Bus-free tests for summer ventilation, options and entity gating."""
 
 import asyncio
+import threading
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.storage import Store
 import voluptuous as vol
 
 from custom_components.novus300bus import _sync_bypass_entity
@@ -25,12 +29,85 @@ def coordinator(values=None):
     instance._parameter_write_lock = asyncio.Lock()
     instance._plant_word_received = asyncio.Event()
     instance._counter_store = Mock()
+    instance._stop_event = threading.Event()
+    instance._serial_lock = threading.Lock()
+    instance._serial = None
     instance._async_send = AsyncMock()
     instance.last_update_success = True
     instance.async_set_updated_data = Mock(
         side_effect=lambda data: setattr(instance, "data", data)
     )
     return instance
+
+
+class CoordinatorStopTest(unittest.IsolatedAsyncioTestCase):
+    async def test_reload_flushes_pending_store_and_cancels_the_old_writer(self):
+        with TemporaryDirectory(prefix="novus-stop-test-") as directory:
+            hass = HomeAssistant(directory)
+            co = coordinator({"param_1b": 0x73})
+            co.hass = hass
+            co._thread = None
+            co._cancel_time_sync = None
+            co._counter_store = Store(hass, 1, "novus-stop-test")
+            await co._counter_store.async_save({"param_1b": 0x77})
+            co._counter_store.async_delay_save(co._persisted_values, 0.05)
+
+            await co.async_stop()
+            replacement = Store(hass, 1, "novus-stop-test")
+            self.assertEqual(await replacement.async_load(), {"param_1b": 0x73})
+            await replacement.async_save({"param_1b": 0x7F})
+            await asyncio.sleep(0.1)
+            self.assertEqual(
+                await Store(hass, 1, "novus-stop-test").async_load(),
+                {"param_1b": 0x7F},
+            )
+
+    async def test_stop_joins_reader_before_flushing_current_configuration(self):
+        co = coordinator({"param_1b": 0x73, "defroster_status_raw": 0x0C})
+        co._cancel_time_sync = Mock()
+        co._thread = Mock()
+        co._thread.is_alive.return_value = False
+        co._serial = Mock()
+        order = []
+
+        async def executor(func, *args):
+            self.assertTrue(co._stop_event.is_set())
+            order.append("join")
+            return func(*args)
+
+        async def save(values):
+            order.append("save")
+            self.assertEqual(values, {"param_1b": 0x73, "defroster_status_raw": 0x0C})
+
+        co.hass = SimpleNamespace(async_add_executor_job=AsyncMock(side_effect=executor))
+        co._counter_store.async_save = AsyncMock(side_effect=save)
+        cancel = co._cancel_time_sync
+        await co.async_stop()
+        self.assertEqual(order, ["join", "save"])
+        co._thread.join.assert_called_once_with(5)
+        co._serial.close.assert_not_called()
+        cancel.assert_called_once()
+        self.assertIsNone(co._cancel_time_sync)
+        co._counter_store.async_save.assert_awaited_once()
+
+    async def test_stopped_coordinator_cannot_publish_queued_stale_values(self):
+        co = coordinator({"param_1b": 0x73})
+        co._stop_event.set()
+        co._async_publish({"param_1b": 0x77})
+        self.assertEqual(co._values["param_1b"], 0x73)
+        co.async_set_updated_data.assert_not_called()
+        co._counter_store.async_delay_save.assert_not_called()
+
+    async def test_stop_reports_reader_that_has_not_finished(self):
+        co = coordinator({"param_1b": 0x73})
+        co._cancel_time_sync = None
+        co._thread = Mock()
+        co._thread.is_alive.return_value = True
+        co.hass = SimpleNamespace(async_add_executor_job=AsyncMock())
+        co._counter_store.async_save = AsyncMock()
+        with self.assertRaisesRegex(HomeAssistantError, "reader did not stop"):
+            await co.async_stop()
+        co._counter_store.async_save.assert_not_awaited()
 
 
 class SummerControlTest(unittest.IsolatedAsyncioTestCase):

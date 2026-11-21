@@ -213,15 +213,11 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         if self._cancel_time_sync is not None:
             self._cancel_time_sync()
             self._cancel_time_sync = None
-        await self.hass.async_add_executor_job(self._close_serial)
         if self._thread is not None:
             await self.hass.async_add_executor_job(self._thread.join, 5)
-
-    def _close_serial(self) -> None:
-        """Close the serial connection outside Home Assistant's event loop."""
-        with self._serial_lock:
-            if self._serial is not None:
-                self._serial.close()
+            if self._thread.is_alive():
+                raise HomeAssistantError("The Novus serial reader did not stop")
+        await self._counter_store.async_save(self._persisted_values())
 
     def _read_serial(self) -> None:
         """Read and decode the serial byte stream until stopped."""
@@ -669,6 +665,8 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     def _async_publish(self, readings: dict[str, NovusValue]) -> None:
         """Publish decoded readings on Home Assistant's event loop."""
+        if self._stop_event.is_set():
+            return
         clock = readings.get("clock")
         if isinstance(clock, str):
             now = dt_util.now().replace(tzinfo=None)
