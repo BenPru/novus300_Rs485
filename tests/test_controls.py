@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er
 import voluptuous as vol
 
 from custom_components.novus300bus import _sync_bypass_entity
-from custom_components.novus300bus.config_flow import NovusOptionsFlow
+from custom_components.novus300bus.config_flow import NovusConfigFlow, NovusOptionsFlow
 from custom_components.novus300bus.coordinator import NovusCoordinator
 from custom_components.novus300bus.fan import NovusBusFanEntity
 from custom_components.novus300bus.protocol import NovusFrameParser, build_setting_frame
@@ -253,6 +253,44 @@ class EntityGatingTest(unittest.TestCase):
                     self.assertTrue(
                         all(c.kwargs == {"disabled_by": expected} for c in registry.async_update_entity.call_args_list)
                     )
+
+
+class BusConfigTest(unittest.IsolatedAsyncioTestCase):
+    async def test_dynamic_addresses_default_off_and_follow_saved_setting(self):
+        flow = NovusConfigFlow()
+        flow.async_show_form = Mock(side_effect=lambda **kwargs: kwargs)
+        entry = SimpleNamespace(data={}, options={})
+        flow._get_reconfigure_entry = Mock(return_value=entry)
+        for step in (flow.async_step_user, flow.async_step_bus):
+            result = await step()
+            values = result["data_schema"](
+                {"serial_port": "/dev/ttyUSB0", "baudrate": 9600, "parity": "mark"}
+            )
+            self.assertFalse(values["dynamic_bus_addresses"])
+        entry.data["dynamic_bus_addresses"] = False
+        entry.options["dynamic_bus_addresses"] = True
+        result = await flow.async_step_bus()
+        values = result["data_schema"](
+            {"serial_port": "/dev/ttyUSB0", "baudrate": 9600, "parity": "mark"}
+        )
+        self.assertTrue(values["dynamic_bus_addresses"])
+
+    async def test_bus_reconfiguration_saves_enabling_and_disabling(self):
+        flow = NovusConfigFlow()
+        entry = SimpleNamespace(
+            data={"serial_port": "/dev/ttyUSB0"}, options={"daily_time_sync": False}
+        )
+        flow._get_reconfigure_entry = Mock(return_value=entry)
+        flow.hass = Mock()
+        flow.async_abort = Mock(return_value={"type": "abort"})
+        for enabled in (True, False):
+            with self.subTest(enabled=enabled):
+                await flow.async_step_bus({"dynamic_bus_addresses": enabled})
+                changes = flow.hass.config_entries.async_update_entry.call_args.kwargs
+                self.assertEqual(changes["data"]["dynamic_bus_addresses"], enabled)
+                self.assertEqual(changes["options"]["dynamic_bus_addresses"], enabled)
+                self.assertEqual(changes["data"]["serial_port"], "/dev/ttyUSB0")
+                self.assertFalse(changes["options"]["daily_time_sync"])
 
 
 class OptionsTest(unittest.IsolatedAsyncioTestCase):

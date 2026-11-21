@@ -5,7 +5,11 @@
         "data": {
           "serial_port": "Serielles Gerät",
           "baudrate": "Baudrate",
-          "parity": "Parität"
+          "parity": "Parität",
+          "dynamic_bus_addresses": "Dynamische Bus-Adressen akzeptieren (experimentell)"
+        },
+        "data_description": {
+          "dynamic_bus_addresses": "Akzeptiert zusätzlich CRC-gültige Empfangsframes mit einem anderen ersten Headerbyte als 00/01. Das zweite Headerbyte ist bereits uneingeschränkt. Ändert weder Schreibziele noch Bus-Timing und ordnet Adressen keinen Geräten zu."
         }
       },
       "reconfigure": {
@@ -21,7 +25,11 @@
         "data": {
           "serial_port": "Serielles Gerät / Bridge-URL",
           "baudrate": "Baudrate",
-          "parity": "Parität"
+          "parity": "Parität",
+          "dynamic_bus_addresses": "Dynamische Bus-Adressen akzeptieren (experimentell)"
+        },
+        "data_description": {
+          "dynamic_bus_addresses": "Akzeptiert zusätzlich CRC-gültige Empfangsframes mit einem anderen ersten Headerbyte als 00/01. Das zweite Headerbyte ist bereits uneingeschränkt. Ändert weder Schreibziele noch Bus-Timing und ordnet Adressen keinen Geräten zu."
         }
       },
       "fan_control": {

@@ -436,8 +436,26 @@ def _decode_identity(payload: bytes) -> dict[str, NovusValue]:
 class NovusFrameParser:
     """Incrementally parse Novus RS-485 frames."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, dynamic_bus_addresses: bool = False) -> None:
         self._buffer = bytearray()
+        self._dynamic_bus_addresses = dynamic_bus_addresses
+
+    def _has_later_valid_frame(self) -> bool:
+        """Find a CRC-valid frame after an incomplete header during resync."""
+        for offset in range(1, len(self._buffer) - 5):
+            is_clock = self._buffer[offset : offset + 4] == b"\x00\x00\x00\x0e"
+            if not is_clock and not 0x80 <= self._buffer[offset + 2] <= 0x87:
+                continue
+            length = (self._buffer[offset + 3] & 0x7F) + 6
+            if length > 70 or offset + length > len(self._buffer):
+                continue
+            frame = bytes(self._buffer[offset : offset + length])
+            if _frame_is_valid(frame):
+                return True
+            if not is_clock and frame[0] == 0x00:
+                if _frame_is_valid(b"\x01" + frame[1:]):
+                    return True
+        return False
 
     def feed(self, data: bytes) -> list[Mapping[str, NovusValue]]:
         """Return readings from every valid register-data frame in `data`."""
@@ -447,7 +465,11 @@ class NovusFrameParser:
         while len(self._buffer) >= 6:
             is_clock = bytes(self._buffer[:4]) == b"\x00\x00\x00\x0e"
             if not is_clock and (
-                self._buffer[0] not in (0x00, 0x01) or not 0x80 <= self._buffer[2] <= 0x87
+                (
+                    not self._dynamic_bus_addresses
+                    and self._buffer[0] not in (0x00, 0x01)
+                )
+                or not 0x80 <= self._buffer[2] <= 0x87
             ):
                 del self._buffer[0]
                 continue
@@ -458,6 +480,10 @@ class NovusFrameParser:
                 del self._buffer[0]
                 continue
             if len(self._buffer) < frame_length:
+                # Arbitrary headers make incomplete false candidates more likely.
+                if self._dynamic_bus_addresses and self._has_later_valid_frame():
+                    del self._buffer[0]
+                    continue
                 break
 
             frame = bytes(self._buffer[:frame_length])
@@ -472,7 +498,8 @@ class NovusFrameParser:
                     del self._buffer[0]
                 continue
             if candidate[0] == 0x00:
-                candidate = bytes((0x01,)) + candidate[1:]
+                if not self._dynamic_bus_addresses or not _frame_is_valid(candidate):
+                    candidate = bytes((0x01,)) + candidate[1:]
             if not _frame_is_valid(candidate):
                 del self._buffer[0]
                 continue

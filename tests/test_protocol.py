@@ -61,11 +61,53 @@ class NovusFrameParserTest(unittest.TestCase):
         )
 
     def test_repairs_missing_frame_marker(self) -> None:
-        parser = NovusFrameParser()
+        for dynamic in (False, True):
+            with self.subTest(dynamic=dynamic):
+                parser = NovusFrameParser(dynamic_bus_addresses=dynamic)
 
-        readings = parser.feed(bytes.fromhex("0000850329331d0001"))
+                readings = parser.feed(bytes.fromhex("0000850329331d0001"))
 
-        self.assertEqual(readings, [{"run_state": "running", "run_state_raw": 1}])
+                self.assertEqual(readings, [{"run_state": "running", "run_state_raw": 1}])
+
+    def test_dynamic_headers_require_opt_in_and_keep_crc_validation(self) -> None:
+        payload = bytes.fromhex("8100e600")
+        for prefix in (0x00, 0x01, 0x02, 0x7F, 0xFF):
+            for address in (0x00, 0x05, 0x09, 0xFF):
+                with self.subTest(prefix=prefix, address=address):
+                    header = bytes((prefix, address, 0x85, len(payload)))
+                    crc = crc16_ccitt(header + payload)
+                    frame = header + crc.to_bytes(2, "little") + payload
+                    expected = [{"supply_air_temperature": 23.0}]
+                    self.assertEqual(
+                        NovusFrameParser().feed(frame),
+                        expected if prefix == 0x01 else [],
+                    )
+                    parser = NovusFrameParser(dynamic_bus_addresses=True)
+                    self.assertEqual(parser.feed(frame[:5]), [])
+                    self.assertEqual(parser.feed(frame[5:]), expected)
+                    corrupt = frame[:4] + bytes((frame[4] ^ 1, frame[5])) + frame[6:]
+                    self.assertEqual(parser.feed(corrupt), [])
+                    self.assertEqual(parser.feed(frame), expected)
+
+    def test_dynamic_mode_preserves_captured_frames_and_clock(self) -> None:
+        frames = bytes.fromhex(
+            "01008513a89b44008c8100e600820069008300e60084008c00"
+            "0000000ec8b0010001110b1a0200230716040000"
+        )
+        self.assertEqual(
+            NovusFrameParser(dynamic_bus_addresses=True).feed(frames),
+            NovusFrameParser().feed(frames),
+        )
+
+    def test_dynamic_mode_resyncs_past_incomplete_false_header(self) -> None:
+        parser = NovusFrameParser(dynamic_bus_addresses=True)
+        false_header = bytes.fromhex("020985400000")
+        frame = bytes.fromhex("0100850329331d0001")
+        self.assertEqual(parser.feed(false_header + frame[:5]), [])
+        self.assertEqual(
+            parser.feed(frame[5:]),
+            [{"run_state": "running", "run_state_raw": 1}],
+        )
 
     def test_decodes_panel_ventilation_mode(self) -> None:
         parser = NovusFrameParser()

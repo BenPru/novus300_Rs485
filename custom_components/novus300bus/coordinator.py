@@ -23,11 +23,13 @@ from .const import (
     CONF_AWAY_DURATION_MINUTES,
     CONF_BAUDRATE,
     CONF_BOOST_DURATION_MINUTES,
+    CONF_DYNAMIC_BUS_ADDRESSES,
     CONF_FAN_LEVEL_1_PERCENTAGE,
     CONF_FAN_LEVEL_2_PERCENTAGE,
     CONF_FAN_LEVEL_3_PERCENTAGE,
     DEFAULT_AWAY_DURATION_MINUTES,
     DEFAULT_BOOST_DURATION_MINUTES,
+    DEFAULT_DYNAMIC_BUS_ADDRESSES,
     DEFAULT_FILTER_INTERVAL_DAYS,
     CONF_DAILY_TIME_SYNC,
     CONF_SHOW_FAN_LEVELS,
@@ -117,7 +119,11 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     ) -> None:
         super().__init__(hass, LOGGER, name=DOMAIN)
         self._config = config
-        self._parser = NovusFrameParser()
+        self._parser = NovusFrameParser(
+            dynamic_bus_addresses=config.get(
+                CONF_DYNAMIC_BUS_ADDRESSES, DEFAULT_DYNAMIC_BUS_ADDRESSES
+            )
+        )
         self._serial: serial.Serial | None = None
         self._serial_lock = threading.Lock()
         self._stop_event = threading.Event()

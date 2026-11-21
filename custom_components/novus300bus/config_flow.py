@@ -16,6 +16,7 @@ from .const import (
     CONF_AWAY_DURATION_MINUTES,
     CONF_BAUDRATE,
     CONF_DAILY_TIME_SYNC,
+    CONF_DYNAMIC_BUS_ADDRESSES,
     CONF_BOOST_DURATION_MINUTES,
     CONF_FILTER_INTERVAL_DAYS,
     CONF_SHOW_FAN_LEVELS,
@@ -34,6 +35,7 @@ from .const import (
     DEFAULT_FILTER_INTERVAL_DAYS,
     DEFAULT_BAUDRATE,
     DEFAULT_DAILY_TIME_SYNC,
+    DEFAULT_DYNAMIC_BUS_ADDRESSES,
     DEFAULT_BOOST_DURATION_MINUTES,
     DEFAULT_FAN_AUTOMATIC_ENTITY,
     DEFAULT_FAN_ENABLED,
@@ -179,7 +181,7 @@ class NovusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(
-        self, user_input: dict[str, str | int] | None = None
+        self, user_input: dict[str, str | int | bool] | None = None
     ) -> FlowResult:
         """Configure the local serial device."""
         if user_input is not None:
@@ -199,6 +201,10 @@ class NovusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PARITY, default=DEFAULT_PARITY): vol.In(
                     PARITY_OPTIONS
                 ),
+                vol.Optional(
+                    CONF_DYNAMIC_BUS_ADDRESSES,
+                    default=DEFAULT_DYNAMIC_BUS_ADDRESSES,
+                ): bool,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema)
@@ -246,6 +252,12 @@ class NovusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PARITY, default=self._current(CONF_PARITY, DEFAULT_PARITY)
                     ): vol.In(PARITY_OPTIONS),
+                    vol.Optional(
+                        CONF_DYNAMIC_BUS_ADDRESSES,
+                        default=self._current(
+                            CONF_DYNAMIC_BUS_ADDRESSES, DEFAULT_DYNAMIC_BUS_ADDRESSES
+                        ),
+                    ): bool,
                 }
             ),
         )

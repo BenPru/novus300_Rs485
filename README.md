@@ -157,6 +157,7 @@ Open **Settings → Devices & services → Paul Novus 300 RS-485 Bus → gear ic
 | **Serial device / bridge URL** | RS-485 connection: a device path (`/dev/serial/by-id/...`) or `socket://host:port` of the serial bridge. Writing (mode, power, settings, clock) only works through the bridge started with `--allow-command-frames`. | `/dev/ttyNovus300` |
 | **Baud rate** | Bus speed. | 9600 |
 | **Parity** | Bus parity. | none (the bus uses MARK parity; the bridge handles it) |
+| **Accept dynamic bus addresses (experimental)** | During setup or under **Reconfigure → Interface: RS-485 bus**: also accepts CRC-valid receive frames with a different first header byte (previously only `00/01`). The second header byte is already unrestricted. Write destinations, bus timing and register decoding stay unchanged; no automatic device mapping. Not a confirmed fix for issue #10. | off |
 | **Synchronize time daily** | Sets the unit's date and time to Home Assistant's time every day at 03:00 and checks the drift. | on |
 | **Ventilation level 1 / 2 / 3 (%)** | Fan percentage of the three levels, written to the unit. Must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %, otherwise the dialog shows an error. Shows the original value even while a percentage temporarily overrides level 1 or 3. | 35 / 60 / 90 % |
 | **Level 1 / 2 / 3: fan imbalance (%)** | Independent fine adjustment grouped with each level. Values are remembered from the bus; unknown values stay blank and are not written unless entered. | −50 to +50 %, step 0.5 |

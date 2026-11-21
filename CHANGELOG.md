@@ -4,32 +4,15 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 
 ## 2026.11.20
 
-### Fan restoration and hardware diagnostics
-
-- Preserve the remembered original fan percentage if a further temporary
-  percentage change fails, allowing later restoration of the inactive stage.
-- Add bus-free regression tests using captured panel mode feedback for
-  restoration, preservation of an active override and retry after write errors.
-  Clarify that same-stage panel reselection is not established by existing
-  captures and that stage writes do not wait for unit confirmation.
-- Add English/German diagnostic collection guides and a new-hardware GitHub
-  issue form, including timestamped actions, raw-buffer limits and privacy review.
-
-### Fixed
-- **Device configuration:** "Summer ventilation active" belongs to the device's **Configuration** block, not its general controls. Bypass-only availability and automation support remain unchanged.
-- **Options layout:** each ventilation level and its imbalance share a section. Frost protection (including minimum supply air temperature), reheating and summer ventilation have their own sections with shorter field labels. Summer ventilation starts expanded; other sections start collapsed. The EWT installed field is a checkbox. Submitted values are preserved after input errors and stored options remain compatible.
-- **Half-percent imbalance:** accepts 0.5 % steps without integer truncation, including bus encoding/decoding and persistence (one signed raw increment = 0.5 %). Update the bridge script for the corresponding raw limits.
-- **Filter interval** is the third field in general settings, before the grouped ventilation levels. The EWT damper block is first on the plant parameters page.
-- Section defaults include the known field values, preventing grouped plant parameters from appearing empty; unknown fields stay blank and invalid input remains visible for correction.
-- The separate thresholds page is removed: its writable fields now live in the matching plant sections; read-only characteristic values appear only on the final advanced page. Automatic mode is above level 1 on the first page; defroster type precedes frost protection mode.
-- Validated with 50 bus-free regression tests, including fresh unit readings replacing stale form values without writes. No ventilation settings or bypass position were changed for testing.
-
 ### Highlights
 - **Automatable summer ventilation:** new `switch.novus300_summer_ventilation` replaces the activation checkbox in the options. It is offered only when the unit configuration confirms an installed bypass.
 - **Fan imbalance fine adjustment:** each of the three ventilation levels now has its own signed adjustment, −50 to +50 % in 0.5-percent steps, next to its speed setting.
 - **Dynamic second dashboard view:** the "Sensoren" view now uses a base diagram and separate equipment overlays, with temperatures at the sensor locations and a compact layout. Both views and the independent editable dashboard copy are now documented in English and German.
+- **Optional dynamic bus addresses:** experimental receive-only compatibility setting, off by default, available during setup and bus reconfiguration. CRC validation stays enabled; write destinations and bus timing are unchanged.
 
 ### Added
+- **Dynamic receive headers:** when enabled, accept CRC-valid frames with a first header byte other than `00/01`, including native `00` headers. The second header byte was already unrestricted. Retain the existing missing-marker repair and recover from incomplete false headers. This does not discover device/address mappings, change register layouts or establish a fix for issue #10.
+- English/German diagnostic collection and privacy guides, plus a bug/hardware issue form with timestamped actions and raw-buffer limits. The form requires a `.json`/`.zip` diagnostic upload; blank issues are disabled for normal contributors. This does not enforce diagnostic content or prevent CLI/API-created issues. Diagnostics are not anonymized; review attachments before public upload.
 - Signed decoding, encoding, persistence and options synchronization for imbalance registers `0x31`, `0x32` and `0x33`. Positive level/imbalance changes and summer on/off frames have regression tests from panel captures; negative values and boundaries are tested with generated frames.
 - Summer activation changes only bit `0x80` in the known plant word `0x1B`. Parameter writes share a lock and installation changes merge against the latest word, preserving the summer flag.
 - Summer commands wait up to 15 seconds for matching bus feedback and raise an explicit error on missing confirmation or write failure, without an optimistic state change.
@@ -37,19 +20,28 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 - Fan attributes for installed bypass, reheater, earth heat exchanger, defroster and brine defroster, plus the automatic subtype when known.
 - A structured `message_table` attribute and additional disabled-by-default diagnostic sensors for hardware configuration and system-status bits.
 
-### Changed and fixed
+### Changed
+- **Grouped options:** each ventilation level and its imbalance share a section. Frost protection (including minimum supply air temperature), reheating and summer ventilation have their own sections with shorter labels. Summer ventilation starts expanded; other sections start collapsed. The EWT installed field is a checkbox.
+- **Settings order:** filter interval is third in general settings; automatic mode is above level 1. EWT is first on the plant page; defroster type precedes frost protection mode. Writable thresholds live in their matching sections; read-only characteristic values appear only on the final advanced page.
+- "Summer ventilation active" is in the device's **Configuration** block. Filter reset is a diagnostic button.
 - Bypass and summer switch entities are enabled/disabled from the plant flag as values arrive, preserving manual user disabling. Obsolete installed-part binary sensors are removed in favour of fan attributes.
 - Replaced `novus300-schema.svg` with `novus300-base.svg` and transparent reheater/EWT/brine/bypass/defroster layers. The overview keeps its airflow graphic; both views need no custom frontend cards.
-- Updated the earth-heat-exchanger installation labels to match the included installed-part mapping; filter reset is now a diagnostic button.
+- Updated earth-heat-exchanger installation labels and English/German entity/dashboard documentation. YAML and editable UI dashboards are maintained independently; README links simplify HACS installation and integration setup.
+
+### Fixed
+- **Fan restoration:** preserve the remembered original percentage if a later temporary percentage change fails, allowing subsequent restoration of the inactive stage. Tests cover panel mode feedback, preservation of an active override and retry after write errors.
+- **Half-percent imbalance:** accept 0.5 % steps without integer truncation in encoding, decoding and persistence (one signed raw increment = 0.5 %).
+- Known unit readings populate section defaults and replace stale form values without writes. Unknown fields stay blank; invalid submissions remain visible for correction. Stored options stay compatible.
 - Unknown imbalance fields stay blank and are not silently written as zero when other settings are saved. The existing ordering rule applies to fan speeds only, not imbalance.
 - The general settings dialog now reports write failures instead of saving as if they succeeded. Bypass installation cannot be changed with an unknown plant word.
 - The bridge whitelist accepts only the new single-register imbalance writes in the supported signed range; CRC checks and restrictions on other registers remain intact.
-- English/German entity and dashboard documentation now distinguishes summer activation, bypass installation and actual flap feedback, and explains how to maintain YAML and editable UI dashboards separately.
 
 ### Upgrade and validation notes
+- This release was updated in place without a version bump. If already installed, re-download/reinstall **2026.11.20** to obtain the additions, then restart Home Assistant. Dynamic bus addresses remain disabled unless explicitly enabled under **Reconfigure → Interface: RS-485 bus**.
 - **Update the bridge script** on the serial host as well as the integration, restart the bridge service and Home Assistant, then update the dashboard YAML and any editable copy independently. Integration/HACS updates do not overwrite a UI dashboard.
 - Existing entity IDs remain stable. Automations using summer activation should use `switch.novus300_summer_ventilation`; installation and temperature thresholds remain in the options.
-- Validation uses bus-free protocol, bridge, coordinator, entity-registry and options tests, including malformed/range-rejected writes, signed limits, missing feedback and stale installation values.
+- **55 bus-free regression tests** cover protocol, bridge, coordinator, entity registry and config/options flows, including dynamic headers, CRC rejection, fragmented input and resynchronization. No ventilation settings or bypass position were changed for testing.
+- Same-stage panel reselection is not established by existing captures. Stage writes do not wait for unit confirmation.
 - **Direct bypass opening/closing is still not implemented.** Register `0x1A` is feedback, not a verified actuator command. Summer activation does not force the flap. Bus feedback is not hardware confirmation; physical flap movement was not tested.
 
 ## 2026.11.19

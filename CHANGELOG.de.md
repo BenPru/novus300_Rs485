@@ -4,33 +4,15 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
 ## 2026.11.20
 
-### Stufenwiederherstellung und Hardwarediagnosen
-
-- Gespeicherten Original-Prozentwert erhalten, wenn eine weitere temporäre
-  Prozentänderung fehlschlägt, damit die inaktive Stufe später zurückgesetzt
-  werden kann.
-- Busfreie Regressionstests mit aufgezeichneter Panel-Modusrückmeldung für
-  Wiederherstellung, Erhalt einer aktiven Überschreibung und Wiederholung nach
-  Schreibfehlern. Erneute Wahl derselben Panel-Stufe ist in vorhandenen
-  Mitschnitten nicht belegt; Stufenschreiben wartet keine Anlagenbestätigung ab.
-- Deutsche/englische Diagnoseanleitung und GitHub-Issue-Formular für neue
-  Hardware ergänzt, mit Aktionszeitpunkten, Rohpuffergrenzen und Datenschutzprüfung.
-
-### Behoben
-- **Gerätekonfiguration:** „Sommerlüftung aktiv“ gehört zum Geräteblock **Konfiguration** statt zu den allgemeinen Bedienelementen. Bypass-Bedingung und Automationstauglichkeit bleiben unverändert.
-- **Optionslayout:** Jede Lüftungsstufe und ihre Disbalance stehen gemeinsam in einem Abschnitt. Frostschutz (einschließlich minimaler Zulufttemperatur), Nachheizung und Sommerlüftung erhalten eigene Blöcke mit kürzeren Feldnamen. Sommerlüftung startet aufgeklappt, andere Blöcke zugeklappt. „EWT-Klappe vorhanden“ ist eine Checkbox. Bei Eingabefehlern bleiben Werte erhalten und gespeicherte Optionen bleiben kompatibel.
-- **Halbe Disbalance-Prozente:** 0,5-%-Schritte ohne Abschneiden durch Ganzzahlkonvertierung, einschließlich Bus-Codierung/-Auswertung und Speicherung (ein signed Rohwertschritt = 0,5 %). Bridge-Skript für die entsprechenden Rohwertgrenzen aktualisieren.
-- **Filterintervall** steht an dritter Stelle der allgemeinen Einstellungen, vor den gruppierten Lüftungsstufen. Der EWT-Klappenblock steht ganz oben auf der Anlagenparameterseite.
-- Abschnittsvorgaben enthalten die bekannten Feldwerte, damit gruppierte Anlagenparameter nicht leer erscheinen; unbekannte Felder bleiben leer und fehlerhafte Eingaben zur Korrektur sichtbar.
-- Die separate Schwellenseite entfällt: Schreibbare Felder stehen in den passenden Anlagenblöcken, reine Kennlinien-Lesewerte nur auf der letzten erweiterten Seite. Automatikmodus steht auf der ersten Seite über Stufe 1, Defroster-Typ über Frostschutzmodus.
-- Mit 50 busfreien Regressionstests geprüft, einschließlich Übernahme neuer Anlagenwerte statt veralteter Formularwerte ohne Schreibzugriff. Für die Tests wurden weder Lüftungswerte noch Bypass-Stellung verändert.
-
 ### Highlights
 - **Automatisierbare Sommerlüftung:** `switch.novus300_summer_ventilation` ersetzt die Aktivierungs-Checkbox in den Optionen. Der Schalter wird nur angeboten, wenn die Anlagenkonfiguration einen vorhandenen Bypass bestätigt.
 - **Disbalance-Feineinstellung:** Jede der drei Lüftungsstufen erhält direkt neben dem Prozentwert eine eigene Einstellung von −50 bis +50 % in 0,5-Prozentschritten.
 - **Dynamische zweite Dashboard-Ansicht:** „Sensoren“ nutzt ein Basisschema mit separaten Ausstattungsebenen, Temperaturen an den Sensorpositionen und kompakter Darstellung. Beide Ansichten und die unabhängige editierbare Dashboard-Kopie sind jetzt deutsch und englisch dokumentiert.
+- **Optionale dynamische Bus-Adressen:** experimentelle, standardmäßig ausgeschaltete Empfangsoption bei Einrichtung und Bus-Neukonfiguration. CRC-Prüfung bleibt aktiv; Schreibziele und Bus-Timing bleiben unverändert.
 
 ### Neu
+- **Dynamische Empfangsheader:** Aktiviert werden CRC-gültige Frames mit einem anderen ersten Headerbyte als `00/01` akzeptiert, einschließlich nativer `00`-Header. Das zweite Headerbyte war bereits uneingeschränkt. Bestehende Marker-Reparatur bleibt erhalten; unvollständige falsche Header blockieren die Neusynchronisation nicht. Keine automatische Geräte-/Adresszuordnung, keine geänderten Registerlayouts und kein belegter Fix für Issue #10.
+- Deutsche/englische Diagnose- und Datenschutzanleitung sowie Fehler-/Hardware-Issue-Formular mit Aktionszeitpunkten und Rohpuffergrenzen. Das Formular verlangt einen Diagnose-Upload als `.json`/`.zip`; leere Issues sind für normale Nutzer deaktiviert. Keine Prüfung des Diagnoseinhalts oder Sperre für CLI/API-Issues. Diagnosen sind nicht anonymisiert; Anhänge vor öffentlichem Upload prüfen.
 - Vorzeichenrichtige Auswertung, Codierung, Speicherung und Optionsübernahme der Disbalance-Register `0x31`, `0x32` und `0x33`. Positive Stufen-/Disbalance-Änderungen und Sommerlüftung An/Aus sind mit Panel-Mitschnitten getestet; negative Werte und Grenzen mit erzeugten Frames.
 - Sommeraktivierung ändert ausschließlich Bit `0x80` des bekannten Anlagenworts `0x1B`. Parameterschreiben nutzt eine gemeinsame Sperre; Installationsänderungen werden mit dem aktuellen Wort zusammengeführt und erhalten das Sommerflag.
 - Sommerbefehle warten bis zu 15 Sekunden auf passende Bus-Rückmeldung. Fehlende Bestätigung und Schreibfehler werden ausdrücklich gemeldet; keine optimistische Zustandsänderung.
@@ -38,19 +20,28 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 - Lüfterattribute für vorhandenen Bypass, Nachheizung, EWT, Defroster und Sole-Defroster sowie den bekannten Automatik-Untertyp.
 - Strukturiertes Attribut `message_table` und zusätzliche, standardmäßig deaktivierte Diagnosesensoren für Hardware-Konfiguration und Systemstatus-Bits.
 
-### Geändert und behoben
+### Geändert
+- **Gruppierte Optionen:** Jede Lüftungsstufe steht mit ihrer Disbalance in einem Abschnitt. Frostschutz (einschließlich minimaler Zulufttemperatur), Nachheizung und Sommerlüftung haben eigene Blöcke mit kürzeren Feldnamen. Sommerlüftung startet aufgeklappt, andere Blöcke zugeklappt. „EWT-Klappe vorhanden“ ist eine Checkbox.
+- **Reihenfolge:** Filterintervall an dritter Stelle, Automatikmodus über Stufe 1. EWT steht zuerst auf der Anlagenseite, Defroster-Typ vor Frostschutzmodus. Schreibbare Schwellen stehen in ihren Anlagenblöcken; reine Kennlinien-Lesewerte nur auf der letzten erweiterten Seite.
+- „Sommerlüftung aktiv“ steht im Geräteblock **Konfiguration**. Filter-Reset ist ein Diagnosebutton.
 - Bypass- und Sommerschalter werden anhand eintreffender Anlagenflags aktiviert/deaktiviert; manuelles Deaktivieren bleibt erhalten. Alte Ausstattungs-Binärsensoren werden zugunsten von Lüfterattributen entfernt.
 - `novus300-schema.svg` durch `novus300-base.svg` und transparente Nachheizungs-/EWT-/Sole-/Bypass-/Defroster-Ebenen ersetzt. Die Übersicht behält ihre Luftstromgrafik; beide Ansichten benötigen keine Zusatzkarten.
-- EWT-Installationsbeschriftungen an die enthaltene Ausstattungsauswertung angepasst; Filter-Reset ist jetzt ein Diagnosebutton.
+- EWT-Beschriftungen und deutsche/englische Entitäts-/Dashboard-Dokumentation überarbeitet. YAML und editierbare UI-Kopie werden unabhängig gepflegt; README-Links vereinfachen HACS-Installation und Integrationseinrichtung.
+
+### Behoben
+- **Stufenwiederherstellung:** Gespeicherten Original-Prozentwert erhalten, wenn eine weitere temporäre Prozentänderung fehlschlägt, damit die inaktive Stufe später zurückgesetzt werden kann. Tests prüfen Panel-Modusrückmeldung, Erhalt einer aktiven Überschreibung und Wiederholung nach Schreibfehlern.
+- **Halbe Disbalance-Prozente:** 0,5-%-Schritte ohne Ganzzahl-Abschneiden bei Codierung, Auswertung und Speicherung (ein signed Rohwertschritt = 0,5 %).
+- Bekannte Anlagenwerte stehen in Abschnittsvorgaben und ersetzen veraltete Formularwerte ohne Schreibzugriff. Unbekannte Felder bleiben leer, fehlerhafte Eingaben zur Korrektur sichtbar. Gespeicherte Optionen bleiben kompatibel.
 - Unbekannte Disbalance bleibt leer und wird beim Speichern anderer Einstellungen nicht stillschweigend mit null überschrieben. Die bestehende aufsteigende Stufenprüfung gilt nur für Lüfterprozente.
 - Der allgemeine Einstellungsdialog meldet Schreibfehler, statt vermeintlich erfolgreich zu speichern. Ohne bekanntes Anlagenwort kann die Bypass-Installation nicht geändert werden.
 - Die Bridge-Whitelist erlaubt nur die neuen Einzelregister-Disbalancebefehle im unterstützten signed Bereich. CRC-Prüfung und Sperren anderer Register bleiben erhalten.
-- Entitäts- und Dashboard-Dokumentation unterscheiden Sommeraktivierung, Bypass-Installation und tatsächliche Klappenrückmeldung; YAML- und editierbare UI-Kopie einschließlich separater Aktualisierung sind beschrieben.
 
 ### Update- und Prüfhinweise
+- Diese Release wurde ohne Versionswechsel ergänzt. Bereits installierte **2026.11.20** erneut herunterladen/installieren und Home Assistant neu starten. Dynamische Bus-Adressen bleiben ausgeschaltet, bis sie unter **Neu konfigurieren → Schnittstelle: RS-485-Bus** aktiviert werden.
 - **Bridge-Skript ebenfalls aktualisieren**, Bridge-Dienst und Home Assistant neu starten; Dashboard-YAML und editierbare Kopien separat aktualisieren. Integrations-/HACS-Updates überschreiben kein UI-Dashboard.
 - Bestehende Entity-IDs bleiben stabil. Sommeraktivierungs-Automationen verwenden `switch.novus300_summer_ventilation`; Installation und Temperaturschwellen bleiben in den Optionen.
-- Busfreie Tests prüfen Protokoll, Bridge, Coordinator, Entitätsverwaltung und Optionen einschließlich verworfener Frames/Werte, signed Grenzen, fehlender Rückmeldung und veralteter Installationswerte.
+- **55 busfreie Regressionstests** prüfen Protokoll, Bridge, Coordinator, Entitätsverwaltung und Konfigurations-/Optionsdialoge einschließlich dynamischer Header, CRC-Ablehnung, fragmentierter Daten und Neusynchronisation. Für die Tests wurden weder Lüftungswerte noch Bypass-Stellung verändert.
+- Erneute Wahl derselben Panel-Stufe ist in vorhandenen Mitschnitten nicht belegt. Stufenschreiben wartet keine Anlagenbestätigung ab.
 - **Direktes Bypass-Öffnen/Schließen bleibt offen.** Register `0x1A` ist eine Rückmeldung, kein belegter Stellbefehl. Sommeraktivierung erzwingt keine Klappenstellung. Bus-Rückmeldung ist keine Hardwarebestätigung; physische Klappenbewegung wurde nicht getestet.
 
 ## 2026.11.19

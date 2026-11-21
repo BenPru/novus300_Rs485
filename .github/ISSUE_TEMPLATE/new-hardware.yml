@@ -1,6 +1,6 @@
-name: New hardware / diagnostic data
-description: Report another unit or accessory, such as an EWT damper, with reviewed diagnostics.
-title: "[Hardware] "
+name: Bug or hardware report / diagnostic data
+description: Report an issue, another unit or accessory with reviewed diagnostics (required upload).
+title: "[Novus] "
 body:
   - type: markdown
     attributes:
@@ -50,13 +50,14 @@ body:
       description: |
         Include date/time with UTC offset, panel versus HA action, before/after values,
         restoration of original settings and the corresponding filename.
+        Describe any redactions made to the diagnostic files here.
         A passive report with no changes is welcome; state that explicitly.
         For stages, distinguish changing stage from pressing the already-active stage again.
       placeholder: |
         YYYY-MM-DD hh:mm:ss+01:00 | panel action or passive observation | before -> after | filename.json
     validations:
       required: true
-  - type: textarea
+  - type: upload
     id: diagnostics
     attributes:
       label: Upload diagnostic data
@@ -71,9 +72,10 @@ body:
         [English](https://github.com/BenPru/novus300_Rs485/blob/main/docs/DIAGNOSTICS.md) /
         [Deutsch](https://github.com/BenPru/novus300_Rs485/blob/main/docs/DIAGNOSTICS.de.md).
         Download immediately after each action; the raw log only holds 3000 received chunks.
-        Describe any redactions. Do not paste the whole raw log or attach HA backups or secrets.
+        Describe any redactions in the action log above. Do not attach HA backups or secrets.
     validations:
       required: true
+      accept: ".json,.zip"
   - type: checkboxes
     id: privacy
     attributes:

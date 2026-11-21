@@ -5,7 +5,11 @@
         "data": {
           "serial_port": "Serial device",
           "baudrate": "Baud rate",
-          "parity": "Parity"
+          "parity": "Parity",
+          "dynamic_bus_addresses": "Accept dynamic bus addresses (experimental)"
+        },
+        "data_description": {
+          "dynamic_bus_addresses": "Also accepts CRC-valid receive frames whose first header byte differs from 00/01. The second header byte is already unrestricted. Does not change write destinations or bus timing, or assign addresses to devices."
         }
       },
       "reconfigure": {
@@ -21,7 +25,11 @@
         "data": {
           "serial_port": "Serial device / bridge URL",
           "baudrate": "Baud rate",
-          "parity": "Parity"
+          "parity": "Parity",
+          "dynamic_bus_addresses": "Accept dynamic bus addresses (experimental)"
+        },
+        "data_description": {
+          "dynamic_bus_addresses": "Also accepts CRC-valid receive frames whose first header byte differs from 00/01. The second header byte is already unrestricted. Does not change write destinations or bus timing, or assign addresses to devices."
         }
       },
       "fan_control": {
