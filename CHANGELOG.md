@@ -2,28 +2,16 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
-## Unreleased
-
-### Fixed
-- Flush the latest stored readings before completing an integration unload and cancel the old store's delayed write. This prevents old/new bypass settings from alternating across entity-registry reloads.
-- Let the serial reader close its own connection before unloading; reject queued readings after stop. This avoids closing the socket during `read()` and publishing stale state from an unloaded coordinator.
-
 ## 2026.11.21
 
 ### Highlights
-- **Correct bypass detection:** the installation bit was interpreted backwards. An installed bypass is now recognised independently of its activation state, restoring the matching entity and equipment display.
-- **Defroster presence from the short status:** distinguish installed/absent without opening the panel menu. The exact electric/PTC/brine type is deliberately not guessed.
+- **Stability:** fix the reload loop, stale bypass values and socket-read errors.
+- **Equipment:** detect defroster presence without guessing its type; adjust bypass/summer entity gating.
 
-### Fixed
-- Decode bypass installation bit `0x04` separately from activation bit `0x08` in register `0x1B`. The configuration checkbox and parameter builder use the same validated interpretation and preserve the other flags.
-- Enable bypass feedback for units with a bypass, and summer ventilation only for units configured without one. Preserve manually disabled entities.
-- Keep short register `0x1E` as `defroster_status_raw`, separate from the extended panel type. Expose generic presence as `fan.novus300` attribute `defroster_installed`; confirmed absence hides both defroster overlays and no longer requires a missing panel type in the settings dialog.
-- Accept the valid bypass flag combinations in the serial bridge whitelist, retaining CRC validation and restrictions on other writes.
-
-### Upgrade and validation notes
-- Update the integration **and the bridge script**, then restart Home Assistant and the bridge service. No ventilation-unit restart or automatic installation-parameter writes are needed. Dashboard files are unchanged.
-- **61 bus-free regression tests pass.** Short-status presence was compared with two known hardware configurations; this does not establish a universal exact-type mapping.
-- **Direct bypass opening/closing remains unsupported.** Correct equipment detection does not prove a physical flap position; summer ventilation does not force the flap.
+### Notes
+- **Updated in place:** reinstall **2026.11.21** and restart HA. Update/restart the bridge too if not already updated for this release. No ventilation-unit restart.
+- **Bypass limitation:** panel-write semantics remain unresolved; direct flap control is unsupported.
+- **65 regression tests pass.**
 
 ## 2026.11.20
 
