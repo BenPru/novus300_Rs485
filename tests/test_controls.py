@@ -365,7 +365,7 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
     async def test_level_sections_write_flat_settings_without_group_options(self):
         flow, co = self.flow()
         self.assertEqual(
-            [field.schema for field in flow._general_schema().schema][2],
+            [field.schema for field in flow._general_schema().schema][1],
             "filter_interval_days",
         )
         data = {
@@ -416,7 +416,9 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
         flow, co = self.flow({"param_63": 0x1F0})
         co.async_write_parameters = AsyncMock()
         names = [field.schema for field in flow._general_schema().schema]
-        self.assertEqual(names[3:5], ["automatic", "fan_level_1"])
+        self.assertEqual(
+            names[2:5], ["automatic", "show_fan_levels", "fan_level_1"]
+        )
         await flow.async_step_general(
             {
                 "automatic": "sensor",

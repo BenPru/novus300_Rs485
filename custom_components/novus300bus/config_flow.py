@@ -461,12 +461,6 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
                 default=self._value(CONF_DAILY_TIME_SYNC, DEFAULT_DAILY_TIME_SYNC),
             ): bool,
         }
-        fields[
-            vol.Required(
-                CONF_SHOW_FAN_LEVELS,
-                default=self._value(CONF_SHOW_FAN_LEVELS, DEFAULT_SHOW_FAN_LEVELS),
-            )
-        ] = bool
         interval = (
             user_input.get(CONF_FILTER_INTERVAL_DAYS)
             if user_input and CONF_FILTER_INTERVAL_DAYS in user_input
@@ -476,6 +470,12 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
             _setting_selector(CONF_FILTER_INTERVAL_DAYS, int(interval))
         )
         fields.update([self._select_field("automatic", self._unit(), user_input)])
+        fields[
+            vol.Required(
+                CONF_SHOW_FAN_LEVELS,
+                default=self._value(CONF_SHOW_FAN_LEVELS, DEFAULT_SHOW_FAN_LEVELS),
+            )
+        ] = bool
         for key, default in (
             (CONF_FAN_LEVEL_1_PERCENTAGE, DEFAULT_FAN_LEVEL_1_PERCENTAGE),
             (CONF_FAN_LEVEL_2_PERCENTAGE, DEFAULT_FAN_LEVEL_2_PERCENTAGE),

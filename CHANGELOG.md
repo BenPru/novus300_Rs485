@@ -22,7 +22,7 @@ Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de
 
 ### Changed
 - **Grouped options:** each ventilation level and its imbalance share a section. Frost protection (including minimum supply air temperature), reheating and summer ventilation have their own sections with shorter labels. Summer ventilation starts expanded; other sections start collapsed. The EWT installed field is a checkbox.
-- **Settings order:** filter interval is third in general settings; automatic mode is above level 1. EWT is first on the plant page; defroster type precedes frost protection mode. Writable thresholds live in their matching sections; read-only characteristic values appear only on the final advanced page.
+- **Settings order:** daily time sync, filter interval, automatic mode, then "Show levels instead of automatic" directly underneath, followed by the grouped ventilation levels. EWT is first on the plant page; defroster type precedes frost protection mode. Writable thresholds live in their matching sections; read-only characteristic values appear only on the final advanced page.
 - "Summer ventilation active" is in the device's **Configuration** block. Filter reset is a diagnostic button.
 - Bypass and summer switch entities are enabled/disabled from the plant flag as values arrive, preserving manual user disabling. Obsolete installed-part binary sensors are removed in favour of fan attributes.
 - Replaced `novus300-schema.svg` with `novus300-base.svg` and transparent reheater/EWT/brine/bypass/defroster layers. The overview keeps its airflow graphic; both views need no custom frontend cards.

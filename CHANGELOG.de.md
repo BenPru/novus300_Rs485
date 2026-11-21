@@ -22,7 +22,7 @@ Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
 ### Geändert
 - **Gruppierte Optionen:** Jede Lüftungsstufe steht mit ihrer Disbalance in einem Abschnitt. Frostschutz (einschließlich minimaler Zulufttemperatur), Nachheizung und Sommerlüftung haben eigene Blöcke mit kürzeren Feldnamen. Sommerlüftung startet aufgeklappt, andere Blöcke zugeklappt. „EWT-Klappe vorhanden“ ist eine Checkbox.
-- **Reihenfolge:** Filterintervall an dritter Stelle, Automatikmodus über Stufe 1. EWT steht zuerst auf der Anlagenseite, Defroster-Typ vor Frostschutzmodus. Schreibbare Schwellen stehen in ihren Anlagenblöcken; reine Kennlinien-Lesewerte nur auf der letzten erweiterten Seite.
+- **Reihenfolge:** Tägliche Uhrzeitsynchronisation, Filterintervall, Automatikmodus, direkt darunter „Stufen statt Automatik anzeigen“, danach die gruppierten Lüftungsstufen. EWT steht zuerst auf der Anlagenseite, Defroster-Typ vor Frostschutzmodus. Schreibbare Schwellen stehen in ihren Anlagenblöcken; reine Kennlinien-Lesewerte nur auf der letzten erweiterten Seite.
 - „Sommerlüftung aktiv“ steht im Geräteblock **Konfiguration**. Filter-Reset ist ein Diagnosebutton.
 - Bypass- und Sommerschalter werden anhand eintreffender Anlagenflags aktiviert/deaktiviert; manuelles Deaktivieren bleibt erhalten. Alte Ausstattungs-Binärsensoren werden zugunsten von Lüfterattributen entfernt.
 - `novus300-schema.svg` durch `novus300-base.svg` und transparente Nachheizungs-/EWT-/Sole-/Bypass-/Defroster-Ebenen ersetzt. Die Übersicht behält ihre Luftstromgrafik; beide Ansichten benötigen keine Zusatzkarten.
