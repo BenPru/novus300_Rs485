@@ -13,6 +13,10 @@ from homeassistant.helpers import selector
 
 from .protocol import PARAMETER_LIMITS, bypass_is_present
 from .const import (
+    CONF_HARDWARE_PROFILE,
+    DEFAULT_HARDWARE_PROFILE,
+    HARDWARE_PROFILES,
+    PROFILE_XOR,
     CONF_AWAY_DURATION_MINUTES,
     CONF_BAUDRATE,
     CONF_DAILY_TIME_SYNC,
@@ -78,6 +82,15 @@ PERCENTAGE_KEYS = (
     CONF_FAN_LEVEL_2_PERCENTAGE,
     CONF_FAN_LEVEL_3_PERCENTAGE,
 )
+
+def _profile_selector() -> selector.SelectSelector:
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=list(HARDWARE_PROFILES),
+            translation_key="hardware_profile",
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )
 
 
 # field -> (register, bit mask or None, {option: (value, de, en)})
@@ -194,6 +207,9 @@ class NovusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             {
+                vol.Required(
+                    CONF_HARDWARE_PROFILE, default=DEFAULT_HARDWARE_PROFILE
+                ): _profile_selector(),
                 vol.Required(CONF_SERIAL_PORT, default=DEFAULT_SERIAL_PORT): str,
                 vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
@@ -214,7 +230,12 @@ class NovusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Offer the two interface settings as a menu."""
         return self.async_show_menu(
-            step_id="reconfigure", menu_options=["bus", "fan_control"]
+            step_id="reconfigure",
+            menu_options=(
+                ["bus"]
+                if self._current(CONF_HARDWARE_PROFILE, DEFAULT_HARDWARE_PROFILE) == PROFILE_XOR
+                else ["bus", "fan_control"]
+            ),
         )
 
     def _current(self, key: str, default: str | int | bool) -> str | int | bool:
@@ -242,6 +263,10 @@ class NovusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
+                        CONF_HARDWARE_PROFILE,
+                        default=self._current(CONF_HARDWARE_PROFILE, DEFAULT_HARDWARE_PROFILE),
+                    ): _profile_selector(),
+                    vol.Required(
                         CONF_SERIAL_PORT,
                         default=self._current(CONF_SERIAL_PORT, DEFAULT_SERIAL_PORT),
                     ): str,
@@ -266,6 +291,8 @@ class NovusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str | int | bool] | None = None
     ) -> FlowResult:
         """Configure the optional 0-10 V fan control."""
+        if self._current(CONF_HARDWARE_PROFILE, DEFAULT_HARDWARE_PROFILE) == PROFILE_XOR:
+            return self.async_abort(reason="read_only")
         if user_input is not None:
             return self._store(user_input)
         return self.async_show_form(
@@ -324,6 +351,18 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
     def _source_text(self, missing: list[str]) -> str:
         """Describe whether the shown settings were read from the unit."""
         german = self.hass.config.language.startswith("de")
+        if self._read_only:
+            return (
+                "XOR-Beta: nur passives Lesen. Hardware-/Firmwareversion noch unbekannt. "
+                "Keine Steuerung, Uhrzeitsynchronisation oder Registerabfragen. "
+                "Für eine Diagnose am Gerät '120 Sekunden passiv aufzeichnen' drücken, "
+                "danach die Diagnose herunterladen."
+                if german else
+                "XOR beta: passive reading only. Actual hardware/firmware version still unknown. "
+                "No controls, clock synchronization or register requests. "
+                "For diagnostics, press 'Record 120 seconds (passive)' on the device, "
+                "then download diagnostics."
+            )
         if not missing:
             return (
                 "Stufen, Disbalance und Zeiten wurden aus der Anlage gelesen."
@@ -357,8 +396,12 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         """Offer the settings groups as a menu."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["general", "plant", "bypass", "advanced"],
+            menu_options=["general"] if self._read_only else ["general", "plant", "bypass", "advanced"],
         )
+
+    @property
+    def _read_only(self) -> bool:
+        return self._value(CONF_HARDWARE_PROFILE, DEFAULT_HARDWARE_PROFILE) == PROFILE_XOR
 
     def _save(self, user_input: dict[str, str | int | bool]) -> FlowResult:
         """Store one dialog's values without dropping the other dialogs' options."""
@@ -391,6 +434,16 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         """Configure the bus and the unit's settings."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            profile = user_input.get(
+                CONF_HARDWARE_PROFILE,
+                self._value(CONF_HARDWARE_PROFILE, DEFAULT_HARDWARE_PROFILE),
+            )
+            if profile not in HARDWARE_PROFILES:
+                raise HomeAssistantError(f"Unknown Novus hardware profile: {profile}")
+            if self._read_only or profile != self._value(
+                CONF_HARDWARE_PROFILE, DEFAULT_HARDWARE_PROFILE
+            ):
+                return self._save({CONF_HARDWARE_PROFILE: profile})
             user_input = self._flatten_sections(
                 user_input, (f"fan_level_{level}" for level in range(1, 4))
             )
@@ -457,10 +510,18 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
     def _general_schema(self, user_input=None) -> vol.Schema:
         fields: dict = {
             vol.Required(
+                CONF_HARDWARE_PROFILE,
+                default=self._value(CONF_HARDWARE_PROFILE, DEFAULT_HARDWARE_PROFILE),
+            ): _profile_selector(),
+        }
+        if self._read_only:
+            return vol.Schema(fields)
+        fields.update({
+            vol.Required(
                 CONF_DAILY_TIME_SYNC,
                 default=self._value(CONF_DAILY_TIME_SYNC, DEFAULT_DAILY_TIME_SYNC),
             ): bool,
-        }
+        })
         interval = (
             user_input.get(CONF_FILTER_INTERVAL_DAYS)
             if user_input and CONF_FILTER_INTERVAL_DAYS in user_input
@@ -544,6 +605,8 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
 
     async def _gate(self) -> FlowResult:
         """Explain missing unit values before the dialog opens."""
+        if self._read_only:
+            return self.async_abort(reason="read_only")
         boot, panel = self._missing()
         if not boot and not panel:
             return await self._open_dialog()
@@ -608,6 +671,8 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_missing_restart(self, user_input=None) -> FlowResult:
         """Power-cycle the unit so it re-sends its start-up parameters, then wait."""
+        if self._read_only:
+            return self.async_abort(reason="read_only")
         coordinator = getattr(self._config_entry, "runtime_data", None)
         if coordinator is not None:
             try:
@@ -720,6 +785,8 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_plant_form(self, user_input=None) -> FlowResult:
         """Automatic mode, frost protection, reheating and installation types."""
+        if self._read_only:
+            return self.async_abort(reason="read_only")
         data = self._unit()
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -754,6 +821,8 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
 
         Installation changes require a known unit word so unrelated flags survive.
         """
+        if self._read_only:
+            return self.async_abort(reason="read_only")
         data = self._unit()
         word = data.get("param_1b")
         known = bypass_is_present(word) is not None
@@ -812,6 +881,8 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def _threshold_form(self, step_id, regs, user_input) -> FlowResult:
+        if self._read_only:
+            return self.async_abort(reason="read_only")
         data = self._unit()
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -837,6 +908,8 @@ class NovusOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_summer_settings(self, user_input=None) -> FlowResult:
         """Summer ventilation without bypass (shares registers with the bypass)."""
+        if self._read_only:
+            return self.async_abort(reason="read_only")
         word = self._unit().get("param_1b")
         if word is None or not word & 0x80:
             return self._save({})

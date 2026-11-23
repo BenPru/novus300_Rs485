@@ -2,6 +2,76 @@
 
 [Deutsch](DIAGNOSTICS.de.md)
 
+## XOR beta 2026.11.23b1
+
+The separate `beta/xor-read-only` branch supports the checksum-valid alternative
+protocol found in all four issue #10 recordings. The labels identify **protocol
+profiles**, not established hardware/firmware generations:
+
+- **CRC16 - reference installation (TFT ETA0036E29A):** existing integration
+  behaviour, including configured write features. Default for existing entries.
+- **XOR - issue #10 variant (HW/FW unknown, read-only beta):** no serial writes,
+  scheduled time synchronization, parameter requests, fan/select/switch controls
+  or optional Tinkerforge output. Even direct write service calls are rejected.
+
+The beta exposes a validated-frame counter, the last changed raw data page
+(`address:page`, hexadecimal) and an **experimental BCD bus clock**. Its clock
+interpretation is not panel-confirmed and is never synchronized automatically.
+All observed address/type counts and up to 64 recent raw pages are included in
+diagnostics. Temperatures, fan stages, bypass and equipment types are deliberately
+not guessed. Unknown firmware and fallback component identities are not reported
+as detected XOR hardware.
+
+### Install and select the profile
+
+1. Back up Home Assistant and the existing integration files.
+2. Open **HACS > Paul Novus 300 RS-485 Bus > three-dot menu > Redownload**.
+   Under **Need a different version?**, select **2026.11.23b1**, if listed.
+   If the prerelease is not listed, use the manual alternative below.
+3. Restart **Home Assistant**, not the ventilation unit. Open **Settings >
+   Devices & services > Paul Novus 300 RS-485 Bus > Configure > General and unit
+   settings** and set **Hardware / firmware profile > XOR**. Save.
+   The same selector is in **Reconfigure > Interface: RS-485 bus** and initial
+   setup. A profile change saves only the selection, ignores other edits in that
+   submission and reloads the integration; reopen the form for further edits.
+4. Keep the existing bridge URL and **9600, 8N1**, TCP Server and transparent
+   Transfer Protocol None. The dynamic-address option applies only to CRC16.
+   Do not select CRC16 on the XOR unit to try to enable controls.
+
+**Manual alternative:** download the
+[beta source ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.23b1.zip).
+Move the old `/config/custom_components/novus300bus` folder to a backup location
+**outside** `custom_components`. Extract only
+`custom_components/novus300bus` from the ZIP into `/config/custom_components/`,
+then follow steps 3-4. Do not copy the repository root or overwrite other
+integrations. Roll back by reinstalling stable **2026.11.21** (or the backed-up
+folder) and restarting HA; restore the backup if configuration recovery is needed.
+
+### Record without sending any command
+
+On the integration's **device page**, under **Diagnostic**, press
+**Record 120 seconds (passive)** once. It uses the already-open receive connection
+and sends **no commands**, including no register dump. Wait at least 125 seconds,
+then download integration diagnostics as described below. An ongoing recording
+cannot be overwritten; after downloading it, press again for a new one.
+
+The JSON's `passive_recording` contains UTC timestamps, exact byte order, byte
+count and status (`recording`, `complete` or `truncated`; initially `not_started`).
+Tiny reads are combined into approximately 100 ms chunks; timestamps identify
+each chunk's first read, not individual byte arrival times. Limits are 120 seconds,
+1 MiB or 2400 chunks. `complete` with zero bytes means no data arrived, **not**
+successful communication. Recordings are in memory until replaced or reloaded;
+download before reloading/restarting HA.
+
+First collect an unchanged baseline. If appropriate for normal operation, make
+a second recording: wait 20 seconds, change one normal fan stage **on the panel**,
+wait 40 seconds, restore it, then wait for completion. Note exact action times,
+UTC offset, panel stage/temperatures and the panel clock. Read the actual unit,
+panel, hardware and software/BUS versions from accessible info pages or labels;
+photos/screenshots with serial numbers masked are useful. No powered covers,
+frost/heater changes, resets, ventilation reboot or dump requests are needed.
+**Review privacy before uploading:** see section 4 below.
+
 Diagnostics from another compatible ventilation unit or additional equipment
 (for example an EWT/earth heat exchanger damper) can help identify unknown bus
 registers. A report does not mean that the hardware is already supported.

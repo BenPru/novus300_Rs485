@@ -205,12 +205,30 @@ SENSORS = (
     ),
 )
 
+XOR_SENSORS = (
+    NovusSensorDescription(
+        "xor_frames_received", "XOR frames received",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NovusSensorDescription(
+        "xor_clock", "Bus clock (experimental)",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NovusSensorDescription(
+        "xor_last_page", "Last XOR data page",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up Novus sensors."""
     coordinator: NovusCoordinator = entry.runtime_data
     async_add_entities(
-        [NovusSensor(coordinator, description) for description in SENSORS]
+        [
+            NovusSensor(coordinator, description)
+            for description in (XOR_SENSORS if coordinator.read_only else SENSORS)
+        ]
     )
 
 
@@ -235,13 +253,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         self._attr_translation_key = description.key
         self._restored_value: float | None = None
         self.entity_id = f"sensor.novus300_{description.key}"
-        self._attr_device_info = {
-            "identifiers": {("novus300bus", "novus300")},
-            "name": "Paul Novus 300",
-            "manufacturer": "Paul",
-            "model": "Novus 300 (FOCUS250)",
-            "sw_version": "BUS 1.7.1",
-        }
+        self._attr_device_info = coordinator.device_info
 
     async def async_added_to_hass(self) -> None:
         """Restore duration readings until their next bus update."""
@@ -343,6 +355,11 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def extra_state_attributes(self) -> dict[str, float | int | str]:
         """Expose the message details and observed status changes."""
+        if self._description.key == "xor_last_page":
+            return {
+                "format": "address:page (hex); data is raw, meaning unconfirmed",
+                "data": self.coordinator.data.get("xor_last_page_data", ""),
+            }
         if self._description.key == "message":
             attributes = {"code": self.coordinator.data.get("message_code")}
             time = self.coordinator.message_time()

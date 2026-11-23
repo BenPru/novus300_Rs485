@@ -1,11 +1,13 @@
 """Bus-free tests for summer ventilation, options and entity gating."""
 
 import asyncio
+from collections import deque
+import json
 import threading
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.core import HomeAssistant
@@ -13,12 +15,16 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 import voluptuous as vol
 
-from custom_components.novus300bus import _sync_bypass_entity
+from custom_components.novus300bus import _platforms, _register_sub_devices, _sync_bypass_entity
+from custom_components.novus300bus.button import async_setup_entry as setup_buttons
+from custom_components.novus300bus.capture import PassiveRecording
 from custom_components.novus300bus.config_flow import NovusConfigFlow, NovusOptionsFlow
 from custom_components.novus300bus.coordinator import NovusCoordinator
-from custom_components.novus300bus.fan import NovusBusFanEntity
+from custom_components.novus300bus.diagnostics import async_get_config_entry_diagnostics
+from custom_components.novus300bus.fan import NovusBusFanEntity, NovusFanEntity
 from custom_components.novus300bus.protocol import NovusFrameParser, build_setting_frame
 from custom_components.novus300bus.switch import NovusSummerVentilationSwitch
+from custom_components.novus300bus.xor_protocol import NovusXorParser
 
 
 def coordinator(values=None):
@@ -361,6 +367,22 @@ class EntityGatingTest(unittest.TestCase):
 
 
 class BusConfigTest(unittest.IsolatedAsyncioTestCase):
+    async def test_hardware_profile_defaults_and_saved_selection(self):
+        flow = NovusConfigFlow()
+        flow.async_show_form = Mock(side_effect=lambda **kwargs: kwargs)
+        entry = SimpleNamespace(data={}, options={})
+        flow._get_reconfigure_entry = Mock(return_value=entry)
+        for step in (flow.async_step_user, flow.async_step_bus):
+            form = await step()
+            values = form["data_schema"]({"serial_port": "socket://test:502", "baudrate": 9600, "parity": "none"})
+            self.assertEqual(values["hardware_profile"], "crc16")
+        entry.options["hardware_profile"] = "xor"
+        form = await flow.async_step_bus()
+        values = form["data_schema"]({"serial_port": "socket://test:502", "baudrate": 9600, "parity": "none"})
+        self.assertEqual(values["hardware_profile"], "xor")
+        flow.async_abort = Mock(side_effect=lambda **kwargs: kwargs)
+        self.assertEqual((await flow.async_step_fan_control({"fan_enabled": True}))["reason"], "read_only")
+
     async def test_dynamic_addresses_default_off_and_follow_saved_setting(self):
         flow = NovusConfigFlow()
         flow.async_show_form = Mock(side_effect=lambda **kwargs: kwargs)
@@ -411,6 +433,38 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
         flow.async_show_form = Mock(side_effect=lambda **kwargs: kwargs)
         flow._save = Mock(return_value={"type": "create_entry"})
         return flow, co
+
+    async def test_profile_switch_saves_only_profile_without_device_writes(self):
+        for previous, selected in (("crc16", "xor"), ("xor", "crc16"), ("xor", "xor")):
+            with self.subTest(previous=previous, selected=selected):
+                flow, co = self.flow()
+                flow._config_entry.options["hardware_profile"] = previous
+                await flow.async_step_general({
+                    "hardware_profile": selected,
+                    "filter_interval_days": 180,
+                    "fan_level_1_percentage": 20,
+                })
+                flow._save.assert_called_once_with({"hardware_profile": selected})
+                co.async_write_settings.assert_not_awaited()
+                co._async_send.assert_not_awaited()
+                co.clear_temporary_settings.assert_not_called()
+
+    async def test_xor_options_offer_only_profile_and_block_hidden_write_steps(self):
+        flow, co = self.flow()
+        flow._config_entry.options["hardware_profile"] = "xor"
+        flow.async_show_menu = Mock(side_effect=lambda **kwargs: kwargs)
+        flow.async_abort = Mock(side_effect=lambda **kwargs: kwargs)
+        self.assertEqual((await flow.async_step_init())["menu_options"], ["general"])
+        form = await flow.async_step_general()
+        self.assertEqual([field.schema for field in form["data_schema"].schema], ["hardware_profile"])
+        for method in (
+            flow.async_step_plant, flow.async_step_bypass, flow.async_step_missing_restart,
+            flow.async_step_plant_form, flow.async_step_bypass_form,
+            flow.async_step_summer_settings, flow.async_step_bypass_settings,
+        ):
+            with self.subTest(method=method.__name__):
+                self.assertEqual((await method({}))["reason"], "read_only")
+        co._async_send.assert_not_awaited()
 
     async def test_unknown_imbalance_has_no_default_and_is_not_written(self):
         flow, co = self.flow()
@@ -489,7 +543,7 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
     async def test_level_sections_write_flat_settings_without_group_options(self):
         flow, co = self.flow()
         self.assertEqual(
-            [field.schema for field in flow._general_schema().schema][1],
+            [field.schema for field in flow._general_schema().schema][2],
             "filter_interval_days",
         )
         data = {
@@ -541,7 +595,7 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
         co.async_write_parameters = AsyncMock()
         names = [field.schema for field in flow._general_schema().schema]
         self.assertEqual(
-            names[2:5], ["automatic", "show_fan_levels", "fan_level_1"]
+            names[3:6], ["automatic", "show_fan_levels", "fan_level_1"]
         )
         await flow.async_step_general(
             {
@@ -643,3 +697,143 @@ class OptionsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await displayed_temperature(), "6.0")
         co.async_write_parameters.assert_not_awaited()
         co._async_send.assert_not_awaited()
+
+
+class ReadOnlyProfileTest(unittest.IsolatedAsyncioTestCase):
+    async def test_real_reader_records_and_exports_existing_connection_without_writes(self):
+        co = coordinator()
+        co._config.update({
+            "hardware_profile": "xor", "serial_port": "socket://test:502",
+            "baudrate": 9600, "parity": "none",
+        })
+        co._parser = NovusXorParser()
+        co.raw_log = deque(maxlen=3000)
+        co.passive_recording = PassiveRecording()
+        co.start_passive_recording()
+        co.hass = SimpleNamespace(loop=Mock())
+        stream = bytes.fromhex("020001fd000a0000315920002311260301aa")
+        chunks = iter(bytes((byte,)) for byte in stream)
+        serial_port = MagicMock(port="socket://test:502", in_waiting=1)
+        serial_port.__enter__.return_value = serial_port
+
+        def read(_):
+            value = next(chunks, b"")
+            if not value:
+                co._stop_event.set()
+            return value
+
+        serial_port.read.side_effect = read
+        with patch(
+            "custom_components.novus300bus.coordinator.serial.serial_for_url",
+            return_value=serial_port,
+        ) as connect:
+            co._read_serial()
+        connect.assert_called_once_with("socket://test:502", timeout=1)
+        serial_port.write.assert_not_called()
+        result = await async_get_config_entry_diagnostics(
+            Mock(), SimpleNamespace(data={}, options={}, runtime_data=co)
+        )
+        self.assertTrue(result["read_only"])
+        self.assertEqual(result["protocol"]["valid_frames"], 2)
+        captured = bytes.fromhex("".join(
+            chunk["hex"] for chunk in result["passive_recording"]["chunks"]
+        ))
+        self.assertEqual(captured, stream)
+        self.assertEqual(result["passive_recording"]["received_bytes"], len(stream))
+        json.dumps(result)
+
+    async def test_every_bus_write_path_fails_before_transmission_or_mutation(self):
+        co = coordinator({"param_1b": 0x7B, "fan_level_1_percentage": 20, "orig_fan_level_1_percentage": 17})
+        co._config["hardware_profile"] = "xor"
+        co._serial = Mock(port="socket://test:502")
+        co.hass = SimpleNamespace(async_add_executor_job=AsyncMock())
+        before = dict(co._values)
+        operations = (
+            lambda: co.async_set_ventilation_mode("level_1"),
+            lambda: co.async_set_power(True),
+            lambda: co.async_write_settings({"fan_level_1_percentage": 40}),
+            lambda: co.async_write_parameters({0x1B: 0x7F}),
+            lambda: co._async_write_parameters({0x1B: 0x7F}),
+            lambda: co.async_set_summer_ventilation(True),
+            lambda: co.async_set_filter_interval(90),
+            co.async_reset_filter, co.async_request_dump, co.async_sync_clock,
+            lambda: co.async_set_temporary_setting("fan_level_2_percentage", 42),
+            co.async_restore_settings,
+            lambda: NovusCoordinator._async_send(co, b"blocked"),
+        )
+        for operation in operations:
+            with self.subTest(operation=operation):
+                with self.assertRaisesRegex(HomeAssistantError, "read-only"):
+                    await operation()
+                self.assertEqual(co._values, before)
+        with self.assertRaisesRegex(HomeAssistantError, "read-only"):
+            co._send_frame(b"blocked")
+        co._serial.write.assert_not_called()
+        co._async_send.assert_not_awaited()
+        co.hass.async_add_executor_job.assert_not_awaited()
+
+    async def test_xor_start_does_not_restore_crc_values_or_schedule_clock_writes(self):
+        with TemporaryDirectory(prefix="novus-xor-test-") as directory:
+            hass = HomeAssistant(directory)
+            with patch("homeassistant.helpers.frame.report_usage"):
+                co = NovusCoordinator(hass, {
+                    "hardware_profile": "xor", "serial_port": "socket://test:502",
+                    "daily_time_sync": True, "fan_enabled": True,
+                }, "test")
+            co._async_restore_counters = AsyncMock()
+            with patch("custom_components.novus300bus.coordinator.threading.Thread") as thread:
+                with patch("custom_components.novus300bus.coordinator.async_track_time_change") as schedule:
+                    await co.async_start()
+            co._async_restore_counters.assert_not_awaited()
+            schedule.assert_not_called()
+            thread.return_value.start.assert_called_once()
+            self.assertEqual(co._values, {})
+            self.assertIsInstance(co._parser, NovusXorParser)
+            self.assertEqual(co._counter_store.key, "novus300bus.test.counters.xor")
+            self.assertIsNone(co.device_info["sw_version"])
+            self.assertNotIn("fan", _platforms(co))
+            self.assertNotIn("select", _platforms(co))
+            self.assertNotIn("switch", _platforms(co))
+            added = Mock()
+            await setup_buttons(hass, SimpleNamespace(data={}, options={}, runtime_data=co), added)
+            buttons = added.call_args.args[0]
+            self.assertEqual([button.translation_key for button in buttons], ["passive_recording"])
+            with patch.object(co, "_send_frame") as send:
+                await buttons[0].async_press()
+            send.assert_not_called()
+            self.assertEqual(co.passive_recording.snapshot()["status"], "recording")
+
+    async def test_existing_entries_remain_crc16_and_xor_blocks_external_fan_output(self):
+        co = coordinator()
+        self.assertFalse(co.read_only)
+        co.ensure_writable()
+        self.assertIn("fan", _platforms(co))
+        co._config["hardware_profile"] = "xor"
+        fan = NovusFanEntity(co, {
+            "tinkerforge_host": "test", "tinkerforge_port": 4223, "tinkerforge_uid": "test",
+        })
+        fan._connect = Mock()
+        with self.assertRaisesRegex(HomeAssistantError, "read-only"):
+            fan._set_percentage(50)
+        with self.assertRaisesRegex(HomeAssistantError, "read-only"):
+            await fan.async_set_percentage(50)
+        with self.assertRaisesRegex(HomeAssistantError, "read-only"):
+            await fan.async_set_preset_mode("Automatik")
+        fan._connect.assert_not_called()
+
+    async def test_xor_removes_fallback_component_metadata(self):
+        co = coordinator()
+        co._config["hardware_profile"] = "xor"
+        registry = Mock()
+        registry.async_get_device.side_effect = [
+            SimpleNamespace(id="panel", config_entries={"test"}),
+            SimpleNamespace(id="fan", config_entries={"test"}),
+            SimpleNamespace(id="defroster", config_entries={"test"}),
+            SimpleNamespace(id="unit"),
+        ]
+        with patch("custom_components.novus300bus.dr.async_get", return_value=registry):
+            _register_sub_devices(Mock(), SimpleNamespace(entry_id="test", runtime_data=co))
+        self.assertEqual(registry.async_update_device.call_count, 4)
+        registry.async_update_device.assert_any_call(
+            "unit", model="Novus 300 (XOR, experimental)", sw_version=None
+        )

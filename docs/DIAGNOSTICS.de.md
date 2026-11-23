@@ -2,6 +2,78 @@
 
 [English](DIAGNOSTICS.md)
 
+## XOR-Beta 2026.11.23b1
+
+Der separate Zweig `beta/xor-read-only` unterstützt das alternative Protokoll
+aus allen vier Mitschnitten in Ticket #10. Die Auswahl bezeichnet bestätigte
+**Protokollprofile**, keine bereits bekannten Hardware-/Firmwaregenerationen:
+
+- **CRC16 - Referenzanlage (TFT ETA0036E29A):** bisheriges Verhalten einschließlich
+  konfigurierter Schreibfunktionen; Standard für bestehende Einträge.
+- **XOR - Variante aus Ticket #10 (HW/FW unbekannt, Beta nur lesend):** keine
+  Bus-Schreibzugriffe, tägliche Uhrzeitsynchronisation, Registerabfragen,
+  Lüfter-/Select-/Switch-Steuerung oder optionale Tinkerforge-Ausgabe.
+  Auch direkte Schreib-Serviceaufrufe werden zurückgewiesen.
+
+Angezeigt werden Telegrammzähler, zuletzt geänderte Rohdatenseite
+(`Adresse:Seite`, hexadezimal) und eine **experimentelle BCD-Busuhr**. Deren
+Zuordnung ist noch nicht am Panel bestätigt; sie wird nie automatisch gestellt.
+Diagnosen enthalten zusätzlich Adress-/Typzähler und bis zu 64 letzte Rohseiten.
+Temperaturen, Lüfterstufen, Bypass und Ausstattung werden nicht geraten.
+Unbekannte Firmware und Ersatzkennungen erscheinen nicht als erkannte XOR-Hardware.
+
+### Installieren und Profil wählen
+
+1. Home Assistant und bestehende Integrationsdateien sichern.
+2. **HACS > Paul Novus 300 RS-485 Bus > Dreipunktmenü > Erneut herunterladen**:
+   unter **Andere Version benötigt? / Need a different version?** die Version
+   **2026.11.23b1** wählen, falls angeboten. Sonst die manuelle Variante nutzen.
+3. **Home Assistant**, nicht die Lüftung, neu starten. Unter **Einstellungen >
+   Geräte & Dienste > Paul Novus 300 RS-485 Bus > Konfigurieren >
+   Grundeinstellungen und Anlagenwerte** das **Hardware-/Firmwareprofil XOR**
+   wählen und speichern. Die Auswahl gibt es auch bei **Neu konfigurieren >
+   Schnittstelle: RS-485-Bus** und der Ersteinrichtung. Ein Profilwechsel
+   speichert nur die Auswahl, ignoriert andere Änderungen dieses Formulars
+   und lädt die Integration neu; für weitere Änderungen das Formular neu öffnen.
+4. Bridge-URL sowie **9600, 8N1**, TCP Server und Transfer Protocol None
+   beibehalten. Dynamische Adressen gelten nur für CRC16. Auf einer XOR-Anlage
+   nicht CRC16 wählen, um Steuerungen freizuschalten.
+
+**Manuell:** [Beta-Quellcode-ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.23b1.zip)
+herunterladen. Bisherigen Ordner `/config/custom_components/novus300bus` an einen
+Sicherungsort **außerhalb** von `custom_components` verschieben. Nur
+`custom_components/novus300bus` aus dem ZIP nach `/config/custom_components/`
+entpacken, dann Schritte 3-4 ausführen. Nicht das ganze Repository kopieren oder
+andere Integrationen überschreiben. Rückkehr durch Neuinstallation von
+**2026.11.21** beziehungsweise Rückspielen des gesicherten Ordners und HA-Neustart;
+bei nötiger Konfigurationswiederherstellung das Backup nutzen.
+
+### Aufzeichnen, ohne Befehle zu senden
+
+Auf der **Geräteseite** unter **Diagnose** einmal **120 Sekunden passiv
+aufzeichnen** drücken. Genutzt wird ausschließlich die bestehende
+Empfangsverbindung; **keine Befehle**, auch kein Register-Dump.
+Mindestens 125 Sekunden warten und dann die Integrationsdiagnose wie unten
+beschrieben herunterladen. Eine laufende Aufzeichnung wird nicht überschrieben;
+nach dem Download lässt sich eine neue starten.
+
+`passive_recording` enthält UTC-Zeiten, vollständige Byte-Reihenfolge, Bytezahl
+und Status (`recording`, `complete`, `truncated`; anfangs `not_started`).
+Kleine Lesevorgänge werden in ungefähr 100-ms-Blöcken zusammengefasst;
+deren Zeitstempel bezeichnet den ersten Lesevorgang, nicht jedes einzelne Byte.
+Grenzen: 120 Sekunden, 1 MiB oder 2400 Blöcke. `complete` mit null Bytes bedeutet
+keinen Empfang, **keinen** Kommunikationserfolg. Die Daten bleiben bis zum
+Ersetzen/Neuladen im Arbeitsspeicher; vor HA-Neustart oder Reload herunterladen.
+
+Zuerst unverändert aufzeichnen. Falls im normalen Betrieb sinnvoll, eine zweite
+Aufzeichnung starten: nach 20 Sekunden **am Panel** eine normale Lüfterstufe
+ändern, nach weiteren 40 Sekunden zurückstellen, Abschluss abwarten. Genaue
+Aktionszeiten mit UTC-Abweichung, Stufe, Paneltemperaturen und Paneluhr notieren.
+Anlagen-, Panel-, Hardware- und Software-/BUS-Version von zugänglichen Infoseiten
+oder Typenschildern ablesen; Fotos mit geschwärzten Seriennummern helfen.
+Keine geöffneten spannungsführenden Abdeckungen, Frost-/Heizungsänderungen,
+Resets, Lüftungsneustarts oder Dumps. **Vor Upload Datenschutz prüfen:** Abschnitt 4.
+
 Diagnosedaten einer anderen kompatiblen Lüftungsanlage oder zusätzlicher
 Ausstattung (zum Beispiel einer EWT-Klappe) helfen, unbekannte Busregister
 zuzuordnen. Eine Meldung bedeutet noch nicht, dass die Hardware unterstützt

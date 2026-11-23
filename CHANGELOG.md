@@ -2,6 +2,19 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.23b1 (beta)
+
+### Highlights
+- **Hardware/firmware profiles:** existing CRC16 reference and issue #10 XOR variant.
+- **Strictly read-only XOR:** checked framing, raw-page diagnostics and experimental bus clock; no controls, time sync, dumps or 0-10 V writes.
+- **Passive 120-second recording:** diagnostic button, bounded memory and JSON export through the existing connection.
+
+### Notes
+- Separate `beta/xor-read-only` branch; stable 2026.11.21 is unchanged.
+- Actual XOR hardware/firmware generation and temperature/stage mappings remain unconfirmed; no fallback identities or CRC16 cache are reused.
+- 80 offline regression tests and replay of all four issue #10 recordings pass. No production bus commands used.
+- [Installation and capture instructions](docs/DIAGNOSTICS.md#xor-beta-20261123b1).
+
 ## 2026.11.21
 
 ### Highlights

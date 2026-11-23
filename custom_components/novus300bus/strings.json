@@ -1,14 +1,24 @@
 {
+  "selector": {
+    "hardware_profile": {
+      "options": {
+        "crc16": "CRC16 - reference installation (TFT ETA0036E29A)",
+        "xor": "XOR - issue #10 variant (HW/FW unknown, read-only beta)"
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
         "data": {
+          "hardware_profile": "Hardware / firmware profile",
           "serial_port": "Serial device",
           "baudrate": "Baud rate",
           "parity": "Parity",
           "dynamic_bus_addresses": "Accept dynamic bus addresses (experimental)"
         },
         "data_description": {
+          "hardware_profile": "Select by the confirmed protocol, not an assumed firmware generation. XOR disables all device writes, including time sync and optional 0-10 V control. Dynamic bus addresses applies only to CRC16.",
           "dynamic_bus_addresses": "Also accepts CRC-valid receive frames whose first header byte differs from 00/01. The second header byte is already unrestricted. Does not change write destinations or bus timing, or assign addresses to devices."
         }
       },
@@ -23,12 +33,14 @@
         "title": "Interface: RS-485 bus",
         "description": "How Home Assistant reaches the Novus RS-485 bus.\n\n**Serial device / bridge URL:** a local device such as `/dev/ttyUSB0` or `/dev/ttyNovus300`, or a network bridge such as `socket://10.0.17.45:9700` that forwards the serial bus over TCP. Only one client can use a bridge at a time.\n\n**Baud rate:** the Novus bus runs at 9600.\n\n**Parity:** `none` for a bridge or an adapter that already handles the address bit, `mark` for a plain RS-485 adapter on the bus.\n\nThe integration reloads automatically afterwards.",
         "data": {
+          "hardware_profile": "Hardware / firmware profile",
           "serial_port": "Serial device / bridge URL",
           "baudrate": "Baud rate",
           "parity": "Parity",
           "dynamic_bus_addresses": "Accept dynamic bus addresses (experimental)"
         },
         "data_description": {
+          "hardware_profile": "Select by the confirmed protocol, not an assumed firmware generation. XOR disables all device writes, including time sync and optional 0-10 V control. Dynamic bus addresses applies only to CRC16.",
           "dynamic_bus_addresses": "Also accepts CRC-valid receive frames whose first header byte differs from 00/01. The second header byte is already unrestricted. Does not change write destinations or bus timing, or assign addresses to devices."
         }
       },
@@ -45,6 +57,7 @@
       }
     },
     "abort": {
+      "read_only": "The XOR profile is read-only. Optional 0-10 V fan control is disabled.",
       "reconfigure_successful": "Saved, the integration is reloading."
     }
   },
@@ -62,6 +75,7 @@
       "general": {
         "title": "General and unit settings",
         "data": {
+          "hardware_profile": "Hardware / firmware profile",
           "daily_time_sync": "Synchronize time daily",
           "boost_duration_minutes": "Boost duration",
           "away_duration_minutes": "Away: ventilation time (min/h)",
@@ -69,7 +83,7 @@
           "filter_interval_days": "Filter interval",
           "automatic": "Automatic mode"
         },
-        "description": "{source}",
+        "description": "{source}\n\nChanging the hardware/firmware profile saves only that selection and reloads the integration; other edits in this submission are ignored. XOR is read-only; switch back to CRC16 only on a confirmed CRC16 installation.",
         "sections": {
           "fan_level_1": {
             "name": "Ventilation level 1",
@@ -181,6 +195,9 @@
         }
       }
     },
+    "abort": {
+      "read_only": "The XOR hardware/firmware profile is read-only; unit configuration and restarts are disabled."
+    },
     "error": {
       "levels_order": "Levels must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %.",
       "not_loaded": "Not connected to the bus.",
@@ -205,6 +222,15 @@
       }
     },
     "sensor": {
+      "xor_frames_received": {
+        "name": "XOR frames received"
+      },
+      "xor_clock": {
+        "name": "Bus clock (experimental)"
+      },
+      "xor_last_page": {
+        "name": "Last changed XOR data page"
+      },
       "supply_air_temperature": {
         "name": "2 Supply air temperature"
       },
@@ -259,6 +285,9 @@
       }
     },
     "button": {
+      "passive_recording": {
+        "name": "Record 120 seconds (passive)"
+      },
       "boost": {
         "name": "Boost ventilation"
       },

@@ -1,14 +1,24 @@
 {
+  "selector": {
+    "hardware_profile": {
+      "options": {
+        "crc16": "CRC16 - Referenzanlage (TFT ETA0036E29A)",
+        "xor": "XOR - Variante aus Ticket #10 (HW/FW unbekannt, Beta nur lesend)"
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
         "data": {
+          "hardware_profile": "Hardware-/Firmwareprofil",
           "serial_port": "Serielles Gerät",
           "baudrate": "Baudrate",
           "parity": "Parität",
           "dynamic_bus_addresses": "Dynamische Bus-Adressen akzeptieren (experimentell)"
         },
         "data_description": {
+          "hardware_profile": "Nach bestätigtem Protokoll wählen, nicht nach vermuteter Firmwaregeneration. XOR sperrt alle Geräteschreibzugriffe einschließlich Uhrzeitsynchronisation und optionaler 0-10-V-Steuerung. Dynamische Busadressen gelten nur für CRC16.",
           "dynamic_bus_addresses": "Akzeptiert zusätzlich CRC-gültige Empfangsframes mit einem anderen ersten Headerbyte als 00/01. Das zweite Headerbyte ist bereits uneingeschränkt. Ändert weder Schreibziele noch Bus-Timing und ordnet Adressen keinen Geräten zu."
         }
       },
@@ -23,12 +33,14 @@
         "title": "Schnittstelle: RS-485-Bus",
         "description": "Wie Home Assistant den RS-485-Bus der Novus erreicht.\n\n**Serielles Gerät / Bridge-URL:** ein lokales Gerät wie `/dev/ttyUSB0` oder `/dev/ttyNovus300`, oder eine Netzwerk-Bridge wie `socket://10.0.17.45:9700`, die den seriellen Bus über TCP weiterreicht. Eine Bridge bedient immer nur einen Client.\n\n**Baudrate:** Der Novus-Bus läuft mit 9600.\n\n**Parität:** `none` bei einer Bridge oder einem Adapter, der das Adressbit selbst behandelt, `mark` bei einem einfachen RS-485-Adapter direkt am Bus.\n\nDie Integration wird danach automatisch neu geladen.",
         "data": {
+          "hardware_profile": "Hardware-/Firmwareprofil",
           "serial_port": "Serielles Gerät / Bridge-URL",
           "baudrate": "Baudrate",
           "parity": "Parität",
           "dynamic_bus_addresses": "Dynamische Bus-Adressen akzeptieren (experimentell)"
         },
         "data_description": {
+          "hardware_profile": "Nach bestätigtem Protokoll wählen, nicht nach vermuteter Firmwaregeneration. XOR sperrt alle Geräteschreibzugriffe einschließlich Uhrzeitsynchronisation und optionaler 0-10-V-Steuerung. Dynamische Busadressen gelten nur für CRC16.",
           "dynamic_bus_addresses": "Akzeptiert zusätzlich CRC-gültige Empfangsframes mit einem anderen ersten Headerbyte als 00/01. Das zweite Headerbyte ist bereits uneingeschränkt. Ändert weder Schreibziele noch Bus-Timing und ordnet Adressen keinen Geräten zu."
         }
       },
@@ -45,6 +57,7 @@
       }
     },
     "abort": {
+      "read_only": "Das XOR-Profil ist nur lesend. Die optionale 0-10-V-Lüftersteuerung ist gesperrt.",
       "reconfigure_successful": "Gespeichert, die Integration wird neu geladen."
     }
   },
@@ -62,6 +75,7 @@
       "general": {
         "title": "Allgemein und Anlageneinstellungen",
         "data": {
+          "hardware_profile": "Hardware-/Firmwareprofil",
           "daily_time_sync": "Uhrzeit täglich synchronisieren",
           "boost_duration_minutes": "Dauer Stoßlüftung",
           "away_duration_minutes": "Abwesend: Lüftungszeit (min/h)",
@@ -69,7 +83,7 @@
           "filter_interval_days": "Filterintervall",
           "automatic": "Automatik-Modus"
         },
-        "description": "{source}",
+        "description": "{source}\n\nEin Profilwechsel speichert nur die Profilauswahl und lädt die Integration neu; andere Änderungen dieses Formulars werden dabei ignoriert. XOR ist nur lesend. CRC16 nur bei bestätigter CRC16-Anlage auswählen.",
         "sections": {
           "fan_level_1": {
             "name": "Lüftungsstufe 1",
@@ -181,6 +195,9 @@
         }
       }
     },
+    "abort": {
+      "read_only": "Das XOR-Hardware-/Firmwareprofil ist nur lesend; Anlagenkonfiguration und Anlagenneustart sind gesperrt."
+    },
     "error": {
       "levels_order": "Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %.",
       "not_loaded": "Nicht mit dem Bus verbunden.",
@@ -205,6 +222,15 @@
       }
     },
     "sensor": {
+      "xor_frames_received": {
+        "name": "Empfangene XOR-Telegramme"
+      },
+      "xor_clock": {
+        "name": "Busuhr (experimentell)"
+      },
+      "xor_last_page": {
+        "name": "Zuletzt geänderte XOR-Datenseite"
+      },
       "supply_air_temperature": {
         "name": "2 Zuluft Temperatur Räume"
       },
@@ -259,6 +285,9 @@
       }
     },
     "button": {
+      "passive_recording": {
+        "name": "120 Sekunden passiv aufzeichnen"
+      },
       "boost": {
         "name": "Stoßlüftung"
       },

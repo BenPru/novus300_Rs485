@@ -2,6 +2,19 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.23b1 (Beta)
+
+### Highlights
+- **Hardware-/Firmwareprofile:** bisherige CRC16-Referenz und XOR-Variante aus Ticket #10.
+- **XOR strikt nur lesend:** geprüfte Telegramme, Rohseitendiagnose und experimentelle Busuhr; keine Steuerung, Uhrzeitsynchronisation, Dumps oder 0-10-V-Schreibzugriffe.
+- **120 Sekunden passiv aufzeichnen:** Diagnosetaste, begrenzter Speicher und JSON-Export über die bestehende Verbindung.
+
+### Hinweise
+- Separater Zweig `beta/xor-read-only`; Stable 2026.11.21 bleibt unverändert.
+- Tatsächliche XOR-Hardware/Firmware und Temperatur-/Stufenzuordnung noch offen; keine Ersatzkennungen oder CRC16-Cachewerte übernommen.
+- 80 Offline-Regressionstests und Replay aller vier Mitschnitte aus Ticket #10 bestanden; keine produktiven Busbefehle zum Testen.
+- [Installation und Aufzeichnung](docs/DIAGNOSTICS.de.md#xor-beta-20261123b1).
+
 ## 2026.11.21
 
 ### Highlights

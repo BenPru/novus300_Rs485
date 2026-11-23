@@ -19,13 +19,32 @@ from .coordinator import NovusCoordinator
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up Novus buttons."""
     config = {**entry.data, **entry.options}
-    async_add_entities(
-        [
+    buttons = [NovusPassiveRecordingButton(entry.runtime_data)]
+    if not entry.runtime_data.read_only:
+        buttons.extend([
             NovusBoostButton(hass, entry.runtime_data, config),
             NovusFilterResetButton(entry.runtime_data),
             NovusRequestDumpButton(entry.runtime_data),
-        ]
-    )
+        ])
+    async_add_entities(buttons)
+
+
+class NovusPassiveRecordingButton(ButtonEntity):
+    """Record the existing receive stream without transmitting."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "passive_recording"
+    _attr_unique_id = "novus300bus_passive_recording"
+    _attr_icon = "mdi:record-rec"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: NovusCoordinator) -> None:
+        self._coordinator = coordinator
+        self._attr_device_info = coordinator.device_info
+
+    async def async_press(self) -> None:
+        """Start the bounded recording; download it through integration diagnostics."""
+        self._coordinator.start_passive_recording()
 
 
 class NovusBoostButton(CoordinatorEntity[NovusCoordinator], ButtonEntity):

@@ -15,6 +15,10 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
     values = dict(coordinator.data)
     return {
+        "hardware_profile": coordinator.hardware_profile,
+        "read_only": coordinator.read_only,
+        "protocol": coordinator.protocol_diagnostics(),
+        "passive_recording": coordinator.passive_recording.snapshot(),
         "entry": {"data": dict(entry.data), "options": dict(entry.options)},
         "values": values,
         "parameter_block": {

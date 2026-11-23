@@ -26,6 +26,17 @@ SUB_DEVICES = (
 def _register_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Create the connected components as sub-devices of the unit."""
     registry = dr.async_get(hass)
+    if entry.runtime_data.read_only:
+        for _, slug, _, _ in SUB_DEVICES:
+            device = registry.async_get_device(identifiers={(DOMAIN, f"novus300_{slug}")})
+            if device is not None and entry.entry_id in device.config_entries:
+                registry.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+        main = registry.async_get_device(identifiers={(DOMAIN, "novus300")})
+        if main is not None:
+            registry.async_update_device(
+                main.id, model="Novus 300 (XOR, experimental)", sw_version=None
+            )
+        return
     values = entry.runtime_data.data
     main = registry.async_get_device(identifiers={(DOMAIN, "novus300")})
     if main is None:
@@ -57,6 +68,9 @@ PLATFORMS = (
     Platform.SELECT,
     Platform.SWITCH,
 )
+
+def _platforms(coordinator: NovusCoordinator) -> tuple[Platform, ...]:
+    return (Platform.SENSOR, Platform.BUTTON) if coordinator.read_only else PLATFORMS
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -98,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await coordinator.async_start()
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, _platforms(coordinator))
     _register_sub_devices(hass, entry)
     _sync_bypass_entity(hass, entry)
     _remove_obsolete_entities(hass)
@@ -174,7 +188,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the Novus integration."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, _platforms(entry.runtime_data))
     if unloaded:
         await entry.runtime_data.async_stop()
     return unloaded

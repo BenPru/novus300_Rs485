@@ -20,6 +20,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_HARDWARE_PROFILE,
+    DEFAULT_HARDWARE_PROFILE,
+    HARDWARE_PROFILES,
+    PROFILE_XOR,
     CONF_AWAY_DURATION_MINUTES,
     CONF_BAUDRATE,
     CONF_BOOST_DURATION_MINUTES,
@@ -46,6 +50,8 @@ from .const import (
     FAN_STAGE_KEYS,
     FAN_IMBALANCE_KEYS,
 )
+from .capture import PassiveRecording
+from .xor_protocol import NovusXorParser
 from .protocol import (
     MODE_REQUEST_VALUES,
     NovusFrameParser,
@@ -121,7 +127,9 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
     ) -> None:
         super().__init__(hass, LOGGER, name=DOMAIN)
         self._config = config
-        self._parser = NovusFrameParser(
+        if self.hardware_profile not in HARDWARE_PROFILES:
+            raise HomeAssistantError(f"Unknown Novus hardware profile: {self.hardware_profile}")
+        self._parser = NovusXorParser() if self.read_only else NovusFrameParser(
             dynamic_bus_addresses=config.get(
                 CONF_DYNAMIC_BUS_ADDRESSES, DEFAULT_DYNAMIC_BUS_ADDRESSES
             )
@@ -130,27 +138,69 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
         self._serial_lock = threading.Lock()
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
-        self._values: dict[str, NovusValue] = dict(KNOWN_IDENTITIES)
+        self._values: dict[str, NovusValue] = {} if self.read_only else dict(KNOWN_IDENTITIES)
+        store_suffix = ".xor" if self.read_only else ""
         self._counter_store = Store[dict[str, NovusValue]](
-            hass, 1, f"{DOMAIN}.{entry_id}.counters"
+            hass, 1, f"{DOMAIN}.{entry_id}.counters{store_suffix}"
         )
         self._cancel_time_sync = None
         self._last_clock_at = 0.0
         self._parameter_write_lock = asyncio.Lock()
         self._plant_word_received = asyncio.Event()
         self.raw_log: deque[tuple[str, str]] = deque(maxlen=3000)
+        self.passive_recording = PassiveRecording()
         self.data = {}
+
+    @property
+    def hardware_profile(self) -> str:
+        """Return the explicitly selected protocol, defaulting existing entries to CRC16."""
+        return self._config.get(CONF_HARDWARE_PROFILE, DEFAULT_HARDWARE_PROFILE)
+
+    @property
+    def read_only(self) -> bool:
+        """Return whether all device writes must be blocked."""
+        return self.hardware_profile == PROFILE_XOR
+
+    @property
+    def device_info(self) -> dict:
+        """Do not present reference firmware metadata as detected XOR hardware."""
+        return {
+            "identifiers": {(DOMAIN, "novus300")},
+            "name": "Paul Novus 300",
+            "manufacturer": "Paul",
+            "model": "Novus 300 (XOR, experimental)" if self.read_only else "Novus 300 (FOCUS250)",
+            "sw_version": None if self.read_only else "BUS 1.7.1",
+        }
+
+    def ensure_writable(self) -> None:
+        """Fail before any transmission or optimistic local mutation."""
+        if self.read_only:
+            raise HomeAssistantError("The XOR hardware/firmware profile is read-only")
+
+    def start_passive_recording(self) -> None:
+        """Record received bytes only, using the existing reader connection."""
+        try:
+            self.passive_recording.start()
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+
+    def protocol_diagnostics(self) -> dict:
+        """Return experimental decoder details where available."""
+        if isinstance(self._parser, NovusXorParser):
+            return self._parser.diagnostics()
+        return {"framing": "CRC16", "read_only": False}
 
     async def async_start(self) -> None:
         """Start the serial reader thread."""
-        await self._async_restore_counters()
+        if not self.read_only:
+            await self._async_restore_counters()
         self._thread = threading.Thread(
             target=self._read_serial,
             name="novus300bus-reader",
             daemon=True,
         )
         self._thread.start()
-        if self._config.get(CONF_DAILY_TIME_SYNC, DEFAULT_DAILY_TIME_SYNC) and str(
+        if not self.read_only and self._config.get(CONF_DAILY_TIME_SYNC, DEFAULT_DAILY_TIME_SYNC) and str(
             self._config[CONF_SERIAL_PORT]
         ).startswith("socket://"):
             self._cancel_time_sync = async_track_time_change(
@@ -254,7 +304,9 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                         data = serial_port.read(serial_port.in_waiting or 1)
                         if not data:
                             continue
-                        self.raw_log.append((dt_util.utcnow().isoformat(), data.hex()))
+                        timestamp = dt_util.utcnow().isoformat()
+                        self.raw_log.append((timestamp, data.hex()))
+                        self.passive_recording.feed(data, timestamp)
                         for readings in self._parser.feed(data):
                             self.hass.loop.call_soon_threadsafe(
                                 self._async_publish, dict(readings)
@@ -269,6 +321,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     def _send_frame(self, frame: bytes) -> None:
         """Write one frame to the bridge connection."""
+        self.ensure_writable()
         with self._serial_lock:
             serial_port = self._serial
             if serial_port is None or not serial_port.port.startswith("socket://"):
@@ -279,6 +332,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_set_ventilation_mode(self, mode: str) -> None:
         """Request a ventilation mode and wait until the unit reports it."""
+        self.ensure_writable()
         if mode not in MODE_REQUEST_VALUES:
             raise HomeAssistantError(f"Unsupported ventilation mode: {mode}")
         frame = build_mode_request(mode)
@@ -295,6 +349,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_set_power(self, on: bool) -> None:
         """Switch the unit on or off and wait until it reports the new state."""
+        self.ensure_writable()
         wanted = ("running", "starting") if on else ("stopped",)
         for _ in range(3):
             await self._async_send(build_power_frame(on))
@@ -318,6 +373,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
             LOGGER.warning("Novus clock synchronization failed: %s", err)
 
     async def _async_send(self, frame: bytes) -> None:
+        self.ensure_writable()
         try:
             await self.hass.async_add_executor_job(self._send_frame, frame)
         except OSError as err:
@@ -374,6 +430,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_set_temporary_setting(self, key: str, value: int) -> None:
         """Write a setting, remembering its original value for later restore."""
+        self.ensure_writable()
         marker = f"{ORIGINAL_PREFIX}{key}"
         new_override = marker not in self._values
         if new_override:
@@ -387,6 +444,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_restore_settings(self, keep: str | None = None) -> None:
         """Write back the original values of all temporary settings but `keep`."""
+        self.ensure_writable()
         for key, original in self.temporary_settings().items():
             if key == keep:
                 continue
@@ -505,6 +563,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_write_settings(self, settings: dict[str, int | float]) -> None:
         """Store menu settings in the unit, as the panel does when saving."""
+        self.ensure_writable()
         for key in FAN_IMBALANCE_KEYS:
             if key in settings and (
                 isinstance(settings[key], bool)
@@ -528,11 +587,13 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_write_parameters(self, parameters: dict[int, int]) -> None:
         """Store changed unit parameters and selections (register -> raw value)."""
+        self.ensure_writable()
         async with self._parameter_write_lock:
             await self._async_write_parameters(parameters)
 
     async def _async_write_parameters(self, parameters: dict[int, int]) -> None:
         """Serialize parameter writes with summer ventilation changes."""
+        self.ensure_writable()
         for register, value in parameters.items():
             if register == 0x1B:
                 word = self._values.get("param_1b")
@@ -553,6 +614,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_set_summer_ventilation(self, on: bool) -> None:
         """Change only the summer flag and wait for its bus feedback."""
+        self.ensure_writable()
         async with self._parameter_write_lock:
             if self.bypass_present is not False:
                 raise HomeAssistantError(
@@ -589,6 +651,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_set_filter_interval(self, days: int) -> None:
         """Store the filter interval in the unit, as the panel does."""
+        self.ensure_writable()
         if days not in FILTER_INTERVAL_DAYS:
             raise HomeAssistantError("Filter interval must be 30 to 180 days in steps of 10")
         await self._async_send(build_filter_interval_frame(days))
@@ -597,6 +660,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_reset_filter(self) -> None:
         """Restart the filter run time at the configured interval."""
+        self.ensure_writable()
         days = self.filter_interval_days()
         if days not in FILTER_INTERVAL_DAYS:
             raise HomeAssistantError(f"Unexpected filter interval of {days} days")
@@ -638,10 +702,12 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
 
     async def async_request_dump(self) -> None:
         """Ask the unit to resend all registers (briefly disturbs the panel)."""
+        self.ensure_writable()
         await self._async_send(build_memory_dump_request())
 
     async def async_sync_clock(self) -> None:
         """Set the unit's date and time to Home Assistant's local time."""
+        self.ensure_writable()
         for _ in range(3):
             moment = dt_util.now()
             plant = self._values.get("clock")

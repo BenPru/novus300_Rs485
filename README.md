@@ -5,6 +5,12 @@
 
 [Deutsche Dokumentation](README.de.md)
 
+> **XOR beta `2026.11.23b1`:** this branch adds a hardware/firmware profile
+> selector and passive support for the protocol in [issue #10](https://github.com/BenPru/novus300_Rs485/issues/10).
+> XOR is **read-only**, with diagnostic frames/pages and an experimental bus clock,
+> not yet temperatures or ventilation controls. Existing entries default to CRC16.
+> [Beta installation and recording instructions](docs/DIAGNOSTICS.md#xor-beta-20261123b1).
+
 Home Assistant integration for reading and controlling a Paul Novus 300
 ventilation unit through its RS-485 bus. It exposes temperatures, operating
 state, air path, filter and operating times, messages and the ventilation

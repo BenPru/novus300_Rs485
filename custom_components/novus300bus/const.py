@@ -4,6 +4,12 @@ from typing import Final
 
 DOMAIN: Final = "novus300bus"
 
+CONF_HARDWARE_PROFILE: Final = "hardware_profile"
+PROFILE_CRC16: Final = "crc16"
+PROFILE_XOR: Final = "xor"
+HARDWARE_PROFILES: Final = (PROFILE_CRC16, PROFILE_XOR)
+DEFAULT_HARDWARE_PROFILE: Final = PROFILE_CRC16
+
 CONF_SERIAL_PORT: Final = "serial_port"
 CONF_BAUDRATE: Final = "baudrate"
 CONF_PARITY: Final = "parity"

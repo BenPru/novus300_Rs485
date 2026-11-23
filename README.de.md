@@ -4,6 +4,12 @@
 
 **English documentation:** [README.md](README.md)
 
+> **XOR-Beta `2026.11.23b1`:** Dieser Zweig ergänzt eine Hardware-/Firmwareprofilwahl
+> und passive Unterstützung für das Protokoll aus [Ticket #10](https://github.com/BenPru/novus300_Rs485/issues/10).
+> XOR ist **nur lesend**: Telegramm-/Seitendiagnose und experimentelle Busuhr,
+> noch keine Temperaturen oder Lüftungssteuerung. Bestehende Einträge bleiben bei CRC16.
+> [Beta installieren und aufzeichnen](docs/DIAGNOSTICS.de.md#xor-beta-20261123b1).
+
 
 <img width="586" height="1380" alt="image" src="https://github.com/user-attachments/assets/04bfeca0-c872-4f2a-9d46-2d0a34c71c43" />
 Konfiguration:

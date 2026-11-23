@@ -347,6 +347,7 @@ class NovusFanEntity(NovusBusFanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Switch between the existing automatic and manual control modes."""
+        self.coordinator.ensure_writable()
         self._ensure_panel_automatic()
         if not self._has_automatic_entity:
             raise HomeAssistantError(
@@ -363,6 +364,7 @@ class NovusFanEntity(NovusBusFanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Select automatic mode and write the percentage as 0-10 V."""
+        self.coordinator.ensure_writable()
         target = max(0, min(100, round(percentage)))
         if target == 0:
             await super().async_set_percentage(0)
@@ -403,6 +405,7 @@ class NovusFanEntity(NovusBusFanEntity):
 
     def _set_percentage(self, percentage: int) -> None:
         """Set the analog output voltage."""
+        self.coordinator.ensure_writable()
         with self._lock:
             analog_out = self._connect()
             analog_out.set_voltage(percentage * 100)
