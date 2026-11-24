@@ -24,6 +24,7 @@ anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 
 ## Inhalt
 
+- [Getestete Hardware und Kompatibilität](#getestete-hardware-und-kompatibilität)
 - [Voraussetzungen](#voraussetzungen)
 - [Installation mit HACS](#installation-mit-hacs)
 - [RS-485 anschließen und konfigurieren](#rs-485-anschließen-und-konfigurieren)
@@ -39,6 +40,64 @@ anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 - [Uhrzeit-Synchronisation](#uhrzeit-synchronisation)
 - [Schreibschutz der Bridge](#schreibschutz-der-bridge)
 
+## Getestete Hardware und Kompatibilität
+
+Stand **24.11.2026**. Getestet sind diese Kombinationen, **nicht pauschal jede
+Novus desselben Baujahrs**. Die Baujahre stammen aus Nutzerangaben; zur 2011er
+liegen datierte Bauteilaufkleber vor. Profil nach aufgezeichnetem Protokoll
+wählen, nicht allein nach Baujahr oder Aussehen des Bedienteils.
+
+| Anlage / Bauteile | Bus und Versionen | Ergebnis |
+|---|---|---|
+| Novus 300, laut Nutzer 2014, TFT `ETA0036E29A`, Lüfterslave `SWZ0025B26A`, externer PTC-Defroster `ST00064E24A`; Bypass deaktiviert | CRC16-Referenzprofil; Stable 2026.11.21 | **Positiv live getestet:** Temperaturen, Betriebsdaten, Modusrückmeldung und Controllerreaktion auf HA-Stufenwechsel. Panel-Synchronisation weiter offen, siehe Einschränkungen. |
+| Zweite Novus 300, laut Nutzer 2014, TFT `ETA0036E30A`, Bypass vorhanden, kein Defroster | CRC16-Referenzprofil; Stable 2026.11.21 | **Positiv live getestet:** Empfang und dekodierte Betriebsdaten. Bypass-Konfiguration/-Status untersucht; direkte Klappensteuerung nicht unterstützt. |
+| Novus 300 erster Generation, laut Nutzer 2011, LED-Tastenpanel und Erdwärmetauscher; Waveshare RS232/485/422 TO POE ETH (B), Firmware V1.523 | XOR-Telegramme; tatsächliche Novus-HW/FW unbekannt; [Ticket #10](https://github.com/BenPru/novus300_Rs485/issues/10) | **Negativ mit CRC16-Profil**, auch bei dynamischen Adressen. **Teilweise positiv mit XOR-Beta:** gültige Telegramme/Seiten, Stufe 1/2 offline aus Panelmitschnitten reproduziert. Beta 2026.11.24b1 zeigt auch abgeleitete Stufen 3-7; Nutzerprüfung steht aus. Noch keine Temperaturen oder Schreibzugriffe. |
+| Neuere Novus 300/450 **RD (redesign)** ab Seriennummernbereich `15000-2`, mit RD-LED- oder TFT-Bedienteil | Protokoll und Firmware hier nicht belegt | **Ungetestet**, kein negatives Testergebnis. Kompatibilität mit keinem der Profile voraussetzen. |
+
+`ETA...`, `SWZ...` und `ST...` sind Softwarekennungen der Komponenten, keine
+Anlagenseriennummern. **Das angezeigte `BUS 1.7.1` ist eine statische Referenzangabe,
+keine unabhängig erkannte Bus-Firmwareversion.** CRC16/XOR bezeichnen
+Telegrammaufbau/Prüfsumme, keine nummerierte Hardwaregeneration.
+Eine restaurierte Kennung allein beweist kein vorhandenes Bauteil.
+
+**Bauteilgrenzen / bekannte negative Ergebnisse:** PTC-Präsenz und Softwarekennung
+wurden beobachtet, ein reiner Busstatus für Heizen/Standby/fehlende Netzversorgung
+ist aber nicht belegt. Ein vorhandener Erdwärmetauscher in Ticket #10 bedeutet
+noch keine Unterstützung seiner Klappe. Für Sole-Defroster, Nachheizung,
+RD-Elektronik und andere Firmwarekombinationen gibt es hier keine positiven
+Hardwaretests. Auf der CRC16-Referenzanlage ändern HA-Stufenbefehle die
+Controllerrückmeldung und den realen Verbrauch, das TFT kann jedoch bei seiner
+alten Auswahl bleiben; ein anderer Teilnehmer kann diese später erneut setzen.
+Auch Frostschutzänderungen werden nicht zuverlässig am Panel angezeigt;
+die HA-Parameteranzeige allein ist keine Geräterücklesebestätigung.
+Deshalb sind nicht pauschal alle Schreibfunktionen als vollständig geprüft anzusehen.
+
+### Neuere Revision: RD / redesign
+
+Zehnders [Anleitungsübersicht](https://zehnder-systems-de.zendesk.com/hc/de/articles/4403739035793-Novus-300-450-Anleitungen)
+trennt Serviceunterlagen **V1.0 bis Juni 2015 / Seriennummer 14999** und
+**V2.0 ab Oktober 2015 / Seriennummernbereich 15000-2**. Die
+[Ersatzteilliste](https://zehnder-systems-de.zendesk.com/hc/de/articles/4409158002705-Novus-Ersatzteilliste)
+nennt die neuere Hardware **RD (redesign)** und unterscheidet Master-/Slaveplatinen,
+BUS-Thermostate sowie jeweils LED- und TFT-Bedienteile. RD-Ersatzteile sind am
+schwarzen Balken auf ihrem Typenschild gekennzeichnet.
+
+| Bedienteil als Ersatzteil | Vor RD | RD |
+|---|---|---|
+| LED-Tastenpanel | `521010730` | `521014130` |
+| TFT-Touchpanel | `521010740` | `521014140` |
+
+Das sind **Artikelnummern**, keine gelesenen Firmwareversionen oder Nachweise
+familienübergreifender Austauschbarkeit. Beide dokumentierten Familien führen
+beide Paneltypen; damit ist nicht jede Baujahres-/Firmwarekombination belegt.
+Der Unterschied 2011 LED/XOR gegenüber 2014 TFT/CRC16 könnte vom Panel,
+der Controller-Firmware oder deren Zusammenspiel abhängen;
+**„LED = XOR, TFT = CRC16“ ist nicht bewiesen**.
+Das sind Hardware-/Serviceunterschiede, **kein Nachweis eines anderen oder
+kompatiblen RS-485-Protokolls**; „V2.0“ ist hier keine gelesene Bus-Firmware.
+Für die Zuordnung helfen tatsächliche Geräte-/Platinenversionen und ein
+[passiver Diagnosemitschnitt](docs/DIAGNOSTICS.de.md).
+
 ## Voraussetzungen
 
 - Home Assistant mit HACS
@@ -53,8 +112,9 @@ anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 > Verantwortung. Anlage spannungsfrei schalten, bevor Leitungen angeschlossen
 > oder verändert werden. Anschlussbelegung, zulässige Leitungslänge und
 > Abschlusswiderstände immer dem Paul-Handbuch und dem konkreten Anlagentyp
-> entnehmen. Diese Integration sendet keine RS-485-Telegramme und darf nicht
-> zum Schreiben auf den Bus erweitert werden.
+> entnehmen. CRC16-Schreibzugriffe benötigen die projektspezifische busbewusste
+> Bridge samt Befehls-Whitelist; ein generischer transparenter TCP-Konverter
+> ersetzt deren Schreibzeitplanung nicht. XOR bleibt nur lesend.
 
 ## Installation mit HACS
 
@@ -169,7 +229,7 @@ diesen Helfer und sind ebenfalls nur bei Panel-Modus Automatik verfügbar.
 |---|---|---|
 | **Serielles Gerät / Bridge-URL** | RS-485-Verbindung: Gerätepfad (`/dev/serial/by-id/...`) oder `socket://Host:Port` der seriellen Bridge. Schreiben (Modus, Ein/Aus, Einstellungen, Uhrzeit) geht nur über die Bridge, die mit `--allow-command-frames` gestartet wurde. | `/dev/ttyNovus300` |
 | **Baudrate** | Busgeschwindigkeit. | 9600 |
-| **Parität** | Parität des Busses. | none (der Bus nutzt MARK-Parität; das übernimmt die Bridge) |
+| **Parität** | Physische UART-Einstellung; `socket://` konfiguriert den entfernten Konverter nicht. | Profil-/adapterabhängig: Referenz-Schreibbridge mit MARK; XOR-Empfang aus Ticket #10 mit 8N1. |
 | **Dynamische Bus-Adressen akzeptieren (experimentell)** | Bei Einrichtung oder unter **Neu konfigurieren → Schnittstelle: RS-485-Bus**: akzeptiert zusätzlich CRC-gültige Empfangsframes mit abweichendem ersten Headerbyte (bisher nur `00/01`). Das zweite Headerbyte ist bereits uneingeschränkt. Schreibziele, Bus-Timing und Registerdekodierung bleiben unverändert; keine automatische Gerätezuordnung. Kein belegter Fix für Issue #10. | aus |
 | **Uhrzeit täglich synchronisieren** | Setzt Datum und Uhrzeit der Anlage täglich um 03:00 auf die Zeit von Home Assistant und prüft die Abweichung. | an |
 | **Lüftungsstufe 1 / 2 / 3 (%)** | Lüfter-Prozentwert der drei Stufen, wird in die Anlage geschrieben. Es muss gelten: 17 % ≤ Stufe 1 < Stufe 2 < Stufe 3 ≤ 100 %, sonst zeigt der Dialog einen Fehler. Zeigt den ursprünglichen Wert, auch wenn gerade ein Prozentwert Stufe 1 oder 3 vorübergehend überschreibt. | 35 / 60 / 90 % |
