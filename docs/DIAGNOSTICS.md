@@ -2,10 +2,12 @@
 
 [Deutsch](DIAGNOSTICS.de.md)
 
-## XOR beta 2026.11.23b1
+<a id="xor-beta-20261123b1"></a>
+
+## XOR beta 2026.11.24b1
 
 The separate `beta/xor-read-only` branch supports the checksum-valid alternative
-protocol found in all four issue #10 recordings. The labels identify **protocol
+protocol found in the issue #10 recordings. The labels identify **protocol
 profiles**, not established hardware/firmware generations:
 
 - **CRC16 - reference installation (TFT ETA0036E29A):** existing integration
@@ -14,19 +16,33 @@ profiles**, not established hardware/firmware generations:
   scheduled time synchronization, parameter requests, fan/select/switch controls
   or optional Tinkerforge output. Even direct write service calls are rejected.
 
-The beta exposes a validated-frame counter, the last changed raw data page
+The beta exposes **Selected fan stage (experimental)**,
+`sensor.novus300_xor_fan_stage`, a validated-frame counter, the last changed raw data page
 (`address:page`, hexadecimal) and an **experimental BCD bus clock**. Its clock
 interpretation is not panel-confirmed and is never synchronized automatically.
 All observed address/type counts and up to 64 recent raw pages are included in
-diagnostics. Temperatures, fan stages, bypass and equipment types are deliberately
-not guessed. Unknown firmware and fallback component identities are not reported
+diagnostics. The stage scale is **1-7**, not the TFT mode codes: 4/5/6 are
+**not** boost/away/automatic. Values 1/2 follow the old labelled captures and the
+new 1-2-1 sequence; 3-7 are inferred from the LED scale and still need validation.
+The sensor attributes distinguish `capture_confirmed`, `inferred` and `unmapped`
+and retain the raw byte. Other values, including 0, show **unknown**, not an
+assumed standby state. This is the selected stage, not measured RPM, power or
+proof that the fans are running. Boost is not decoded separately; a displayed 7
+does not establish boost mode. Temperatures, bypass and equipment types remain
+unmapped. Unknown firmware and fallback component identities are not reported
 as detected XOR hardware.
+
+**Writing remains blocked, without an unlock switch.** The observed stage
+change involves a handshake and a 16-byte block, not an isolated stage command.
+Bus roles, safe arbitration and preservation of the other fields are not
+established. Replaying a captured block through a generic TCP converter is not
+a verified write implementation, even after the stage display has been checked.
 
 ### Install and select the profile
 
 1. Back up Home Assistant and the existing integration files.
 2. Open **HACS > Paul Novus 300 RS-485 Bus > three-dot menu > Redownload**.
-   Under **Need a different version?**, select **2026.11.23b1**, if listed.
+   Under **Need a different version?**, select **2026.11.24b1**, if listed.
    If the prerelease is not listed, use the manual alternative below.
 3. Restart **Home Assistant**, not the ventilation unit. Open **Settings >
    Devices & services > Paul Novus 300 RS-485 Bus > Configure > General and unit
@@ -39,7 +55,7 @@ as detected XOR hardware.
    Do not select CRC16 on the XOR unit to try to enable controls.
 
 **Manual alternative:** download the
-[beta source ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.23b1.zip).
+[beta source ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.24b1.zip).
 Move the old `/config/custom_components/novus300bus` folder to a backup location
 **outside** `custom_components`. Extract only
 `custom_components/novus300bus` from the ZIP into `/config/custom_components/`,
@@ -63,14 +79,59 @@ each chunk's first read, not individual byte arrival times. Limits are 120 secon
 successful communication. Recordings are in memory until replaced or reloaded;
 download before reloading/restarting HA.
 
-First collect an unchanged baseline. If appropriate for normal operation, make
-a second recording: wait 20 seconds, change one normal fan stage **on the panel**,
-wait 40 seconds, restore it, then wait for completion. Note exact action times,
-UTC offset, panel stage/temperatures and the panel clock. Read the actual unit,
+First collect an unchanged baseline. For LED panel tests, use the sequences
+below. Note exact action times with UTC offset, LED count and the HA stage;
+the LED panel has no temperature or clock display. Read the actual unit,
 panel, hardware and software/BUS versions from accessible info pages or labels;
 photos/screenshots with serial numbers masked are useful. No powered covers,
 frost/heater changes, resets, ventilation reboot or dump requests are needed.
 **Review privacy before uploading:** see section 4 below.
+
+### Validate all seven LED stages
+
+Use the physical panel only, and only stages appropriate for normal operation.
+Start from stage 1 if appropriate. Start a passive recording, then select stage 2
+at +20 s, stage 3 at +50 s, and return to the original normal stage at +80 s.
+Record every actual button press, LED count and HA reading after it has settled.
+Wait until +125 s and download **before** starting the next recording.
+
+If higher stages are appropriate, make another recording covering 4/5/6/7:
+reach stage 4 at +20 s, 5 at +40 s, 6 at +60 s, 7 at +80 s, and restore the
+original normal stage at +100 s. Record intermediate stages when multiple +/-
+presses are needed. Do not select unusually high stages just for this test.
+If the display is wrong, attach the same raw recording; it contains the bytes
+needed to correct the mapping. Name files `stages-1-3.json` and `stages-4-7.json`.
+
+For each action report: `local time + UTC offset | button/number of presses |
+LED count | HA stage | raw_value | mapping_status`. Also note any automation,
+boost or external input that might override the selection. Do not change
+automations or wiring merely for the recording.
+
+### Passive dumps for the other LED buttons
+
+These are **receive-only captures**, not active register-dump requests. Use
+a separate 120-second recording for each function, download at +125 s, and
+note the original stage, mode LEDs and exact action time. Press the physical
+button at approximately +20 s and observe the HA stage and all LEDs afterwards.
+Restore the original mode during the recording only using its normal, known
+operation; note how and when. If unsure, capture the next normal use instead.
+
+| Button | Meaning in the Novus manual | Useful recording |
+|---|---|---|
+| + / - | Seven selected ventilation stages | Stage tests above |
+| Boost ventilation | Timed stage 7; factory duration 15 minutes | `boost.json`: record activation during normal use and distinguish boost LED from stage LEDs; do not assume manual stage 7 means boost |
+| Supply and extract | Balanced two-fan operation | `balanced.json`, including return from another permitted mode |
+| Extract only | Supply fan disabled | `extract-only.json` **only if this mode is permitted for the installation** |
+| Supply only | Extract fan disabled | `supply-only.json` **only if permitted for the installation** |
+| Filter/reset | Resets the filter runtime counter | `filter-reset.json` **only during an actually due filter service**, never reset solely for diagnosis |
+
+**Fireplace warning:** the manual requires extract-only operation to be disabled
+when operating with a fireplace. Do not unlock it, bypass interlocks, or test
+one-fan modes without knowing that they are permitted. Do not test hidden
+combinations for fireplace configuration, bypass thresholds or imbalance.
+No standby, mains restart, frost/heater changes or active dump is required.
+Boost expiry needs a separate capture around its normal end if investigated;
+the two-minute recording does not cover the factory 15-minute duration.
 
 Diagnostics from another compatible ventilation unit or additional equipment
 (for example an EWT/earth heat exchanger damper) can help identify unknown bus

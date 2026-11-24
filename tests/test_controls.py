@@ -23,6 +23,7 @@ from custom_components.novus300bus.coordinator import NovusCoordinator
 from custom_components.novus300bus.diagnostics import async_get_config_entry_diagnostics
 from custom_components.novus300bus.fan import NovusBusFanEntity, NovusFanEntity
 from custom_components.novus300bus.protocol import NovusFrameParser, build_setting_frame
+from custom_components.novus300bus.sensor import NovusSensor, XOR_SENSORS
 from custom_components.novus300bus.switch import NovusSummerVentilationSwitch
 from custom_components.novus300bus.xor_protocol import NovusXorParser
 
@@ -44,6 +45,31 @@ def coordinator(values=None):
         side_effect=lambda data: setattr(instance, "data", data)
     )
     return instance
+
+
+class XorStageSensorTest(unittest.TestCase):
+    def test_inferred_stages_are_distinct_from_confirmed_values_and_unknown(self):
+        co = coordinator()
+        co._config = {"hardware_profile": "xor"}
+        description = next(item for item in XOR_SENSORS if item.key == "xor_fan_stage")
+        sensor = NovusSensor(co, description)
+        self.assertFalse(sensor.available)
+        for value, expected, status in (
+            (1, 1, "capture_confirmed"),
+            (2, 2, "capture_confirmed"),
+            (3, 3, "inferred"),
+            (7, 7, "inferred"),
+            (0, None, "unmapped"),
+            (255, None, "unmapped"),
+        ):
+            co.data = {"xor_fan_stage": value, "xor_fan_stage_raw": value}
+            self.assertTrue(sensor.available)
+            self.assertEqual(sensor.native_value, expected)
+            self.assertEqual(sensor.extra_state_attributes["mapping_status"], status)
+            self.assertEqual(sensor.extra_state_attributes["raw_value"], value)
+        co.data = {"xor_fan_stage": "unknown", "xor_fan_stage_raw": 8}
+        self.assertIsNone(sensor.native_value)
+        self.assertEqual(sensor.extra_state_attributes["boost_status"], "not_decoded")
 
 
 class CoordinatorStopTest(unittest.IsolatedAsyncioTestCase):

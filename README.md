@@ -5,11 +5,12 @@
 
 [Deutsche Dokumentation](README.de.md)
 
-> **XOR beta `2026.11.23b1`:** this branch adds a hardware/firmware profile
+> **XOR beta `2026.11.24b1`:** this branch adds a hardware/firmware profile
 > selector and passive support for the protocol in [issue #10](https://github.com/BenPru/novus300_Rs485/issues/10).
-> XOR is **read-only**, with diagnostic frames/pages and an experimental bus clock,
-> not yet temperatures or ventilation controls. Existing entries default to CRC16.
-> [Beta installation and recording instructions](docs/DIAGNOSTICS.md#xor-beta-20261123b1).
+> XOR is **read-only**, with an experimental selected-stage sensor (1-7),
+> diagnostic pages and bus clock. Stages 1/2 are capture-confirmed; 3-7 are inferred.
+> Boost, temperatures and write controls remain unsupported. Existing entries default to CRC16.
+> [Beta installation and recording instructions](docs/DIAGNOSTICS.md#xor-beta-20261124b1).
 
 Home Assistant integration for reading and controlling a Paul Novus 300
 ventilation unit through its RS-485 bus. It exposes temperatures, operating
@@ -26,6 +27,7 @@ with the command whitelist enabled, can request a ventilation mode via
 
 ## Contents
 
+- [Tested hardware and compatibility](#tested-hardware-and-compatibility)
 - [Requirements](#requirements)
 - [Install with HACS](#install-with-hacs)
 - [Connect and configure RS-485](#connect-and-configure-rs-485)
@@ -42,6 +44,62 @@ with the command whitelist enabled, can request a ventilation mode via
 - [Clock synchronization](#clock-synchronization)
 - [Bridge write protection](#bridge-write-protection)
 
+## Tested hardware and compatibility
+
+Status as of **2026-11-24**. These are tested combinations, **not a blanket
+compatibility promise for every Novus of the same year**. Years are owner-reported;
+the 2011 issue includes dated component labels. Select profiles by captured
+protocol, not year or panel appearance alone.
+
+| Unit / components | Bus and versions | Result |
+|---|---|---|
+| Novus 300, reported 2014, TFT panel `ETA0036E29A`, fan slave `SWZ0025B26A`, external PTC defroster `ST00064E24A`; bypass disabled | CRC16 reference profile; stable 2026.11.21 | **Positive live tests:** temperatures, operating data, mode feedback and controller response to HA stage changes. Panel synchronization remains unresolved; see limitations below. |
+| Second Novus 300, reported 2014, TFT panel `ETA0036E30A`, installed bypass, no defroster | CRC16 reference profile; stable 2026.11.21 | **Positive live tests:** reception and decoded operating data. Bypass configuration/status decoding has been investigated; direct flap control is unsupported. |
+| First-generation Novus 300, reported 2011, LED/button panel and ground heat exchanger; Waveshare RS232/485/422 TO POE ETH (B), firmware V1.523 | XOR framing; actual Novus HW/FW versions unknown; [issue #10](https://github.com/BenPru/novus300_Rs485/issues/10) | **Negative with the CRC16 profile**, including dynamic addresses. **Partial positive with XOR beta:** valid frames/pages; stage 1/2 readback reproduced offline from panel captures. Beta 2026.11.24b1 displays inferred stages 3-7 too, awaiting owner validation. No temperatures or writes yet. |
+| Later Novus 300/450 **RD (redesign)**, from serial range `15000-2`, with RD LED or TFT controls | Protocol and firmware not established here | **Untested**, not a negative result. Do not assume compatibility with either profile. |
+
+`ETA...`, `SWZ...` and `ST...` above are component software identifiers, not
+unit serial numbers. **The displayed `BUS 1.7.1` is static reference metadata,
+not an independently detected bus firmware version.** CRC16/XOR describe the
+observed framing/checksum, not numbered hardware revisions. A restored identity
+alone does not prove that the component is present.
+
+**Component limits / known negative results:** PTC presence and its software
+identity have been observed, but a bus-only heating/standby/mains-off status has
+not been established. An installed ground heat exchanger in issue #10 does not
+establish support for its damper. Brine defrosters, reheaters, RD electronics and
+other firmware combinations have no positive hardware test evidence here.
+On the CRC16 reference unit, HA stage commands change controller feedback and
+physical consumption, but the TFT can retain its previous selection and another
+participant may later reassert it. Frost-setting changes are also not reliably
+reflected on the panel; HA's parameter display alone is not device readback.
+These limitations prevent a claim that all write functions are fully validated.
+
+### Newer revision: RD / redesign
+
+Zehnder's [manual index](https://zehnder-systems-de.zendesk.com/hc/de/articles/4403739035793-Novus-300-450-Anleitungen)
+separates service instructions **V1.0 through June 2015 / serial numbers up to
+14999** from **V2.0 from October 2015 / serial range 15000-2 onward**. Its
+[parts list](https://zehnder-systems-de.zendesk.com/hc/de/articles/4409158002705-Novus-Ersatzteilliste)
+calls the newer hardware **RD (redesign)** and lists different master/slave
+boards, BUS thermostats and both LED and TFT panels. RD replacement-part labels
+are marked with a black bar.
+
+| Panel spare part | Before RD | RD |
+|---|---|---|
+| LED/button panel | `521010730` | `521014130` |
+| TFT touch panel | `521010740` | `521014140` |
+
+These are **part numbers**, not firmware readings or evidence that panels can
+be interchanged across families. Both documented families offer both panel types;
+this does not prove availability for every year/firmware combination. The
+2011 LED/XOR versus 2014 TFT/CRC16 difference could involve the panel, controller
+firmware or their interaction; **“LED = XOR, TFT = CRC16” is not established**.
+These are hardware/service distinctions,
+**not proof of a different or compatible RS-485 protocol**; “V2.0” here is not
+a bus firmware reading. Use the actual unit/board versions and a
+[passive diagnostic capture](docs/DIAGNOSTICS.md) to establish compatibility.
+
 ## Requirements
 
 - Home Assistant with HACS
@@ -54,8 +112,9 @@ with the command whitelist enabled, can request a ventilation mode via
 > Work on the ventilation unit and its bus wiring is at your own risk. Switch
 > off the unit before connecting or altering any wiring. Always follow the
 > connection pinout, permitted cable length, and termination guidance in the
-> Paul documentation for the specific unit. This integration never transmits
-> RS-485 frames and must not be extended to write to the bus.
+> Paul documentation for the specific unit. CRC16 writes require the project's
+> bus-aware bridge with its command whitelist; a generic transparent TCP
+> converter is not an equivalent write scheduler. XOR remains read-only.
 
 ## Install with HACS
 
@@ -162,7 +221,7 @@ Open **Settings → Devices & services → Paul Novus 300 RS-485 Bus → gear ic
 |---|---|---|
 | **Serial device / bridge URL** | RS-485 connection: a device path (`/dev/serial/by-id/...`) or `socket://host:port` of the serial bridge. Writing (mode, power, settings, clock) only works through the bridge started with `--allow-command-frames`. | `/dev/ttyNovus300` |
 | **Baud rate** | Bus speed. | 9600 |
-| **Parity** | Bus parity. | none (the bus uses MARK parity; the bridge handles it) |
+| **Parity** | Physical UART setting; `socket://` does not configure the remote converter. | Profile/adapter-specific: the reference write bridge uses MARK; issue #10 XOR reception uses 8N1. |
 | **Accept dynamic bus addresses (experimental)** | During setup or under **Reconfigure → Interface: RS-485 bus**: also accepts CRC-valid receive frames with a different first header byte (previously only `00/01`). The second header byte is already unrestricted. Write destinations, bus timing and register decoding stay unchanged; no automatic device mapping. Not a confirmed fix for issue #10. | off |
 | **Synchronize time daily** | Sets the unit's date and time to Home Assistant's time every day at 03:00 and checks the drift. | on |
 | **Ventilation level 1 / 2 / 3 (%)** | Fan percentage of the three levels, written to the unit. Must satisfy 17 % ≤ level 1 < level 2 < level 3 ≤ 100 %, otherwise the dialog shows an error. Shows the original value even while a percentage temporarily overrides level 1 or 3. | 35 / 60 / 90 % |

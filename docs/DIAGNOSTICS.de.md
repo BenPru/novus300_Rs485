@@ -2,10 +2,12 @@
 
 [English](DIAGNOSTICS.md)
 
-## XOR-Beta 2026.11.23b1
+<a id="xor-beta-20261123b1"></a>
+
+## XOR-Beta 2026.11.24b1
 
 Der separate Zweig `beta/xor-read-only` unterstützt das alternative Protokoll
-aus allen vier Mitschnitten in Ticket #10. Die Auswahl bezeichnet bestätigte
+aus den Mitschnitten in Ticket #10. Die Auswahl bezeichnet bestätigte
 **Protokollprofile**, keine bereits bekannten Hardware-/Firmwaregenerationen:
 
 - **CRC16 - Referenzanlage (TFT ETA0036E29A):** bisheriges Verhalten einschließlich
@@ -15,19 +17,35 @@ aus allen vier Mitschnitten in Ticket #10. Die Auswahl bezeichnet bestätigte
   Lüfter-/Select-/Switch-Steuerung oder optionale Tinkerforge-Ausgabe.
   Auch direkte Schreib-Serviceaufrufe werden zurückgewiesen.
 
-Angezeigt werden Telegrammzähler, zuletzt geänderte Rohdatenseite
+Angezeigt werden **Gewählte Lüfterstufe (experimentell)**,
+`sensor.novus300_xor_fan_stage`, Telegrammzähler, zuletzt geänderte Rohdatenseite
 (`Adresse:Seite`, hexadezimal) und eine **experimentelle BCD-Busuhr**. Deren
 Zuordnung ist noch nicht am Panel bestätigt; sie wird nie automatisch gestellt.
 Diagnosen enthalten zusätzlich Adress-/Typzähler und bis zu 64 letzte Rohseiten.
-Temperaturen, Lüfterstufen, Bypass und Ausstattung werden nicht geraten.
+Die Stufenskala ist **1-7**, nicht die TFT-Moduszuordnung: 4/5/6 bedeuten hier
+**nicht** Stoßlüftung/Abwesend/Automatik. Werte 1/2 passen zu den alten
+beschrifteten Aufnahmen und dem neuen Ablauf 1-2-1; 3-7 sind aus der
+LED-Skala abgeleitet und noch zu prüfen. Sensorattribute unterscheiden
+`capture_confirmed`, `inferred` und `unmapped` und enthalten den Rohwert.
+Andere Werte einschließlich 0 erscheinen **unbekannt**, nicht als vermutetes
+Standby. Die gewählte Stufe ist keine gemessene Drehzahl oder Leistung und kein
+Nachweis laufender Lüfter. Stoßlüftung ist nicht separat dekodiert; Stufe 7
+allein beweist keine aktive Stoßlüftung. Temperaturen, Bypass und Ausstattung
+sind weiterhin nicht zugeordnet.
 Unbekannte Firmware und Ersatzkennungen erscheinen nicht als erkannte XOR-Hardware.
+
+**Schreiben bleibt gesperrt, ohne Freigabeschalter.** Der aufgezeichnete Wechsel
+enthält einen Handshake mit einem 16-Byte-Block, keinen isolierten Stufenbefehl.
+Busteilnehmerrollen, sichere Arbitrierung und Erhaltung der anderen Felder
+sind nicht geklärt. Einen alten Block über einen generischen TCP-Konverter
+abzuspielen wäre auch nach Prüfung der Anzeige keine verifizierte Schreibfunktion.
 
 ### Installieren und Profil wählen
 
 1. Home Assistant und bestehende Integrationsdateien sichern.
 2. **HACS > Paul Novus 300 RS-485 Bus > Dreipunktmenü > Erneut herunterladen**:
    unter **Andere Version benötigt? / Need a different version?** die Version
-   **2026.11.23b1** wählen, falls angeboten. Sonst die manuelle Variante nutzen.
+   **2026.11.24b1** wählen, falls angeboten. Sonst die manuelle Variante nutzen.
 3. **Home Assistant**, nicht die Lüftung, neu starten. Unter **Einstellungen >
    Geräte & Dienste > Paul Novus 300 RS-485 Bus > Konfigurieren >
    Grundeinstellungen und Anlagenwerte** das **Hardware-/Firmwareprofil XOR**
@@ -39,7 +57,7 @@ Unbekannte Firmware und Ersatzkennungen erscheinen nicht als erkannte XOR-Hardwa
    beibehalten. Dynamische Adressen gelten nur für CRC16. Auf einer XOR-Anlage
    nicht CRC16 wählen, um Steuerungen freizuschalten.
 
-**Manuell:** [Beta-Quellcode-ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.23b1.zip)
+**Manuell:** [Beta-Quellcode-ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.24b1.zip)
 herunterladen. Bisherigen Ordner `/config/custom_components/novus300bus` an einen
 Sicherungsort **außerhalb** von `custom_components` verschieben. Nur
 `custom_components/novus300bus` aus dem ZIP nach `/config/custom_components/`
@@ -65,14 +83,62 @@ Grenzen: 120 Sekunden, 1 MiB oder 2400 Blöcke. `complete` mit null Bytes bedeut
 keinen Empfang, **keinen** Kommunikationserfolg. Die Daten bleiben bis zum
 Ersetzen/Neuladen im Arbeitsspeicher; vor HA-Neustart oder Reload herunterladen.
 
-Zuerst unverändert aufzeichnen. Falls im normalen Betrieb sinnvoll, eine zweite
-Aufzeichnung starten: nach 20 Sekunden **am Panel** eine normale Lüfterstufe
-ändern, nach weiteren 40 Sekunden zurückstellen, Abschluss abwarten. Genaue
-Aktionszeiten mit UTC-Abweichung, Stufe, Paneltemperaturen und Paneluhr notieren.
+Zuerst unverändert aufzeichnen. Für LED-Paneltests die Abläufe unten verwenden.
+Genaue Aktionszeiten mit UTC-Abweichung, LED-Anzahl und HA-Stufe notieren;
+das LED-Panel hat keine Temperatur- oder Uhranzeige.
 Anlagen-, Panel-, Hardware- und Software-/BUS-Version von zugänglichen Infoseiten
 oder Typenschildern ablesen; Fotos mit geschwärzten Seriennummern helfen.
 Keine geöffneten spannungsführenden Abdeckungen, Frost-/Heizungsänderungen,
 Resets, Lüftungsneustarts oder Dumps. **Vor Upload Datenschutz prüfen:** Abschnitt 4.
+
+### Alle sieben LED-Stufen prüfen
+
+Nur am physischen Panel und mit im normalen Betrieb passenden Stufen testen.
+Soweit sinnvoll auf Stufe 1 beginnen. Passive Aufzeichnung starten, nach 20 s
+Stufe 2, nach 50 s Stufe 3 und nach 80 s wieder die ursprüngliche normale Stufe
+wählen. Tatsächliche Tastendrücke, LED-Anzahl und anschließend eingependelte
+HA-Anzeige notieren. Nach 125 s Diagnose herunterladen, **bevor** die nächste
+Aufzeichnung gestartet wird.
+
+Sofern höhere Stufen im normalen Betrieb passen, separat aufzeichnen:
+nach 20 s Stufe 4, nach 40 s Stufe 5, nach 60 s Stufe 6, nach 80 s Stufe 7,
+nach 100 s die ursprüngliche normale Stufe wiederherstellen.
+Bei mehreren +/-Tastendrücken auch Zwischenstufen notieren. Keine ungewöhnlich
+hohen Stufen nur für den Test wählen. Bei falscher HA-Anzeige denselben
+Rohmitschnitt anhängen; er enthält die zur Korrektur benötigten Bytes.
+Dateien etwa `stages-1-3.json` und `stages-4-7.json` nennen.
+
+Je Aktion: `lokale Uhrzeit mit UTC-Abweichung | Taste/Anzahl Tastendrücke |
+LED-Anzahl | HA-Stufe | raw_value | mapping_status`.
+Aktive Automationen, Stoßlüftung und mögliche externe Übersteuerung nennen,
+aber Automationen oder Verkabelung nicht eigens für die Aufnahme ändern.
+
+### Passive Dumps der anderen LED-Tasten
+
+Das sind **reine Empfangsmitschnitte**, keine aktiven Register-Dump-Anfragen.
+Pro Funktion eine separate 120-s-Aufzeichnung, Download nach 125 s.
+Anfangsstufe, Modus-LEDs und genaue Aktionszeit notieren. Die physische Taste
+etwa nach 20 s betätigen und danach alle LEDs sowie die HA-Stufe beobachten.
+Den ursprünglichen Modus nur auf bekanntem normalem Bedienweg zurückstellen;
+Zeitpunkt und Bedienung notieren. Im Zweifel die nächste reguläre Nutzung
+aufzeichnen, statt einen Test zu erzwingen.
+
+| Taste | Bedeutung laut Novus-Anleitung | Sinnvolle Aufnahme |
+|---|---|---|
+| + / - | Sieben gewählte Lüfterstufen | Stufentests oben |
+| Stoßlüftung | Zeitprogramm auf Stufe 7, Werkseinstellung 15 Minuten | `boost.json`: Aktivierung bei normaler Nutzung; Stoßlüftungs-LED von Stufen-LEDs unterscheiden |
+| Zu- und Abluft | Betrieb beider Lüfter | `balanced.json`, gegebenenfalls Rückkehr aus anderem erlaubtem Modus |
+| Nur Abluft | Zuluftlüfter abgeschaltet | `extract-only.json`, **nur wenn diese Betriebsart zulässig ist** |
+| Nur Zuluft | Abluftlüfter abgeschaltet | `supply-only.json`, **nur wenn zulässig** |
+| Filter/Reset | Filterlaufzeitzähler zurücksetzen | `filter-reset.json`, **nur bei tatsächlich fälliger Filterwartung**, nicht eigens zur Diagnose |
+
+**Feuerstättenwarnung:** Laut Anleitung muss der Abluft-Modus beim Betrieb mit
+Feuerstätte gesperrt sein. Nicht entsperren, Verriegelungen umgehen oder
+Einlüfterbetrieb ohne geklärte Zulässigkeit testen. Keine versteckten
+Kombinationen für Feuerstätte, Bypassschwellen oder Disbalance ausprobieren.
+Standby, Netzneustart, Frost-/Heizungsänderungen und aktive Dumps sind nicht nötig.
+Das reguläre Ende der Stoßlüftung bei Bedarf separat erfassen; die zweiminütige
+Aufzeichnung reicht nicht über die werkseitigen 15 Minuten.
 
 Diagnosedaten einer anderen kompatiblen Lüftungsanlage oder zusätzlicher
 Ausstattung (zum Beispiel einer EWT-Klappe) helfen, unbekannte Busregister

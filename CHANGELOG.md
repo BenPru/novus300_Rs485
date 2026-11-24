@@ -2,6 +2,19 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.24b1 (beta)
+
+### Highlights
+- **XOR stages 1-7:** experimental selected-stage sensor; 1/2 capture-confirmed, 3-7 inferred and explicitly labelled.
+- **Targeted recordings:** step-by-step stage, boost and LED-button capture instructions in English/German.
+
+### Notes
+- Unknown stage bytes remain unknown with raw diagnostics; stage 7 does not imply boost.
+- XOR remains read-only: the observed block-transfer handshake is not yet a verified write implementation.
+- Stable 2026.11.21 and production installations are unchanged.
+- 83 offline regression tests and replay of all six issue #10 recordings pass.
+- [Install and record](docs/DIAGNOSTICS.md#xor-beta-20261124b1).
+
 ## 2026.11.23b1 (beta)
 
 ### Highlights

@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import NovusCoordinator
 from .protocol import MESSAGES
+from .xor_protocol import CAPTURE_CONFIRMED_STAGES, FAN_STAGES
 
 
 # message key -> (text, possible cause / action), after the Paul Novus 300 manual
@@ -207,6 +208,9 @@ SENSORS = (
 
 XOR_SENSORS = (
     NovusSensorDescription(
+        "xor_fan_stage", "Selected fan stage (experimental)",
+    ),
+    NovusSensorDescription(
         "xor_frames_received", "XOR frames received",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -309,6 +313,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     def native_value(self) -> float | int | str | None:
         """Return the decoded register value."""
         value = self.coordinator.data.get(self._description.key)
+        if self._description.key == "xor_fan_stage":
+            return value if type(value) is int and value in FAN_STAGES else None
         if value is None:
             return self._restored_value
         if self._description.key == "message":
@@ -335,6 +341,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         """Return an icon matching the current operating state."""
         if self._description.key in TEMPERATURE_ICONS:
             return TEMPERATURE_ICONS[self._description.key]
+        if self._description.key == "xor_fan_stage":
+            return "mdi:fan"
         if self._description.key == "message":
             if self.coordinator.transient_event() is not None:
                 return "mdi:message-processing-outline"
@@ -355,6 +363,20 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
     @property
     def extra_state_attributes(self) -> dict[str, float | int | str]:
         """Expose the message details and observed status changes."""
+        if self._description.key == "xor_fan_stage":
+            raw = self.coordinator.data.get("xor_fan_stage_raw")
+            attributes: dict[str, float | int | str] = {
+                "source": "04:00, data offset 12",
+                "interpretation": "Selected LED stage, not measured speed",
+                "mapping_status": (
+                    "capture_confirmed" if raw in CAPTURE_CONFIRMED_STAGES
+                    else "inferred" if raw in FAN_STAGES else "unmapped"
+                ),
+                "boost_status": "not_decoded",
+            }
+            if isinstance(raw, int):
+                attributes["raw_value"] = raw
+            return attributes
         if self._description.key == "xor_last_page":
             return {
                 "format": "address:page (hex); data is raw, meaning unconfirmed",

@@ -11,6 +11,9 @@ from .protocol import NovusValue
 
 # Only type/length combinations actually present in the supplied recordings.
 FRAME_LENGTHS = {0x00: (10,), 0x01: (0,), 0x02: (2, 3), 0x03: (2,), 0x04: (17,), 0x0F: (0,)}
+FAN_STAGE_OFFSET = 12
+FAN_STAGES = range(1, 8)
+CAPTURE_CONFIRMED_STAGES = (1, 2)
 
 
 class NovusXorParser:
@@ -69,8 +72,17 @@ class NovusXorParser:
             self._pages[key] = value
             if len(self._pages) > 64:
                 self._pages.popitem(last=False)
+            values: dict[str, NovusValue] = {}
             if old != value:
-                return {"xor_last_page": key, "xor_last_page_data": value}
+                values.update({"xor_last_page": key, "xor_last_page_data": value})
+            if address == 0x04 and payload[0] == 0x00:
+                stage = payload[1 + FAN_STAGE_OFFSET]
+                # Only 1/2 are capture-confirmed; 3-7 follow the LED panel's scale.
+                values.update({
+                    "xor_fan_stage": stage if stage in FAN_STAGES else "unknown",
+                    "xor_fan_stage_raw": stage,
+                })
+            return values
         elif kind == 0x00 and address == 0:
             # BCD layout inferred from the dated captures, not yet panel-confirmed.
             bcd = [payload[index] for index in (1, 2, 3, 5, 6, 7)]
@@ -100,4 +112,12 @@ class NovusXorParser:
                 "frames_by_address_type": dict(self._counts),
                 "pages": dict(self._pages),
                 "clock_interpretation": "Experimental BCD layout; confirm against the panel",
+                "fan_stage_interpretation": {
+                    "source": "04:00, zero-based data offset 12 (page byte excluded)",
+                    "meaning": "Selected LED stage, not measured speed or boost status",
+                    "supported_range": [1, 7],
+                    "capture_confirmed": list(CAPTURE_CONFIRMED_STAGES),
+                    "inferred": [3, 4, 5, 6, 7],
+                    "other_values": "Unknown; raw byte retained",
+                },
             }

@@ -2,6 +2,19 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.24b1 (Beta)
+
+### Highlights
+- **XOR-Stufen 1-7:** experimenteller Sensor für die gewählte Stufe; 1/2 in Mitschnitten bestätigt, 3-7 abgeleitet und gekennzeichnet.
+- **Gezielte Mitschnitte:** deutsche/englische Anleitungen für Stufen, Stoßlüftung und LED-Tasten.
+
+### Hinweise
+- Unbekannte Stufenbytes bleiben unbekannt mit Rohdiagnose; Stufe 7 beweist keine Stoßlüftung.
+- XOR bleibt nur lesend: Der Blocktransfer-Handshake ist noch keine verifizierte Schreibfunktion.
+- Stable 2026.11.21 und produktive Installationen bleiben unverändert.
+- 83 Offline-Regressionstests und Replay aller sechs Mitschnitte aus Ticket #10 bestanden.
+- [Installation und Aufzeichnung](docs/DIAGNOSTICS.de.md#xor-beta-20261124b1).
+
 ## 2026.11.23b1 (Beta)
 
 ### Highlights

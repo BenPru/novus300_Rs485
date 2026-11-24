@@ -20,6 +20,42 @@ def frame(address, kind, payload):
 
 
 class XorProtocolTest(unittest.TestCase):
+    def test_recorded_stage_changes_ignore_request_echoes_and_bad_checksums(self):
+        stage_2 = bytes.fromhex("04110400030157007f00000300c505000201010004")
+        stage_1 = bytes.fromhex("04110400030157007f00000300c505000101010007")
+        request = bytes.fromhex("01110420030157007f00000300c505000201010021")
+        bad = stage_2[:-1] + bytes((stage_2[-1] ^ 1,))
+        stream = stage_1 + request + bad + stage_2 + stage_1
+        for size in (1, 7, len(stream)):
+            with self.subTest(size=size):
+                parser = NovusXorParser()
+                stages = [
+                    reading["xor_fan_stage"]
+                    for offset in range(0, len(stream), size)
+                    for reading in parser.feed(stream[offset:offset + size])
+                    if "xor_fan_stage" in reading
+                ]
+                self.assertEqual(stages, [1, 2, 1])
+
+    def test_all_seven_stages_and_unmapped_values_replace_previous_stage(self):
+        parser = NovusXorParser()
+        for stage in (1, 2, 3, 4, 5, 6, 7, 0, 8, 255, 1):
+            payload = bytearray(17)
+            payload[13] = stage
+            readings = parser.feed(frame(4, 4, payload))
+            self.assertEqual(readings[-1]["xor_fan_stage_raw"], stage)
+            self.assertEqual(
+                readings[-1]["xor_fan_stage"],
+                stage if 1 <= stage <= 7 else "unknown",
+            )
+        diagnostics = parser.diagnostics()["fan_stage_interpretation"]
+        self.assertEqual(diagnostics["capture_confirmed"], [1, 2])
+        self.assertEqual(diagnostics["inferred"], [3, 4, 5, 6, 7])
+        self.assertFalse(any(
+            "xor_fan_stage" in reading
+            for reading in parser.feed(frame(4, 4, b"\x10" + bytes(16)))
+        ))
+
     def test_public_frames_survive_every_chunk_boundary_and_deduplicate(self):
         stream = HEARTBEAT + CLOCK + PAGE + PAGE
         for size in (1, 2, 3, 7, len(stream)):
