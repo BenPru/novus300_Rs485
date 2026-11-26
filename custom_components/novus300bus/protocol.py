@@ -73,6 +73,7 @@ REGISTER_WIDTHS = {
     0x27: 1,
     0x28: 1,
     0x29: 1,
+    **dict.fromkeys(range(0x2A, 0x2E), 1),
     0x3D: 5,
     0x3E: 5,
     0x44: 1,
@@ -372,9 +373,9 @@ def _decode_registers(payload: bytes) -> dict[str, NovusValue]:
         elif register == 0x1D:
             readings["run_state"] = RUN_STATES.get(raw[0], "unknown")
             readings["run_state_raw"] = raw[0]
-        elif register == 0x27:
-            readings["ventilation_mode"] = VENTILATION_MODES.get(raw[0], "unknown")
-            readings["ventilation_mode_raw"] = raw[0]
+        elif register in (0x27, 0x29):
+            key = "applied_mode_raw" if register == 0x27 else "selected_mode_raw"
+            readings[key] = raw[0]
         elif register == 0x09:
             readings["message_code"] = raw[0]
             readings["message"] = MESSAGES.get(
@@ -441,6 +442,33 @@ class NovusFrameParser:
     def __init__(self, *, dynamic_bus_addresses: bool = False) -> None:
         self._buffer = bytearray()
         self._dynamic_bus_addresses = dynamic_bus_addresses
+        self._selected_mode: int | None = None
+        self._applied_mode: int | None = None
+
+    def restore_mode_registers(self, values: Mapping[str, NovusValue]) -> None:
+        """Seed provisional mode state from storage, including pre-beta stores."""
+        selected = values.get("selected_mode_raw")
+        applied = values.get("applied_mode_raw", values.get("ventilation_mode_raw"))
+        self._selected_mode = selected if type(selected) is int else None
+        self._applied_mode = applied if type(applied) is int else None
+
+    def _resolve_mode(self, decoded: dict[str, NovusValue]) -> None:
+        """Keep the selected programme when automatic applies a fixed level."""
+        if "selected_mode_raw" in decoded:
+            self._selected_mode = int(decoded["selected_mode_raw"])
+        if "applied_mode_raw" in decoded:
+            self._applied_mode = int(decoded["applied_mode_raw"])
+        if not {"selected_mode_raw", "applied_mode_raw"}.intersection(decoded):
+            return
+        # Boost temporarily overlays the selected mode without changing 0x29.
+        mode = (
+            4 if self._applied_mode == 4
+            else self._selected_mode if self._selected_mode is not None
+            else self._applied_mode
+        )
+        if mode is not None:
+            decoded["ventilation_mode_raw"] = mode
+            decoded["ventilation_mode"] = VENTILATION_MODES.get(mode, "unknown")
 
     def _has_later_valid_frame(self) -> bool:
         """Find a CRC-valid frame after an incomplete header during resync."""
@@ -462,7 +490,7 @@ class NovusFrameParser:
     def feed(self, data: bytes) -> list[Mapping[str, NovusValue]]:
         """Return readings from every valid register-data frame in `data`."""
         self._buffer.extend(data)
-        readings: list[Mapping[str, float | int | bool]] = []
+        readings: list[Mapping[str, NovusValue]] = []
 
         while len(self._buffer) >= 6:
             is_clock = bytes(self._buffer[:4]) == b"\x00\x00\x00\x0e"
@@ -513,6 +541,7 @@ class NovusFrameParser:
                     readings.append(identity)
             if candidate[2] == 0x85:
                 decoded = _decode_registers(candidate[6:])
+                self._resolve_mode(decoded)
                 if decoded:
                     readings.append(decoded)
 

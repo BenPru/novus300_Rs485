@@ -96,6 +96,8 @@ PERSISTED_KEYS = {
     *COUNTER_ENTITY_IDS,
     "ventilation_mode",
     "ventilation_mode_raw",
+    "selected_mode_raw",
+    "applied_mode_raw",
     *SETTING_REGISTERS.values(),
 }
 
@@ -172,6 +174,7 @@ class NovusCoordinator(DataUpdateCoordinator[dict[str, NovusValue]]):
                 await self._counter_store.async_save(counters)
 
         if counters:
+            self._parser.restore_mode_registers(counters)
             raw_mode = counters.get("ventilation_mode_raw")
             if isinstance(raw_mode, int):
                 counters["ventilation_mode"] = VENTILATION_MODES.get(

@@ -121,7 +121,7 @@ class NovusFrameParserTest(unittest.TestCase):
 
         self.assertEqual(
             readings,
-            [{"ventilation_mode": "standby", "ventilation_mode_raw": 0}],
+            [{"applied_mode_raw": 0, "ventilation_mode": "standby", "ventilation_mode_raw": 0}],
         )
 
         payload = bytes.fromhex("270006")
@@ -134,7 +134,7 @@ class NovusFrameParserTest(unittest.TestCase):
 
         self.assertEqual(
             readings,
-            [{"ventilation_mode": "automatic", "ventilation_mode_raw": 6}],
+            [{"applied_mode_raw": 6, "ventilation_mode": "automatic", "ventilation_mode_raw": 6}],
         )
 
         payload = bytes.fromhex("270005")
@@ -146,8 +146,57 @@ class NovusFrameParserTest(unittest.TestCase):
 
         self.assertEqual(
             readings,
-            [{"ventilation_mode": "away", "ventilation_mode_raw": 5}],
+            [{"applied_mode_raw": 5, "ventilation_mode": "away", "ventilation_mode_raw": 5}],
         )
+
+    def test_selected_automatic_survives_applied_levels_and_boost(self):
+        parser = NovusFrameParser()
+
+        def mode(payload):
+            header = bytes((1, 0, 0x85, len(payload)))
+            frame = header + crc16_ccitt(header + payload).to_bytes(2, "little") + payload
+            return parser.feed(frame)[0]
+
+        self.assertEqual(mode(bytes.fromhex("270001290006")), {
+            "applied_mode_raw": 1, "selected_mode_raw": 6,
+            "ventilation_mode": "automatic", "ventilation_mode_raw": 6,
+        })
+        self.assertEqual(mode(bytes.fromhex("270003"))["ventilation_mode"], "automatic")
+        self.assertEqual(mode(bytes.fromhex("270004"))["ventilation_mode"], "boost")
+        self.assertEqual(mode(bytes.fromhex("270001"))["ventilation_mode"], "automatic")
+        self.assertEqual(mode(bytes.fromhex("270005290005"))["ventilation_mode"], "away")
+        self.assertEqual(mode(bytes.fromhex("2900fe"))["ventilation_mode"], "unknown")
+        self.assertEqual(mode(bytes.fromhex("270002"))["ventilation_mode"], "unknown")
+        self.assertEqual(parser.feed(bytes.fromhex("010085039b6d280006")), [])
+
+    def test_mode_register_restore_preserves_auto_and_legacy_feedback(self):
+        for stored, expected in (
+            ({"selected_mode_raw": 6, "applied_mode_raw": 1,
+              "ventilation_mode_raw": 6}, "automatic"),
+            ({"ventilation_mode_raw": 6}, "level_2"),
+            ({}, "level_2"),
+        ):
+            with self.subTest(stored=stored):
+                parser = NovusFrameParser()
+                parser.restore_mode_registers(stored)
+                decoded = parser.feed(bytes.fromhex("010085032e01270002"))[0]
+                self.assertEqual(decoded["ventilation_mode"], expected)
+
+    def test_decodes_issue11_startup_settings_after_unknown_registers(self):
+        readings = NovusFrameParser().feed(bytes.fromhex(
+            "0100853ce3872900062a00002b00002c00642d00112e00112f0021300064"
+            "31000532000533000534001435002136002e37003c3800493900573a0064"
+            "3b000f3c000f"
+        ))[0]
+        self.assertEqual(readings["ventilation_mode"], "automatic")
+        self.assertEqual(
+            [readings[f"fan_level_{level}_percentage"] for level in range(1, 4)],
+            [17, 33, 100],
+        )
+        self.assertEqual(readings["fan_level_1_imbalance"], 2.5)
+        self.assertEqual(readings["boost_duration_minutes"], 15)
+        self.assertEqual(readings["away_duration_minutes"], 15)
+        self.assertEqual(readings["fan_stage_7_percentage"], 100)
 
     def test_decodes_clock_broadcast(self) -> None:
         parser = NovusFrameParser()

@@ -2,6 +2,21 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.26b1 — CRC16/TFT beta
+
+### Highlights
+- Decode the 2019 TFT unit's startup levels **17/33/100 %** and boost/away durations by recognizing the one-byte registers `0x2A`–`0x2D`.
+- Distinguish **selected mode `0x29`** from **applied mode `0x27`**: time-programme automatic stays automatic even when level 1 is applied; boost temporarily overlays the selected mode.
+- Document the 2019 component software versions, probable but unconfirmed RD generation, panel slot `04` and the stock bridge's missing write slot.
+
+### Compatibility and safety
+- Separate `beta/crc16-rd` branch; not an update to the LED/XOR beta `2026.11.24b1`. Stable/latest stays `2026.11.21`.
+- Persist both raw mode registers and restore parser context, including a fallback for older stores with only `ventilation_mode_raw`. Restored readings are provisional; before `0x29` is observed, retain legacy `0x27` feedback.
+- **No bridge, write-slot, parity, power-on or imbalance-scale changes.** The supplied FF-slot writer is not adopted: stream framing, stale commands, duplicate handling, slot freshness and backpressure need work. The ~15-second status sequence after external mode changes remains unexplained. Use read-only operation on issue #11 hardware.
+- Do not infer measured speed or zero airflow in away mode from the mode bytes. Existing reference-unit controls and entity IDs remain unchanged; panel synchronization limitations remain.
+- Supplied attachment: **21 tests passed**; ten additional offline probes reproduced defects/limitations. Integration: **69 regression tests passed**. All six issue #11 captures replayed at four chunk sizes; six reference-installation recordings preserve existing readings and mode transitions, with additional startup settings decoded.
+- Install the selected beta through HACS and restart **Home Assistant only**, not the ventilation unit. No bridge update is required.
+
 ## 2026.11.21
 
 ### Highlights

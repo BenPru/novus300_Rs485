@@ -41,6 +41,25 @@ def coordinator(values=None):
 
 
 class CoordinatorStopTest(unittest.IsolatedAsyncioTestCase):
+    async def test_restore_seeds_parser_before_applied_only_feedback(self):
+        for stored, expected in (
+            ({"selected_mode_raw": 6, "applied_mode_raw": 1,
+              "ventilation_mode_raw": 6}, "automatic"),
+            ({"ventilation_mode_raw": 6}, "level_2"),
+        ):
+            with self.subTest(stored=stored):
+                co = coordinator()
+                co._parser = NovusFrameParser()
+                co._counter_store.async_load = AsyncMock(return_value=dict(stored))
+                await co._async_restore_counters()
+                self.assertEqual(co.data["ventilation_mode"], "automatic")
+                for reading in co._parser.feed(bytes.fromhex("010085032e01270002")):
+                    co._async_publish(dict(reading))
+                self.assertEqual(co.data["ventilation_mode"], expected)
+                self.assertEqual(co._persisted_values()["applied_mode_raw"], 2)
+                if "selected_mode_raw" in stored:
+                    self.assertEqual(co._persisted_values()["selected_mode_raw"], 6)
+
     async def test_reload_flushes_pending_store_and_cancels_the_old_writer(self):
         with TemporaryDirectory(prefix="novus-stop-test-") as directory:
             hass = HomeAssistant(directory)

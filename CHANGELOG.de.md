@@ -2,6 +2,21 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.26b1 — CRC16/TFT-Beta
+
+### Highlights
+- Startwerte der 2019er TFT-Anlage **17/33/100 %** sowie Boost-/Abwesenheitsdauer lesen: Register `0x2A`–`0x2D` mit je einem Datenbyte ergänzt.
+- **Gewählten Modus `0x29`** vom **angewendeten Modus `0x27`** trennen: Zeitautomatik bleibt Automatik, auch wenn gerade Stufe 1 läuft; Boost überlagert den gewählten Modus vorübergehend.
+- Komponentenkennungen der 2019er Anlage, wahrscheinliche, aber unbestätigte RD-Generation, Panel-Slot `04` und fehlenden Schreibslot der Standard-Bridge dokumentiert.
+
+### Kompatibilität und Sicherheit
+- Eigener Zweig `beta/crc16-rd`, kein Update der LED/XOR-Beta `2026.11.24b1`. Stable/latest bleibt `2026.11.21`.
+- Beide Modusrohwerte speichern und Parserzustand wiederherstellen, einschließlich Rückfall für ältere Speicher mit nur `ventilation_mode_raw`. Restaurierte Daten bleiben vorläufig; bis zum ersten `0x29` gilt die bisherige `0x27`-Rückmeldung.
+- **Keine Änderungen an Bridge, Schreibslot, Parität, Einschalttelegramm oder Imbalanceskalierung.** Den beigefügten FF-Slot-Schreiber nicht übernommen: TCP-Telegrammaufteilung, veraltete Befehle, Duplikate, Slot-Aktualität und Rückstau sind noch problematisch. Die etwa 15 s Statuswechsel nach externem Modusschreiben bleiben ungeklärt. Hardware aus Ticket #11 vorerst nur lesend betreiben.
+- Keine gemessene Drehzahl oder null Luftstrom im Abwesenheitsmodus aus Modusbytes ableiten. Steuerung und Entitätskennungen der Referenzanlage bleiben erhalten; bekannte Panel-Synchronisationsprobleme bestehen weiter.
+- Beigefügter Code: **21 Tests bestanden**; zehn zusätzliche Offlineprüfungen reproduzieren Fehler/Grenzen. Integration: **69 Regressionstests bestanden**. Alle sechs Mitschnitte aus Ticket #11 mit vier Blockgrößen nachgespielt; sechs Referenzmitschnitte behalten vorhandene Werte und Moduswechsel, ergänzt um weitere Startwerte.
+- Gewählte Beta über HACS installieren und **nur Home Assistant**, nicht die Lüftung, neu starten. Kein Bridge-Update erforderlich.
+
 ## 2026.11.21
 
 ### Highlights
