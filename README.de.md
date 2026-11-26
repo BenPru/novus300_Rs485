@@ -42,7 +42,7 @@ anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 
 ## Getestete Hardware und Kompatibilität
 
-Stand **24.11.2026**. Getestet sind diese Kombinationen, **nicht pauschal jede
+Stand **26.11.2026**. Getestet sind diese Kombinationen, **nicht pauschal jede
 Novus desselben Baujahrs**. Die Baujahre stammen aus Nutzerangaben; zur 2011er
 liegen datierte Bauteilaufkleber vor. Profil nach aufgezeichnetem Protokoll
 wählen, nicht allein nach Baujahr oder Aussehen des Bedienteils.
@@ -51,8 +51,9 @@ wählen, nicht allein nach Baujahr oder Aussehen des Bedienteils.
 |---|---|---|
 | Novus 300, laut Nutzer 2014, TFT `ETA0036E29A`, Lüfterslave `SWZ0025B26A`, externer PTC-Defroster `ST00064E24A`; Bypass deaktiviert | CRC16-Referenzprofil; Stable 2026.11.21 | **Positiv live getestet:** Temperaturen, Betriebsdaten, Modusrückmeldung und Controllerreaktion auf HA-Stufenwechsel. Panel-Synchronisation weiter offen, siehe Einschränkungen. |
 | Zweite Novus 300, laut Nutzer 2014, TFT `ETA0036E30A`, Bypass vorhanden, kein Defroster | CRC16-Referenzprofil; Stable 2026.11.21 | **Positiv live getestet:** Empfang und dekodierte Betriebsdaten. Bypass-Konfiguration/-Status untersucht; direkte Klappensteuerung nicht unterstützt. |
-| Novus 300 erster Generation, laut Nutzer 2011, LED-Tastenpanel und Erdwärmetauscher; Waveshare RS232/485/422 TO POE ETH (B), Firmware V1.523 | XOR-Telegramme; tatsächliche Novus-HW/FW unbekannt; [Ticket #10](https://github.com/BenPru/novus300_Rs485/issues/10) | **Negativ mit CRC16-Profil**, auch bei dynamischen Adressen. **Teilweise positiv mit XOR-Beta:** gültige Telegramme/Seiten, Stufe 1/2 offline aus Panelmitschnitten reproduziert. Beta 2026.11.24b1 zeigt auch abgeleitete Stufen 3-7; Nutzerprüfung steht aus. Noch keine Temperaturen oder Schreibzugriffe. |
-| Neuere Novus 300/450 **RD (redesign)** ab Seriennummernbereich `15000-2`, mit RD-LED- oder TFT-Bedienteil | Protokoll und Firmware hier nicht belegt | **Ungetestet**, kein negatives Testergebnis. Kompatibilität mit keinem der Profile voraussetzen. |
+| Novus 300 erster Generation, laut Nutzer 2011, LED-Tastenpanel und Erdwärmetauscher; Waveshare RS232/485/422 TO POE ETH (B), Firmware V1.523 | XOR-Telegramme; tatsächliche Novus-HW/FW unbekannt; [Ticket #10](https://github.com/BenPru/novus300_Rs485/issues/10) | **Negativ mit CRC16**, auch bei dynamischen Adressen. **Positive Stufenrückmeldung:** Nutzer bestätigt alle sieben Stufen mit XOR-Beta 2026.11.24b1; beschriftete Mitschnitte belegen Stufe 1/2 zusätzlich offline. Noch keine Temperaturen oder Schreibzugriffe. |
+| Novus 300, Inbetriebnahme Januar 2019, **wahrscheinlich RD, Typenschild noch nicht bestätigt**; TFT Nr. 1 `ETA0036E31E`, Master `SWZ0024B31A`, Lüfterslave `SWZ0025B27A`, elektrischer Defroster `ST00064E26E`; kein Bypass/Nachheizer/EWT; FTDI DSD TECH SH-U14 | CRC16; Panel-Slot `04`, Lüfterslave `08`, Defroster `09`, Freislot-Abfrage `FF`; [Ticket #11](https://github.com/BenPru/novus300_Rs485/issues/11) | **Positiver Empfang gemeldet; alle sechs Mitschnitte offline nachgespielt.** CRC16-Beta 2026.11.26b1 korrigiert Startwerte und gewählten Automatikmodus. **Modusschreiben mit Standard-Bridge funktioniert nicht:** Slot `05` fehlt. Experimentelle externe Schreibzugriffe lösen Vollübertragung und etwa 15 s Statuswechsel aus; Harmlosigkeit ungeklärt. |
+| Weitere Novus-300/450-**RD-Kombinationen (redesign)** ab Seriennummernbereich `15000-2`, mit RD-LED- oder TFT-Bedienteil | Protokoll-/Firmwarekompatibilität anderer Kombinationen nicht belegt | **Ungetestet**, kein negatives Testergebnis. Aus dem wahrscheinlichen RD-Beispiel oben keine allgemeine Kompatibilität ableiten. |
 
 `ETA...`, `SWZ...` und `ST...` sind Softwarekennungen der Komponenten, keine
 Anlagenseriennummern. **Das angezeigte `BUS 1.7.1` ist eine statische Referenzangabe,
@@ -63,14 +64,34 @@ Eine restaurierte Kennung allein beweist kein vorhandenes Bauteil.
 **Bauteilgrenzen / bekannte negative Ergebnisse:** PTC-Präsenz und Softwarekennung
 wurden beobachtet, ein reiner Busstatus für Heizen/Standby/fehlende Netzversorgung
 ist aber nicht belegt. Ein vorhandener Erdwärmetauscher in Ticket #10 bedeutet
-noch keine Unterstützung seiner Klappe. Für Sole-Defroster, Nachheizung,
-RD-Elektronik und andere Firmwarekombinationen gibt es hier keine positiven
+noch keine Unterstützung seiner Klappe. Für Sole-Defroster, Nachheizung
+und andere Firmwarekombinationen gibt es hier keine positiven
 Hardwaretests. Auf der CRC16-Referenzanlage ändern HA-Stufenbefehle die
 Controllerrückmeldung und den realen Verbrauch, das TFT kann jedoch bei seiner
 alten Auswahl bleiben; ein anderer Teilnehmer kann diese später erneut setzen.
 Auch Frostschutzänderungen werden nicht zuverlässig am Panel angezeigt;
 die HA-Parameteranzeige allein ist keine Geräterücklesebestätigung.
 Deshalb sind nicht pauschal alle Schreibfunktionen als vollständig geprüft anzusehen.
+
+**Getrennte Betas:** [2026.11.24b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.24b1)
+ist die nur lesende LED/XOR-Beta.
+[2026.11.26b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.26b1)
+auf `beta/crc16-rd` ist die CRC16/TFT-Beta, kein XOR-Update. Sie trennt gewählten
+Modus (`0x29`) und angewendeten Modus (`0x27`), berücksichtigt Boost als
+Überlagerung und liest Startwerte hinter `0x2A`–`0x2D`. Beide Modusrohwerte
+stehen in der Diagnose und werden gespeichert. Solange `0x29` noch nicht
+beobachtet wurde, bleibt die bisherige `0x27`-Rückmeldung erhalten; restaurierte
+Werte sind vorläufig, keine frische Bestätigung. Daraus wird keine gemessene
+Lüfterdrehzahl abgeleitet.
+
+Beta installieren: HACS → diese Integration → **Betaversionen anzeigen** →
+**Erneut herunterladen** → genaue Version wählen; danach **nur Home Assistant**
+neu starten. Für Ticket #11 die Bridge **nur lesend** betreiben
+(ohne `--allow-command-frames`); noch keine Schreibautomatik verwenden.
+Bridge, Schreibslot, Parität, Einschalttelegramm und Imbalanceskalierung bleiben
+unverändert. Die an der Referenzanlage belegten 0,5 % pro Rohschritt bleiben;
+für die in Ticket #11 vermuteten 1 % fehlt der Panelvergleich.
+Stable/latest bleibt 2026.11.21.
 
 ### Neuere Revision: RD / redesign
 
