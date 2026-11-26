@@ -39,7 +39,7 @@ with the command whitelist enabled, can request a ventilation mode via
 
 ## Tested hardware and compatibility
 
-Status as of **2026-11-24**. These are tested combinations, **not a blanket
+Status as of **2026-11-26**. These are tested combinations, **not a blanket
 compatibility promise for every Novus of the same year**. Years are owner-reported;
 the 2011 issue includes dated component labels. Select profiles by captured
 protocol, not year or panel appearance alone.
@@ -48,8 +48,9 @@ protocol, not year or panel appearance alone.
 |---|---|---|
 | Novus 300, reported 2014, TFT panel `ETA0036E29A`, fan slave `SWZ0025B26A`, external PTC defroster `ST00064E24A`; bypass disabled | CRC16 reference profile; stable 2026.11.21 | **Positive live tests:** temperatures, operating data, mode feedback and controller response to HA stage changes. Panel synchronization remains unresolved; see limitations below. |
 | Second Novus 300, reported 2014, TFT panel `ETA0036E30A`, installed bypass, no defroster | CRC16 reference profile; stable 2026.11.21 | **Positive live tests:** reception and decoded operating data. Bypass configuration/status decoding has been investigated; direct flap control is unsupported. |
-| First-generation Novus 300, reported 2011, LED/button panel and ground heat exchanger; Waveshare RS232/485/422 TO POE ETH (B), firmware V1.523 | XOR framing; actual Novus HW/FW versions unknown; [issue #10](https://github.com/BenPru/novus300_Rs485/issues/10) | **Negative with the CRC16 profile**, including dynamic addresses. **Partial positive with XOR beta:** valid frames/pages; stage 1/2 readback reproduced offline from panel captures. Beta 2026.11.24b1 displays inferred stages 3-7 too, awaiting owner validation. No temperatures or writes yet. |
-| Later Novus 300/450 **RD (redesign)**, from serial range `15000-2`, with RD LED or TFT controls | Protocol and firmware not established here | **Untested**, not a negative result. Do not assume compatibility with either profile. |
+| First-generation Novus 300, reported 2011, LED/button panel and ground heat exchanger; Waveshare RS232/485/422 TO POE ETH (B), firmware V1.523 | XOR framing; actual Novus HW/FW versions unknown; [issue #10](https://github.com/BenPru/novus300_Rs485/issues/10) | **Negative with CRC16**, including dynamic addresses. **Positive stage readback:** owner confirms all seven stages with XOR beta 2026.11.24b1; labelled captures independently reproduce stages 1/2. No temperatures or writes yet. |
+| Novus 300 commissioned January 2019, **probably RD, not confirmed by type plate**; TFT no. 1 `ETA0036E31E`, master `SWZ0024B31A`, fan slave `SWZ0025B27A`, electric defroster `ST00064E26E`; no bypass/reheater/GHE; FTDI DSD TECH SH-U14 | CRC16; panel slot `04`, fan slave `08`, defroster `09`, free-slot poll `FF`; [issue #11](https://github.com/BenPru/novus300_Rs485/issues/11) | **Positive reception reported; all six captures replayed offline.** CRC16 beta 2026.11.26b1 fixes startup settings and selected automatic mode. **Stock mode writes do not work:** no slot `05`. Experimental external writes cause a full rebroadcast and ~15 s status sequence; not validated as harmless. |
+| Other Novus 300/450 **RD (redesign)** combinations, from serial range `15000-2`, with RD LED or TFT controls | Protocol/firmware compatibility not established for other combinations | **Untested**, not a negative result. Do not infer universal compatibility from the probable-RD example above. |
 
 `ETA...`, `SWZ...` and `ST...` above are component software identifiers, not
 unit serial numbers. **The displayed `BUS 1.7.1` is static reference metadata,
@@ -60,13 +61,31 @@ alone does not prove that the component is present.
 **Component limits / known negative results:** PTC presence and its software
 identity have been observed, but a bus-only heating/standby/mains-off status has
 not been established. An installed ground heat exchanger in issue #10 does not
-establish support for its damper. Brine defrosters, reheaters, RD electronics and
-other firmware combinations have no positive hardware test evidence here.
+establish support for its damper. Brine defrosters, reheaters and other
+firmware combinations have no positive hardware test evidence here.
 On the CRC16 reference unit, HA stage commands change controller feedback and
 physical consumption, but the TFT can retain its previous selection and another
 participant may later reassert it. Frost-setting changes are also not reliably
 reflected on the panel; HA's parameter display alone is not device readback.
 These limitations prevent a claim that all write functions are fully validated.
+
+**Separate betas:** [2026.11.24b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.24b1)
+is the read-only LED/XOR beta.
+[2026.11.26b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.26b1)
+on `beta/crc16-rd` is the CRC16/TFT beta, not an XOR update. It separates selected
+mode (`0x29`) from applied mode (`0x27`), preserves boost as an overlay and
+decodes startup settings after `0x2A`–`0x2D`. Both raw mode values appear in
+diagnostics and are persisted. Before `0x29` has been observed, legacy `0x27`
+feedback is retained; restored values are provisional, not fresh confirmation.
+No measured-speed sensor is inferred from these mode bytes.
+
+To try a beta: HACS → this integration → enable **Show beta versions** →
+**Redownload** → select the exact version, then restart **Home Assistant only**.
+For issue #11, keep the bridge **read-only** (no `--allow-command-frames`);
+do not automate writes yet. This beta does not change the bridge, write slot,
+parity, power-on frame or imbalance scale. The reference installation's
+0.5 %/raw-step imbalance scale remains; issue #11's proposed 1 %/step needs
+comparison with its panel. Stable/latest remains 2026.11.21.
 
 ### Newer revision: RD / redesign
 
