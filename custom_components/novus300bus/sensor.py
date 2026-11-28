@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import NovusCoordinator
 from .protocol import MESSAGES
-from .xor_protocol import CAPTURE_CONFIRMED_STAGES, FAN_STAGES
+from .xor_protocol import CAPTURE_CONFIRMED_STAGES, FAN_STAGES, OPERATING_MODES
 
 
 # message key -> (text, possible cause / action), after the Paul Novus 300 manual
@@ -211,6 +211,11 @@ XOR_SENSORS = (
         "xor_fan_stage", "Selected fan stage (experimental)",
     ),
     NovusSensorDescription(
+        "xor_operating_mode", "Operating mode (experimental)",
+        device_class=SensorDeviceClass.ENUM,
+        options=tuple(OPERATING_MODES.values()),
+    ),
+    NovusSensorDescription(
         "xor_frames_received", "XOR frames received",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -315,6 +320,8 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         value = self.coordinator.data.get(self._description.key)
         if self._description.key == "xor_fan_stage":
             return value if type(value) is int and value in FAN_STAGES else None
+        if self._description.key == "xor_operating_mode":
+            return value if value in OPERATING_MODES.values() else None
         if value is None:
             return self._restored_value
         if self._description.key == "message":
@@ -341,7 +348,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         """Return an icon matching the current operating state."""
         if self._description.key in TEMPERATURE_ICONS:
             return TEMPERATURE_ICONS[self._description.key]
-        if self._description.key == "xor_fan_stage":
+        if self._description.key in ("xor_fan_stage", "xor_operating_mode"):
             return "mdi:fan"
         if self._description.key == "message":
             if self.coordinator.transient_event() is not None:
@@ -365,6 +372,7 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
         """Expose the message details and observed status changes."""
         if self._description.key == "xor_fan_stage":
             raw = self.coordinator.data.get("xor_fan_stage_raw")
+            mode = self.coordinator.data.get("xor_operating_mode")
             attributes: dict[str, float | int | str] = {
                 "source": "04:00, data offset 12",
                 "interpretation": "Selected LED stage, not measured speed",
@@ -372,7 +380,20 @@ class NovusSensor(CoordinatorEntity[NovusCoordinator], SensorEntity, RestoreEnti
                     "capture_confirmed" if raw in CAPTURE_CONFIRMED_STAGES
                     else "inferred" if raw in FAN_STAGES else "unmapped"
                 ),
-                "boost_status": "not_decoded",
+                "boost_status": (
+                    "active" if mode == "boost"
+                    else "inactive" if mode in OPERATING_MODES.values() else "unknown"
+                ),
+            }
+            if isinstance(raw, int):
+                attributes["raw_value"] = raw
+            return attributes
+        if self._description.key == "xor_operating_mode":
+            raw = self.coordinator.data.get("xor_operating_mode_raw")
+            attributes = {
+                "source": "04:00, data offset 13",
+                "interpretation": "Panel mode, not measured airflow",
+                "mapping_status": "capture_confirmed" if raw in OPERATING_MODES else "unmapped",
             }
             if isinstance(raw, int):
                 attributes["raw_value"] = raw

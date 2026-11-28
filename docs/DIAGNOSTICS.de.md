@@ -3,8 +3,9 @@
 [English](DIAGNOSTICS.md)
 
 <a id="xor-beta-20261123b1"></a>
+<a id="xor-beta-20261124b1"></a>
 
-## XOR-Beta 2026.11.24b1
+## XOR-Beta 2026.11.28b1
 
 Der separate Zweig `beta/xor-read-only` unterstützt das alternative Protokoll
 aus den Mitschnitten in Ticket #10. Die Auswahl bezeichnet bestätigte
@@ -23,16 +24,34 @@ Angezeigt werden **Gewählte Lüfterstufe (experimentell)**,
 Zuordnung ist noch nicht am Panel bestätigt; sie wird nie automatisch gestellt.
 Diagnosen enthalten zusätzlich Adress-/Typzähler und bis zu 64 letzte Rohseiten.
 Die Stufenskala ist **1-7**, nicht die TFT-Moduszuordnung: 4/5/6 bedeuten hier
-**nicht** Stoßlüftung/Abwesend/Automatik. Werte 1/2 passen zu den alten
-beschrifteten Aufnahmen und dem neuen Ablauf 1-2-1; 3-7 sind aus der
-LED-Skala abgeleitet und noch zu prüfen. Sensorattribute unterscheiden
+**nicht** Stoßlüftung/Abwesend/Automatik. Mitschnitte bestätigen Stufen 1/2/3
+und Stufe 7 während der Stoßlüftung. Der Nutzer bestätigt alle sieben Stufen
+gegen die LEDs; für 4-6 fehlen noch beschriftete Rohaufnahmen. Sensorattribute unterscheiden
 `capture_confirmed`, `inferred` und `unmapped` und enthalten den Rohwert.
 Andere Werte einschließlich 0 erscheinen **unbekannt**, nicht als vermutetes
 Standby. Die gewählte Stufe ist keine gemessene Drehzahl oder Leistung und kein
-Nachweis laufender Lüfter. Stoßlüftung ist nicht separat dekodiert; Stufe 7
-allein beweist keine aktive Stoßlüftung. Temperaturen, Bypass und Ausstattung
+Nachweis laufender Lüfter. Stufe 7 allein beweist keine aktive Stoßlüftung.
+Temperaturen, Bypass und Ausstattung
 sind weiterhin nicht zugeordnet.
 Unbekannte Firmware und Ersatzkennungen erscheinen nicht als erkannte XOR-Hardware.
+
+**Neu: Betriebsart (experimentell)**, `sensor.novus300_xor_operating_mode`,
+liest Seite `04:00`, Datenoffset 13 ab null, ohne das Seitenbyte:
+
+| Rohwert | Zustand | Panelmodus |
+|---|---|---|
+| 1 | `supply_extract` | Zu- und Abluft |
+| 2 | `extract_only` | Nur Abluft |
+| 3 | `supply_only` | Nur Zuluft |
+| 4 | `boost` | Stoßlüftung |
+
+Das ist Panel-Modusrückmeldung, kein gemessener Luftstrom oder Lüfterlaufnachweis.
+Während Stoßlüftung wird keine separate Luftart abgeleitet. Unbekannte Rohwerte
+ersetzen den bisherigen Modus durch **unbekannt** und bleiben in Attributen und
+Diagnose erhalten. Das Stufenattribut `boost_status` ist `active`, `inactive`
+oder `unknown`, abhängig vom Modusfeld statt von der Stufennummer.
+Alle sechs manuellen Moduswechsel sind offline reproduziert; das automatische
+Ende der Stoßlüftung wurde noch nicht aufgezeichnet.
 
 **Schreiben bleibt gesperrt, ohne Freigabeschalter.** Der aufgezeichnete Wechsel
 enthält einen Handshake mit einem 16-Byte-Block, keinen isolierten Stufenbefehl.
@@ -45,7 +64,9 @@ abzuspielen wäre auch nach Prüfung der Anzeige keine verifizierte Schreibfunkt
 1. Home Assistant und bestehende Integrationsdateien sichern.
 2. **HACS > Paul Novus 300 RS-485 Bus > Dreipunktmenü > Erneut herunterladen**:
    unter **Andere Version benötigt? / Need a different version?** die Version
-   **2026.11.24b1** wählen, falls angeboten. Sonst die manuelle Variante nutzen.
+   gegebenenfalls Betaversionen einblenden und **2026.11.28b1** wählen.
+   Das ist die XOR-Beta, nicht CRC16/TFT-Beta 2026.11.26b1.
+   Falls nicht angeboten, die manuelle Variante nutzen.
 3. **Home Assistant**, nicht die Lüftung, neu starten. Unter **Einstellungen >
    Geräte & Dienste > Paul Novus 300 RS-485 Bus > Konfigurieren >
    Grundeinstellungen und Anlagenwerte** das **Hardware-/Firmwareprofil XOR**
@@ -57,7 +78,7 @@ abzuspielen wäre auch nach Prüfung der Anzeige keine verifizierte Schreibfunkt
    beibehalten. Dynamische Adressen gelten nur für CRC16. Auf einer XOR-Anlage
    nicht CRC16 wählen, um Steuerungen freizuschalten.
 
-**Manuell:** [Beta-Quellcode-ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.24b1.zip)
+**Manuell:** [Beta-Quellcode-ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.28b1.zip)
 herunterladen. Bisherigen Ordner `/config/custom_components/novus300bus` an einen
 Sicherungsort **außerhalb** von `custom_components` verschieben. Nur
 `custom_components/novus300bus` aus dem ZIP nach `/config/custom_components/`
@@ -139,6 +160,12 @@ Kombinationen für Feuerstätte, Bypassschwellen oder Disbalance ausprobieren.
 Standby, Netzneustart, Frost-/Heizungsänderungen und aktive Dumps sind nicht nötig.
 Das reguläre Ende der Stoßlüftung bei Bedarf separat erfassen; die zweiminütige
 Aufzeichnung reicht nicht über die werkseitigen 15 Minuten.
+Die manuellen Stoßlüftungs-/Luftartaufnahmen vom 26. November müssen nicht
+wiederholt werden. Zuerst den neuen Sensor bei normaler Nutzung mit den LEDs
+vergleichen. Optional die passive 120-s-Aufnahme kurz vor dem erwarteten
+natürlichen Ende starten, LED-Wechselzeit notieren und nach Abschluss
+herunterladen. Dauer nicht ändern, nichts zurücksetzen und keine Einlüftertests
+eigens dafür wiederholen.
 
 Diagnosedaten einer anderen kompatiblen Lüftungsanlage oder zusätzlicher
 Ausstattung (zum Beispiel einer EWT-Klappe) helfen, unbekannte Busregister

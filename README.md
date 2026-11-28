@@ -5,12 +5,14 @@
 
 [Deutsche Dokumentation](README.de.md)
 
-> **XOR beta `2026.11.24b1`:** this branch adds a hardware/firmware profile
+> **XOR beta `2026.11.28b1`:** this branch adds a hardware/firmware profile
 > selector and passive support for the protocol in [issue #10](https://github.com/BenPru/novus300_Rs485/issues/10).
 > XOR is **read-only**, with an experimental selected-stage sensor (1-7),
-> diagnostic pages and bus clock. Stages 1/2 are capture-confirmed; 3-7 are inferred.
-> Boost, temperatures and write controls remain unsupported. Existing entries default to CRC16.
-> [Beta installation and recording instructions](docs/DIAGNOSTICS.md#xor-beta-20261124b1).
+> operating-mode feedback (supply/extract, extract only, supply only, boost),
+> diagnostic pages and bus clock. All seven stages are owner-confirmed; captures
+> confirm 1/2/3 and 7 during boost. Temperatures and writes remain unsupported.
+> This is separate from CRC16/TFT beta 2026.11.26b1.
+> [Beta installation and recording instructions](docs/DIAGNOSTICS.md#xor-beta-20261128b1).
 
 Home Assistant integration for reading and controlling a Paul Novus 300
 ventilation unit through its RS-485 bus. It exposes temperatures, operating
@@ -46,7 +48,7 @@ with the command whitelist enabled, can request a ventilation mode via
 
 ## Tested hardware and compatibility
 
-Status as of **2026-11-26**. These are tested combinations, **not a blanket
+Status as of **2026-11-28**. These are tested combinations, **not a blanket
 compatibility promise for every Novus of the same year**. Years are owner-reported;
 the 2011 issue includes dated component labels. Select profiles by captured
 protocol, not year or panel appearance alone.
@@ -76,8 +78,11 @@ participant may later reassert it. Frost-setting changes are also not reliably
 reflected on the panel; HA's parameter display alone is not device readback.
 These limitations prevent a claim that all write functions are fully validated.
 
-**Separate betas:** [2026.11.24b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.24b1)
-is the read-only LED/XOR beta.
+**Separate betas:** [2026.11.28b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.28b1)
+is the read-only LED/XOR beta, adding experimental supply/extract, one-fan and
+boost feedback. All twelve issue #10 recordings replay successfully; stages
+1/2/3 and 7 during boost have labelled capture evidence. Unknown modes stay
+unknown; no airflow measurement or write support is inferred.
 [2026.11.26b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.26b1)
 on `beta/crc16-rd` is the CRC16/TFT beta, not an XOR update. It separates selected
 mode (`0x29`) from applied mode (`0x27`), preserves boost as an overlay and

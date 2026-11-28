@@ -49,12 +49,53 @@ class XorProtocolTest(unittest.TestCase):
                 stage if 1 <= stage <= 7 else "unknown",
             )
         diagnostics = parser.diagnostics()["fan_stage_interpretation"]
-        self.assertEqual(diagnostics["capture_confirmed"], [1, 2])
-        self.assertEqual(diagnostics["inferred"], [3, 4, 5, 6, 7])
+        self.assertEqual(diagnostics["capture_confirmed"], [1, 2, 3, 7])
+        self.assertEqual(diagnostics["inferred"], [4, 5, 6])
         self.assertFalse(any(
             "xor_fan_stage" in reading
             for reading in parser.feed(frame(4, 4, b"\x10" + bytes(16)))
         ))
+
+    def test_recorded_modes_ignore_requests_and_bad_checksums(self):
+        normal = bytes.fromhex("04110400030155007f0000030072090001010100be")
+        boost = bytes.fromhex("04110400030155007f0000030072090007040100bd")
+        extract = bytes.fromhex("04110400030155007f0000030072090001020100bd")
+        supply = bytes.fromhex("04110400030155007f0000030072090001030100bc")
+        request = bytes.fromhex("01110420030155007f000003007209000704010098")
+        bad = boost[:-1] + bytes((boost[-1] ^ 1,))
+        stream = normal + request + bad + boost + normal + extract + normal + supply + normal
+        for size in (1, 7, len(stream)):
+            with self.subTest(size=size):
+                parser = NovusXorParser()
+                modes = [
+                    reading["xor_operating_mode"]
+                    for offset in range(0, len(stream), size)
+                    for reading in parser.feed(stream[offset:offset + size])
+                    if "xor_operating_mode" in reading
+                ]
+                self.assertEqual(modes, [
+                    "supply_extract", "boost", "supply_extract", "extract_only",
+                    "supply_extract", "supply_only", "supply_extract",
+                ])
+
+    def test_unknown_modes_replace_prior_mode_and_stage_seven_is_not_boost(self):
+        parser = NovusXorParser()
+        payload = bytearray(17)
+        payload[13] = 7
+        for mode in (4, 0, 5, 255, 1):
+            payload[14] = mode
+            reading = parser.feed(frame(4, 4, payload))[-1]
+            self.assertEqual(reading["xor_fan_stage"], 7)
+            self.assertEqual(reading["xor_operating_mode_raw"], mode)
+            self.assertEqual(reading["xor_operating_mode"], {
+                1: "supply_extract", 4: "boost",
+            }.get(mode, "unknown"))
+        for address, page in ((1, 0x20), (2, 0x20), (4, 0x40)):
+            payload[0] = page
+            self.assertFalse(any(
+                "xor_operating_mode" in reading
+                for reading in parser.feed(frame(address, 4, payload))
+            ))
 
     def test_public_frames_survive_every_chunk_boundary_and_deduplicate(self):
         stream = HEARTBEAT + CLOCK + PAGE + PAGE

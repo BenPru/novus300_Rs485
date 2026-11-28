@@ -2,6 +2,21 @@
 
 Date-based versioning: `YEAR.MONTH.DAY`. Deutsch: [CHANGELOG.de.md](CHANGELOG.de.md)
 
+## 2026.11.28b1 (XOR read-only beta)
+
+### Highlights
+- **New experimental operating-mode sensor:** supply and extract, extract only, supply only and boost, from the independently observed mode byte.
+- **Boost without guessing:** the stage sensor's `boost_status` uses the mode field, never stage 7 alone. Unknown values clear the mode instead of retaining a stale reading.
+- **More capture evidence:** stages 1/2/3 and 7 during boost are now capture-confirmed; all seven remain owner-confirmed against the LEDs.
+
+### Notes
+- `sensor.novus300_xor_operating_mode` includes raw-value/source attributes and English/German state translations. It reports panel mode, not measured airflow.
+- XOR writes, time synchronization, dump requests and 0-10 V output remain blocked; no unlock switch. CRC16 code and controls are unchanged from this branch's previous beta.
+- Separate from CRC16/TFT beta **2026.11.26b1**; stable/latest stays **2026.11.21**. No production installation or bridge changes.
+- **86 offline regression tests** pass, including read-only protections; all twelve issue #10 recordings replay at four chunk sizes (64 checks across 16 streams), preserving previous readings.
+- Install this version through HACS, retain the XOR profile and restart **HA only**. Existing captures need not be repeated; optional natural boost-expiry recording is the next useful check.
+- [Installation and capture instructions](docs/DIAGNOSTICS.md#xor-beta-20261128b1).
+
 ## 2026.11.24b1 (beta)
 
 ### Highlights

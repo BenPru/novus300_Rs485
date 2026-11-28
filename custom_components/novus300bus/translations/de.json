@@ -228,6 +228,15 @@
       "xor_frames_received": {
         "name": "Empfangene XOR-Telegramme"
       },
+      "xor_operating_mode": {
+        "name": "Betriebsart (experimentell)",
+        "state": {
+          "supply_extract": "Zu- und Abluft",
+          "extract_only": "Nur Abluft",
+          "supply_only": "Nur Zuluft",
+          "boost": "Stoßlüftung"
+        }
+      },
       "xor_clock": {
         "name": "Busuhr (experimentell)"
       },

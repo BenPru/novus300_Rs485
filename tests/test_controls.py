@@ -57,8 +57,9 @@ class XorStageSensorTest(unittest.TestCase):
         for value, expected, status in (
             (1, 1, "capture_confirmed"),
             (2, 2, "capture_confirmed"),
-            (3, 3, "inferred"),
-            (7, 7, "inferred"),
+            (3, 3, "capture_confirmed"),
+            (4, 4, "inferred"),
+            (7, 7, "capture_confirmed"),
             (0, None, "unmapped"),
             (255, None, "unmapped"),
         ):
@@ -69,7 +70,32 @@ class XorStageSensorTest(unittest.TestCase):
             self.assertEqual(sensor.extra_state_attributes["raw_value"], value)
         co.data = {"xor_fan_stage": "unknown", "xor_fan_stage_raw": 8}
         self.assertIsNone(sensor.native_value)
-        self.assertEqual(sensor.extra_state_attributes["boost_status"], "not_decoded")
+        self.assertEqual(sensor.extra_state_attributes["boost_status"], "unknown")
+
+    def test_mode_sensor_and_boost_attribute_do_not_guess_from_stage(self):
+        co = coordinator()
+        co._config = {"hardware_profile": "xor"}
+        mode = NovusSensor(co, next(d for d in XOR_SENSORS if d.key == "xor_operating_mode"))
+        stage = NovusSensor(co, next(d for d in XOR_SENSORS if d.key == "xor_fan_stage"))
+        self.assertFalse(mode.available)
+        for raw, value, expected, boost in (
+            (4, "boost", "boost", "active"),
+            (1, "supply_extract", "supply_extract", "inactive"),
+            (2, "extract_only", "extract_only", "inactive"),
+            (3, "supply_only", "supply_only", "inactive"),
+            (255, "unknown", None, "unknown"),
+        ):
+            with self.subTest(raw=raw):
+                co.data = {
+                    "xor_operating_mode": value, "xor_operating_mode_raw": raw,
+                    "xor_fan_stage": 7, "xor_fan_stage_raw": 7,
+                }
+                self.assertTrue(mode.available)
+                self.assertEqual(mode.native_value, expected)
+                self.assertEqual(mode.extra_state_attributes["raw_value"], raw)
+                self.assertEqual(stage.extra_state_attributes["boost_status"], boost)
+                self.assertEqual(mode.extra_state_attributes["mapping_status"],
+                                 "capture_confirmed" if raw != 255 else "unmapped")
 
 
 class CoordinatorStopTest(unittest.IsolatedAsyncioTestCase):

@@ -2,6 +2,21 @@
 
 Versionierung als Datum: `JAHR.MONAT.TAG`. English: [CHANGELOG.md](CHANGELOG.md)
 
+## 2026.11.28b1 (XOR-Beta, nur lesend)
+
+### Highlights
+- **Neuer experimenteller Betriebsartsensor:** Zu- und Abluft, nur Abluft, nur Zuluft und Stoßlüftung aus dem separat beobachteten Modusbyte.
+- **Stoßlüftung ohne Raten:** Das Stufenattribut `boost_status` nutzt das Modusfeld, nie Stufe 7 allein. Unbekannte Werte ersetzen den Modus statt einen alten Zustand stehen zu lassen.
+- **Weitere Rohdatenbelege:** Stufen 1/2/3 sowie 7 bei Stoßlüftung sind nun in Mitschnitten bestätigt; alle sieben bleiben vom Nutzer gegen die LEDs bestätigt.
+
+### Hinweise
+- `sensor.novus300_xor_operating_mode` mit Rohwert/Quelle und deutschen/englischen Zuständen. Panelmodus, kein gemessener Luftstrom.
+- XOR-Schreibzugriffe, Uhrzeitsynchronisation, Dumps und 0-10-V-Ausgabe bleiben gesperrt; kein Freigabeschalter. CRC16-Code und Steuerung gegenüber der vorherigen Beta dieses Zweigs unverändert.
+- Getrennt von CRC16/TFT-Beta **2026.11.26b1**; Stable/latest bleibt **2026.11.21**. Keine Produktionsinstallation oder Bridgeänderung.
+- **86 Offline-Regressionstests** einschließlich Schreibschutz bestanden. Alle zwölf Mitschnitte aus Ticket #10 mit vier Blockgrößen nachgespielt (64 Prüfungen über 16 Datenströme); bisherige Werte bleiben erhalten.
+- Diese Version über HACS installieren, XOR-Profil beibehalten, **nur HA** neu starten. Vorhandene Tests nicht wiederholen; optional das natürliche Stoßlüftungsende aufzeichnen.
+- [Installation und Aufzeichnung](docs/DIAGNOSTICS.de.md#xor-beta-20261128b1).
+
 ## 2026.11.24b1 (Beta)
 
 ### Highlights

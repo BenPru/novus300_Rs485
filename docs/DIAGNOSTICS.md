@@ -3,8 +3,9 @@
 [Deutsch](DIAGNOSTICS.de.md)
 
 <a id="xor-beta-20261123b1"></a>
+<a id="xor-beta-20261124b1"></a>
 
-## XOR beta 2026.11.24b1
+## XOR beta 2026.11.28b1
 
 The separate `beta/xor-read-only` branch supports the checksum-valid alternative
 protocol found in the issue #10 recordings. The labels identify **protocol
@@ -22,15 +23,34 @@ The beta exposes **Selected fan stage (experimental)**,
 interpretation is not panel-confirmed and is never synchronized automatically.
 All observed address/type counts and up to 64 recent raw pages are included in
 diagnostics. The stage scale is **1-7**, not the TFT mode codes: 4/5/6 are
-**not** boost/away/automatic. Values 1/2 follow the old labelled captures and the
-new 1-2-1 sequence; 3-7 are inferred from the LED scale and still need validation.
+**not** boost/away/automatic. Captures confirm stages 1/2/3 and stage 7 during
+boost. The owner confirms all seven stages against the LEDs; stages 4-6 still
+lack labelled raw captures.
 The sensor attributes distinguish `capture_confirmed`, `inferred` and `unmapped`
 and retain the raw byte. Other values, including 0, show **unknown**, not an
 assumed standby state. This is the selected stage, not measured RPM, power or
-proof that the fans are running. Boost is not decoded separately; a displayed 7
-does not establish boost mode. Temperatures, bypass and equipment types remain
+proof that the fans are running. A displayed 7 alone does not establish boost
+mode. Temperatures, bypass and equipment types remain
 unmapped. Unknown firmware and fallback component identities are not reported
 as detected XOR hardware.
+
+**New: Operating mode (experimental)**, `sensor.novus300_xor_operating_mode`,
+reads page `04:00`, zero-based data offset 13, excluding the page byte:
+
+| Raw value | State | Panel mode |
+|---|---|---|
+| 1 | `supply_extract` | Supply and extract |
+| 2 | `extract_only` | Extract only |
+| 3 | `supply_only` | Supply only |
+| 4 | `boost` | Boost ventilation |
+
+These are panel-mode feedback, not measured airflow or proof of fan operation.
+During boost, no separate airflow direction is inferred. Unknown raw values
+replace the previous mode with **unknown** and remain in the sensor attributes
+and diagnostics. The stage sensor's `boost_status` attribute is `active`,
+`inactive` or `unknown`, based on this mode field rather than the stage number.
+All six manual mode changes in the supplied capture are reproduced offline;
+automatic boost expiry has not yet been captured.
 
 **Writing remains blocked, without an unlock switch.** The observed stage
 change involves a handshake and a 16-byte block, not an isolated stage command.
@@ -42,7 +62,8 @@ a verified write implementation, even after the stage display has been checked.
 
 1. Back up Home Assistant and the existing integration files.
 2. Open **HACS > Paul Novus 300 RS-485 Bus > three-dot menu > Redownload**.
-   Under **Need a different version?**, select **2026.11.24b1**, if listed.
+   Enable prereleases if needed; under **Need a different version?**, select
+   **2026.11.28b1**, if listed. This is the XOR beta, not CRC16/TFT beta 2026.11.26b1.
    If the prerelease is not listed, use the manual alternative below.
 3. Restart **Home Assistant**, not the ventilation unit. Open **Settings >
    Devices & services > Paul Novus 300 RS-485 Bus > Configure > General and unit
@@ -55,7 +76,7 @@ a verified write implementation, even after the stage display has been checked.
    Do not select CRC16 on the XOR unit to try to enable controls.
 
 **Manual alternative:** download the
-[beta source ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.24b1.zip).
+[beta source ZIP](https://github.com/BenPru/novus300_Rs485/archive/refs/tags/2026.11.28b1.zip).
 Move the old `/config/custom_components/novus300bus` folder to a backup location
 **outside** `custom_components`. Extract only
 `custom_components/novus300bus` from the ZIP into `/config/custom_components/`,
@@ -132,6 +153,11 @@ combinations for fireplace configuration, bypass thresholds or imbalance.
 No standby, mains restart, frost/heater changes or active dump is required.
 Boost expiry needs a separate capture around its normal end if investigated;
 the two-minute recording does not cover the factory 15-minute duration.
+The November 26 manual boost and supply/extract captures do not need repeating.
+Please first compare the new mode sensor with the LEDs during normal use.
+Optionally start the passive 120-second capture shortly before boost is due to
+expire naturally, note the LED change time and download after completion. Do
+not alter the duration, reset anything or repeat one-fan tests just for this.
 
 Diagnostics from another compatible ventilation unit or additional equipment
 (for example an EWT/earth heat exchanger damper) can help identify unknown bus

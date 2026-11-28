@@ -13,7 +13,14 @@ from .protocol import NovusValue
 FRAME_LENGTHS = {0x00: (10,), 0x01: (0,), 0x02: (2, 3), 0x03: (2,), 0x04: (17,), 0x0F: (0,)}
 FAN_STAGE_OFFSET = 12
 FAN_STAGES = range(1, 8)
-CAPTURE_CONFIRMED_STAGES = (1, 2)
+CAPTURE_CONFIRMED_STAGES = (1, 2, 3, 7)
+OPERATING_MODE_OFFSET = 13
+OPERATING_MODES = {
+    1: "supply_extract",
+    2: "extract_only",
+    3: "supply_only",
+    4: "boost",
+}
 
 
 class NovusXorParser:
@@ -77,10 +84,12 @@ class NovusXorParser:
                 values.update({"xor_last_page": key, "xor_last_page_data": value})
             if address == 0x04 and payload[0] == 0x00:
                 stage = payload[1 + FAN_STAGE_OFFSET]
-                # Only 1/2 are capture-confirmed; 3-7 follow the LED panel's scale.
+                mode = payload[1 + OPERATING_MODE_OFFSET]
                 values.update({
                     "xor_fan_stage": stage if stage in FAN_STAGES else "unknown",
                     "xor_fan_stage_raw": stage,
+                    "xor_operating_mode": OPERATING_MODES.get(mode, "unknown"),
+                    "xor_operating_mode_raw": mode,
                 })
             return values
         elif kind == 0x00 and address == 0:
@@ -117,7 +126,14 @@ class NovusXorParser:
                     "meaning": "Selected LED stage, not measured speed or boost status",
                     "supported_range": [1, 7],
                     "capture_confirmed": list(CAPTURE_CONFIRMED_STAGES),
-                    "inferred": [3, 4, 5, 6, 7],
+                    "inferred": [stage for stage in FAN_STAGES if stage not in CAPTURE_CONFIRMED_STAGES],
+                    "stage_7_context": "Captured during boost; manual stage 7 is owner-confirmed",
+                    "other_values": "Unknown; raw byte retained",
+                },
+                "operating_mode_interpretation": {
+                    "source": "04:00, zero-based data offset 13 (page byte excluded)",
+                    "meaning": "Panel mode, not measured airflow; stage 7 alone does not imply boost",
+                    "capture_confirmed": dict(OPERATING_MODES),
                     "other_values": "Unknown; raw byte retained",
                 },
             }

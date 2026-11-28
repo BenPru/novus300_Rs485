@@ -225,6 +225,15 @@
       "xor_fan_stage": {
         "name": "Selected fan stage (experimental)"
       },
+      "xor_operating_mode": {
+        "name": "Operating mode (experimental)",
+        "state": {
+          "supply_extract": "Supply and extract",
+          "extract_only": "Extract only",
+          "supply_only": "Supply only",
+          "boost": "Boost ventilation"
+        }
+      },
       "xor_frames_received": {
         "name": "XOR frames received"
       },
