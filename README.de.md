@@ -42,7 +42,7 @@ anfordern (Automatik, Stufe 1–3, Abwesend, Stoßlüftung).
 
 ## Getestete Hardware und Kompatibilität
 
-Stand **26.11.2026**. Getestet sind diese Kombinationen, **nicht pauschal jede
+Stand **28.11.2026**. Getestet sind diese Kombinationen, **nicht pauschal jede
 Novus desselben Baujahrs**. Die Baujahre stammen aus Nutzerangaben; zur 2011er
 liegen datierte Bauteilaufkleber vor. Profil nach aufgezeichnetem Protokoll
 wählen, nicht allein nach Baujahr oder Aussehen des Bedienteils.
@@ -73,8 +73,12 @@ Auch Frostschutzänderungen werden nicht zuverlässig am Panel angezeigt;
 die HA-Parameteranzeige allein ist keine Geräterücklesebestätigung.
 Deshalb sind nicht pauschal alle Schreibfunktionen als vollständig geprüft anzusehen.
 
-**Getrennte Betas:** [2026.11.24b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.24b1)
-ist die nur lesende LED/XOR-Beta.
+**Getrennte Betas:** [2026.11.28b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.28b1)
+ist die nur lesende LED/XOR-Beta mit experimenteller Zu-/Abluft-, Einlüfter-
+und Stoßlüftungsrückmeldung. Alle zwölf Mitschnitte aus Ticket #10 erfolgreich
+nachgespielt; Stufen 1/2/3 sowie 7 bei Stoßlüftung sind mit beschrifteten
+Rohdaten belegt. Unbekannte Modi bleiben unbekannt; keine gemessenen Luftströme
+oder Schreibunterstützung daraus ableiten.
 [2026.11.26b1](https://github.com/BenPru/novus300_Rs485/releases/tag/2026.11.26b1)
 auf `beta/crc16-rd` ist die CRC16/TFT-Beta, kein XOR-Update. Sie trennt gewählten
 Modus (`0x29`) und angewendeten Modus (`0x27`), berücksichtigt Boost als
